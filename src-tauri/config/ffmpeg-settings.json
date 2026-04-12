@@ -1,0 +1,218 @@
+{
+  "hardware": {
+    "enabled": false,
+    "type": "auto",
+    "options": [
+      {
+        "key": "auto",
+        "value": "auto",
+        "label": "自动检测",
+        "description": "自动选择最佳硬件加速"
+      },
+      {
+        "key": "none",
+        "value": "none",
+        "label": "无（软件编码）",
+        "description": "使用CPU进行编解码"
+      },
+      {
+        "key": "nvenc",
+        "value": "cuda",
+        "label": "NVIDIA NVENC",
+        "description": "NVIDIA GPU硬件加速",
+        "encoders": {
+          "h264": "h264_nvenc",
+          "h265": "hevc_nvenc"
+        }
+      },
+      {
+        "key": "qsv",
+        "value": "qsv",
+        "label": "Intel Quick Sync",
+        "description": "Intel GPU硬件加速",
+        "encoders": {
+          "h264": "h264_qsv",
+          "h265": "hevc_qsv"
+        }
+      },
+      {
+        "key": "vaapi",
+        "value": "vaapi",
+        "label": "VA-API (Linux)",
+        "description": "Linux视频加速API",
+        "encoders": {
+          "h264": "h264_vaapi",
+          "h265": "hevc_vaapi"
+        }
+      },
+      {
+        "key": "videotoolbox",
+        "value": "videotoolbox",
+        "label": "VideoToolbox (macOS)",
+        "description": "macOS硬件加速",
+        "encoders": {
+          "h264": "h264_videotoolbox",
+          "h265": "hevc_videotoolbox"
+        }
+      },
+      {
+        "key": "amf",
+        "value": "d3d11va",
+        "label": "AMD AMF",
+        "description": "AMD GPU硬件加速",
+        "encoders": {
+          "h264": "h264_amf",
+          "h265": "hevc_amf"
+        }
+      }
+    ]
+  },
+  "performance": {
+    "threads": 0,
+    "threadOptions": [
+      {
+        "key": "auto",
+        "value": 0,
+        "label": "自动（推荐）"
+      },
+      {
+        "key": "1",
+        "value": 1,
+        "label": "1个线程"
+      },
+      {
+        "key": "2",
+        "value": 2,
+        "label": "2个线程"
+      },
+      {
+        "key": "4",
+        "value": 4,
+        "label": "4个线程"
+      },
+      {
+        "key": "8",
+        "value": 8,
+        "label": "8个线程"
+      },
+      {
+        "key": "16",
+        "value": 16,
+        "label": "16个线程"
+      }
+    ],
+    "maxConcurrent": 2,
+    "maxConcurrentOptions": [
+      {
+        "key": "1",
+        "value": 1,
+        "label": "1个（串行）"
+      },
+      {
+        "key": "2",
+        "value": 2,
+        "label": "2个（推荐）"
+      },
+      {
+        "key": "4",
+        "value": 4,
+        "label": "4个"
+      },
+      {
+        "key": "8",
+        "value": 8,
+        "label": "8个"
+      }
+    ]
+  },
+  "output": {
+    "overwrite": true,
+    "overwriteOptions": [
+      {
+        "key": "yes",
+        "value": true,
+        "label": "始终覆盖",
+        "ffmpegParam": "-y"
+      },
+      {
+        "key": "no",
+        "value": false,
+        "label": "从不覆盖",
+        "ffmpegParam": "-n"
+      }
+    ],
+    "loglevel": "info",
+    "loglevelOptions": [
+      {
+        "key": "quiet",
+        "value": "quiet",
+        "label": "静默"
+      },
+      {
+        "key": "panic",
+        "value": "panic",
+        "label": "仅错误"
+      },
+      {
+        "key": "fatal",
+        "value": "fatal",
+        "label": "致命错误"
+      },
+      {
+        "key": "error",
+        "value": "error",
+        "label": "错误"
+      },
+      {
+        "key": "warning",
+        "value": "warning",
+        "label": "警告"
+      },
+      {
+        "key": "info",
+        "value": "info",
+        "label": "信息（推荐）"
+      },
+      {
+        "key": "verbose",
+        "value": "verbose",
+        "label": "详细"
+      },
+      {
+        "key": "debug",
+        "value": "debug",
+        "label": "调试"
+      }
+    ]
+  },
+  "quality": {
+    "defaultPreset": "medium",
+    "defaultCRF": 23,
+    "crfOptions": [
+      {
+        "key": "18",
+        "value": 18,
+        "label": "18 - 高质量（文件大）"
+      },
+      {
+        "key": "23",
+        "value": 23,
+        "label": "23 - 标准质量（推荐）"
+      },
+      {
+        "key": "28",
+        "value": 28,
+        "label": "28 - 中等质量"
+      },
+      {
+        "key": "32",
+        "value": 32,
+        "label": "32 - 低质量（文件小）"
+      }
+    ]
+  },
+  "advanced": {
+    "customParams": "",
+    "customParamsDescription": "自定义FFmpeg参数，将添加到所有命令中"
+  }
+}

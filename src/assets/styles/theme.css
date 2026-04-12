@@ -1,0 +1,250 @@
+html {
+  /* 字体颜色 */
+  --font-color1: #2c3e50;
+  --font-success-color: #27ae60;
+  --font-error-color: #e74c3c;
+  --font-warning-color: #e67e22;
+  /* 新增：警告文本色 */
+  --font-info-color: #3498db;
+  /* 新增：信息文本色 */
+
+  /* 按钮颜色 */
+  --btn-font-color1: #2c3e50;
+  --btn-bg-color1: #ecf0f1;
+  --btn-bg-color2: #27ae60;
+  --btn-bg-color3: #e74c3c;
+  --btn-box-shadow1: rgba(52, 73, 94, 0.15);
+  --btn-hover-border-color1: #3498db;
+  --btn-active-bg-color1: #d5dbdb;
+  --btn-border-color1: #229954;
+  --btn-border-color2: #c0392b;
+  --btn-active-border-color1: #2980b9;
+
+  /* 开关组件 */
+  --switch-circle-bg-color1: #ffffff;
+  --switch-bg-active-color1: #3498db;
+  --switch-bg-inactive-color2: #95a5a6;
+
+  /* 链接颜色 */
+  --ele-a-color1: #3498db;
+  --ele-a-hover-color1: #2980b9;
+
+  /* 背景颜色 */
+  --bg-color1: #ffffff;
+  --bg-color2: #f8f9fa;
+  --border-color1: #dee2e6;
+
+  /* 文本颜色 */
+  --text-color1: #2c3e50;
+  --text-color2: #7f8c8d;
+
+  /* 布局颜色 */
+  --header-bg: #ffffff;
+  --sidebar-bg: #f8f9fa;
+  --card-bg: #ffffff;
+
+  /* 输入框颜色 */
+  --input-bg: #ffffff;
+  --input-border: #bdc3c7;
+  --input-focus-border: #3498db;
+
+  /* 状态颜色 */
+  --warning-color: #f39c12;
+  --info-color: #3498db;
+  --disabled-color: #95a5a6;
+  --success-color: #27ae60;
+  /* 新增：成功色 */
+  --error-color: #e74c3c;
+  /* 新增：错误色 */
+
+  /* 交互反馈 */
+  --hover-bg: rgba(52, 152, 219, 0.08);
+  --active-bg: rgba(52, 152, 219, 0.15);
+
+  /* 阴影 */
+  --shadow-sm: 0 2px 4px rgba(44, 62, 80, 0.08);
+  --shadow-md: 0 4px 8px rgba(44, 62, 80, 0.12);
+  --shadow-lg: 0 8px 16px rgba(44, 62, 80, 0.15);
+
+  /* 滚动条 */
+  --scrollbar-track: #ecf0f1;
+  /* 新增：滚动条轨道 */
+  --scrollbar-thumb: #bdc3c7;
+  /* 新增：滚动条滑块 */
+  --scrollbar-thumb-hover: #95a5a6;
+  /* 新增：滚动条滑块悬停 */
+
+  /* 分隔线 */
+  --divider-color: #dee2e6;
+  /* 新增：分隔线颜色 */
+
+  /* 表格 */
+  --table-header-bg: #ecf0f1;
+  /* 新增：表头背景 */
+  --table-row-even: #f8f9fa;
+  /* 新增：偶数行背景 */
+  --table-row-hover: #e8eef2;
+  /* 新增：行悬停背景 */
+
+  /* 模态框 */
+  --modal-overlay: rgba(44, 62, 80, 0.6);
+  /* 新增：模态框遮罩 */
+  --modal-bg: #ffffff;
+  /* 新增：模态框背景 */
+
+  /* 工具提示 */
+  --tooltip-bg: #34495e;
+  /* 新增：工具提示背景 */
+  --tooltip-text: #ecf0f1;
+  /* 新增：工具提示文字 */
+
+  /* 标签/徽章 */
+  --tag-bg: #ecf0f1;
+  /* 新增：标签背景 */
+  --tag-text: #2c3e50;
+  /* 新增：标签文字 */
+  --tag-success-bg: #27ae60;
+  /* 新增：成功标签背景 */
+  --tag-error-bg: #e74c3c;
+  /* 新增：错误标签背景 */
+  --tag-warning-bg: #f39c12;
+  /* 新增：警告标签背景 */
+  --tag-info-bg: #3498db;
+  /* 新增：信息标签背景 */
+
+  /* 导航菜单 */
+  --nav-item-bg: transparent;
+  /* 新增：导航项默认背景 */
+  --nav-item-hover-bg: rgba(52, 152, 219, 0.1);
+  /* 新增：导航项悬浮背景 */
+  --nav-item-active-bg: #3498db;
+  /* 新增：导航项选中背景 */
+  --nav-item-text: #2c3e50;
+  /* 新增：导航项文字颜色 */
+  --nav-item-active-text: #ffffff;
+  /* 新增：导航项选中文字颜色 */
+
+  /* 文件列表 */
+  --file-item-active-bg: rgba(52, 152, 219, 0.15);
+  /* 新增：文件选中背景色 */
+  --file-item-active-text: #2c3e50;
+  /* 新增：文件选中文字颜色 */
+}
+
+
+html.dark {
+  /* 字体颜色 */
+  --font-color1: #ecf0f1;
+  --font-success-color: #2ecc71;
+  --font-error-color: #e74c3c;
+  --font-warning-color: #f39c12;
+  /* 新增：警告文本色 */
+  --font-info-color: #5dade2;
+  /* 新增：信息文本色 */
+
+  /* 按钮颜色 */
+  --btn-font-color1: #ecf0f1;
+  --btn-bg-color1: #34495e;
+  --btn-bg-color2: #27ae60;
+  --btn-bg-color3: #c0392b;
+  --btn-box-shadow1: rgba(0, 0, 0, 0.5);
+  --btn-hover-border-color1: #5dade2;
+  --btn-active-bg-color1: #4a5f7f;
+  --btn-border-color1: #2ecc71;
+  --btn-border-color2: #e74c3c;
+  --btn-active-border-color1: #3498db;
+
+  /* 开关组件 */
+  --switch-circle-bg-color1: #ecf0f1;
+  --switch-bg-active-color1: #2980b9;
+  --switch-bg-inactive-color2: #5d6d7e;
+
+  /* 链接颜色 */
+  --ele-a-color1: #5dade2;
+  --ele-a-hover-color1: #85c1e9;
+
+  /* 背景颜色 */
+  --bg-color1: #1a1f2e;
+  --bg-color2: #242b3d;
+
+  --border-color1: #34495e;
+
+  /* 文本颜色 */
+  --text-color1: #ecf0f1;
+  --text-color2: #95a5a6;
+
+  /* 布局颜色 */
+  --header-bg: #242b3d;
+  --sidebar-bg: #2c3e50;
+  --card-bg: #2e4057;
+
+  /* 输入框颜色 */
+  --input-bg: #2e4057;
+  --input-border: #34495e;
+  --input-focus-border: #5dade2;
+
+  /* 状态颜色 */
+  --warning-color: #f39c12;
+  --info-color: #5dade2;
+  --disabled-color: #7f8c8d;
+  --success-color: #2ecc71;
+  /* 新增：成功色 */
+  --error-color: #e74c3c;
+  /* 新增：错误色 */
+
+  /* 交互反馈 */
+  --hover-bg: rgba(93, 173, 226, 0.12);
+  --active-bg: rgba(93, 173, 226, 0.2);
+
+  /* 阴影 */
+  --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 8px 16px rgba(0, 0, 0, 0.3);
+
+  /* 滚动条 */
+  --scrollbar-track: #2e4057;
+  --scrollbar-thumb: #34495e;
+  --scrollbar-thumb-hover: #4a5f7f;
+
+  /* 分隔线 */
+  --divider-color: #34495e;
+
+  /* 表格 */
+  --table-header-bg: #2e4057;
+  --table-row-even: #2c3e50;
+  --table-row-hover: #34495e;
+
+  /* 模态框 */
+  --modal-overlay: rgba(26, 31, 46, 0.85);
+  --modal-bg: #2e4057;
+
+  /* 工具提示 */
+  --tooltip-bg: #34495e;
+  --tooltip-text: #ecf0f1;
+
+  /* 标签/徽章 */
+  --tag-bg: #34495e;
+  --tag-text: #ecf0f1;
+  --tag-success-bg: #27ae60;
+  --tag-error-bg: #c0392b;
+  --tag-warning-bg: #e67e22;
+  --tag-info-bg: #2980b9;
+
+  /* 导航菜单 */
+  --nav-item-bg: transparent;
+  /* 新增：导航项默认背景 */
+  --nav-item-hover-bg: rgba(93, 173, 226, 0.15);
+  /* 新增：导航项悬浮背景 */
+  --nav-item-active-bg: #2980b9;
+  /* 新增：导航项选中背景 */
+  --nav-item-text: #ecf0f1;
+  /* 新增：导航项文字颜色 */
+  --nav-item-active-text: #ffffff;
+  /* 新增：导航项选中文字颜色 */
+
+  /* 文件列表 */
+  --file-item-active-bg: rgba(93, 173, 226, 0.2);
+  /* 新增：文件选中背景色 */
+  --file-item-active-text: #ecf0f1;
+  /* 新增：文件选中文字颜色 */
+}

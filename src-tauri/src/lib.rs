@@ -1,0 +1,395 @@
+mod library;
+pub mod modules;
+mod utility;
+use std::sync::Mutex;
+use std::env;
+
+use tauri::{AppHandle, Manager, Window};
+
+use once_cell::sync::Lazy;
+
+use library::{
+    _ffmpeg,
+    _file::read_file,
+    _probe::probe_media_info,
+    _process::kill_process,
+};
+use utility::_executor::execute_ffmpeg;
+use modules::task_manager;
+use modules::preset_manager;
+
+static GLOBAL_PID: Lazy<Mutex<Option<u32>>> = Lazy::new(|| Mutex::new(None));
+
+/// 新的命令执行接口：接收完整的 FFmpeg 命令字符串并执行
+#[tauri::command]
+fn execute_ffmpeg_command(
+    app: AppHandle,
+    window: Window,
+    command: String,
+) -> Result<String, String> {
+    match execute_ffmpeg(app, window, &command) {
+        Ok(_) => Ok("命令已开始执行".to_string()),
+        Err(e) => Err(e),
+    }
+}
+
+#[tauri::command]
+fn stop_convert() {
+    let mut pid_opt = GLOBAL_PID.lock().unwrap();
+
+    // pid_opt.take() 的功能是「取出 Option 內的值，並把自己設為 None」。
+    if let Some(pid) = pid_opt.take() {
+        kill_process(pid);
+    }
+}
+
+/// 讀取JSON文件資料夾檔名列表
+/// ## 參數
+/// - `app`: Tauri 應用的 AppHandle
+/// - `filename`: 文件名稱
+/// ## 返回
+/// - `String`: 成功時返回記錄的 JSON 字符串，失敗
+#[tauri::command]
+fn read_json_file(app: AppHandle, filename: &str) -> Result<String, String> {
+    read_file(app, "config", filename)
+}
+
+#[tauri::command]
+fn check_ffmpeg_tools() -> serde_json::Value {
+    serde_json::json!({
+        "ffmpeg": {
+            "installed": _ffmpeg::check_ffmpeg_installed(),
+            "path": _ffmpeg::get_ffmpeg_path().unwrap_or_else(|| "".to_string()),
+            "version": _ffmpeg::get_ffmpeg_version().unwrap_or_else(|| "".to_string()),
+        },
+        "ffprobe": {
+            "installed": _ffmpeg::check_ffprobe_installed(),
+            "path": _ffmpeg::get_ffprobe_path().unwrap_or_else(|| "".to_string()),
+            "version": _ffmpeg::get_ffprobe_version().unwrap_or_else(|| "".to_string()),
+        },
+        "ffplay": {
+            "installed": _ffmpeg::check_ffplay_installed(),
+            "path": _ffmpeg::get_ffplay_path().unwrap_or_else(|| "".to_string()),
+            "version": _ffmpeg::get_ffplay_version().unwrap_or_else(|| "".to_string()),
+        },
+    })
+}
+
+#[tauri::command]
+async fn install_ffmpeg_command(app: AppHandle) -> Result<String, String> {
+    _ffmpeg::install_ffmpeg(app).await
+}
+
+#[tauri::command]
+fn get_system_info_app() -> serde_json::Value {
+    _ffmpeg::get_system_info()
+}
+
+#[tauri::command]
+fn check_ffmpeg_from_path(path: &str) -> serde_json::Value {
+    use std::path::Path;
+    use std::process::Command;
+
+    let is_valid = if Path::new(path).exists() {
+        // 如果是完整路径，尝试运行它
+        match Command::new(path).arg("-version").output() {
+            Ok(_) => true,
+            Err(_) => false,
+        }
+    } else {
+        // 如果只是命令名，尝试直接运行
+        match Command::new(path).arg("-version").output() {
+            Ok(_) => true,
+            Err(_) => false,
+        }
+    };
+
+    serde_json::json!({
+        "valid": is_valid,
+        "path": path
+    })
+}
+
+#[tauri::command]
+fn test_ffmpeg(path: String) -> Result<String, String> {
+    use std::process::Command;
+    
+    let ffmpeg_path = if path.is_empty() {
+        "ffmpeg".to_string()
+    } else {
+        path
+    };
+    
+    match Command::new(&ffmpeg_path).arg("-version").output() {
+        Ok(output) => {
+            if output.status.success() {
+                let version_info = String::from_utf8_lossy(&output.stdout);
+                let first_line = version_info.lines().next().unwrap_or("FFmpeg 可用");
+                Ok(first_line.to_string())
+            } else {
+                Err("FFmpeg 执行失败".to_string())
+            }
+        }
+        Err(e) => Err(format!("未找到 FFmpeg: {}", e)),
+    }
+}
+
+#[tauri::command]
+fn write_concat_file(app: AppHandle, content: String) -> Result<String, String> {
+    use std::io::Write;
+    use std::fs::File;
+    
+    let app_data_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    
+    std::fs::create_dir_all(&app_data_dir)
+        .map_err(|e| format!("Failed to create app data dir: {}", e))?;
+    
+    let concat_file_path = app_data_dir.join("ffmpeg_concat_demuxer.txt");
+    
+    let mut file = File::create(&concat_file_path)
+        .map_err(|e| format!("Failed to create concat file: {}", e))?;
+    
+    file.write_all(content.as_bytes())
+        .map_err(|e| format!("Failed to write concat file: {}", e))?;
+    
+    Ok(concat_file_path.to_string_lossy().to_string())
+}
+
+#[tauri::command]
+fn extract_video_frame(video_path: String, timestamp: String) -> Result<String, String> {
+    use std::process::Command;
+    use base64::{Engine as _, engine::general_purpose};
+    
+    let temp_dir = std::env::temp_dir();
+    let output_path = temp_dir.join("crop_preview_frame.png");
+    
+    let status = Command::new("ffmpeg")
+        .args(&[
+            "-ss", &timestamp,
+            "-i", &video_path,
+            "-frames:v", "1",
+            "-q:v", "1",
+            &output_path.to_string_lossy().to_string(),
+            "-y"
+        ])
+        .status()
+        .map_err(|e| format!("Failed to extract frame: {}", e))?;
+    
+    if !status.success() {
+        return Err("Failed to extract video frame".to_string());
+    }
+    
+    let image_data = std::fs::read(&output_path)
+        .map_err(|e| format!("Failed to read frame: {}", e))?;
+    
+    let base64_data = general_purpose::STANDARD.encode(&image_data);
+    
+    let _ = std::fs::remove_file(&output_path);
+    
+    Ok(base64_data)
+}
+
+static FFPLAY_PROCESS: Lazy<Mutex<Option<std::process::Child>>> = Lazy::new(|| Mutex::new(None));
+
+#[tauri::command]
+fn start_ffplay(file_path: String, width: u32, height: u32, volume: u32) -> Result<(), String> {
+    use std::process::{Command, Stdio};
+    
+    let mut ffplay = Command::new("ffplay")
+        .args(&[
+            "-x", &width.to_string(),
+            "-y", &height.to_string(),
+            "-noborder",
+            "-volume", &volume.to_string(),
+            &file_path,
+        ])
+        .stdin(Stdio::piped())
+        .spawn()
+        .map_err(|e| format!("Failed to start ffplay: {}", e))?;
+    
+    let mut process = FFPLAY_PROCESS.lock().unwrap();
+    *process = Some(ffplay);
+    
+    Ok(())
+}
+
+#[tauri::command]
+fn stop_ffplay() {
+    let mut process = FFPLAY_PROCESS.lock().unwrap();
+    if let Some(ref mut child) = *process {
+        let _ = child.kill();
+        let _ = child.wait();
+    }
+    *process = None;
+}
+
+#[tauri::command]
+fn get_system_metrics() -> serde_json::Value {
+    use sysinfo::System;
+    
+    let mut sys = System::new_all();
+    sys.refresh_all();
+    
+    let cpu_usage = sys.global_cpu_usage();
+    let cpu_cores = sys.cpus().len();
+    
+    let total_memory = sys.total_memory();
+    let used_memory = sys.used_memory();
+    let memory_percent = if total_memory > 0 {
+        (used_memory as f64 / total_memory as f64) * 100.0
+    } else {
+        0.0
+    };
+    
+    serde_json::json!({
+        "cpu": {
+            "usage": cpu_usage,
+            "cores": cpu_cores,
+            "temperature": null
+        },
+        "memory": {
+            "total": total_memory,
+            "used": used_memory,
+            "usedPercent": memory_percent
+        },
+        "gpu": {
+            "usage": 0.0,
+            "memoryTotal": 0,
+            "memoryUsed": 0,
+            "temperature": null
+        },
+        "disk": {
+            "readSpeed": 0.0,
+            "writeSpeed": 0.0
+        }
+    })
+}
+
+#[tauri::command]
+fn get_ffmpeg_processes() -> Vec<serde_json::Value> {
+    use sysinfo::{System, Process, ProcessStatus};
+    
+    let mut sys = System::new_all();
+    sys.refresh_all();
+    
+    let processes: Vec<serde_json::Value> = sys.processes()
+        .iter()
+        .filter(|(_, process)| {
+            let name = process.name().to_string_lossy().to_lowercase();
+            name.contains("ffmpeg") || name.contains("ffprobe")
+        })
+        .map(|(pid, process)| {
+            serde_json::json!({
+                "pid": pid.as_u32(),
+                "cpu": process.cpu_usage() as f64,
+                "memory": process.memory()
+            })
+        })
+        .collect();
+    
+    processes
+}
+
+#[tauri::command]
+fn kill_process_by_pid(pid: u32) -> Result<(), String> {
+    use sysinfo::{System, Pid};
+    
+    let mut sys = System::new_all();
+    sys.refresh_all();
+    
+    let pid = Pid::from_u32(pid);
+    if let Some(process) = sys.process(pid) {
+        process.kill();
+        Ok(())
+    } else {
+        Err(format!("Process {} not found", pid))
+    }
+}
+
+#[tauri::command]
+fn get_startup_args() -> Vec<String> {
+    env::args().collect()
+}
+
+#[tauri::command]
+fn parse_startup_args() -> serde_json::Value {
+    let args: Vec<String> = env::args().collect();
+    let mut result = serde_json::Map::new();
+    
+    let mut i = 0;
+    while i < args.len() {
+        let arg = &args[i];
+        
+        if arg == "-i" && i + 1 < args.len() {
+            result.insert("input_file".to_string(), serde_json::json!(args[i + 1]));
+            i += 2;
+        } else if arg == "-3fui_file" && i + 1 < args.len() {
+            result.insert("preset_file".to_string(), serde_json::json!(args[i + 1]));
+            i += 2;
+        } else if arg == "-3fuiVideoHelperInPointTime" && i + 1 < args.len() {
+            result.insert("trim_start".to_string(), serde_json::json!(args[i + 1]));
+            i += 2;
+        } else if arg == "-3fuiVideoHelperOutPointTime" && i + 1 < args.len() {
+            result.insert("trim_end".to_string(), serde_json::json!(args[i + 1]));
+            i += 2;
+        } else if arg == "-ffmpeg" {
+            let ffmpeg_args: Vec<String> = args[i + 1..].to_vec();
+            result.insert("ffmpeg_args".to_string(), serde_json::json!(ffmpeg_args));
+            break;
+        } else {
+            i += 1;
+        }
+    }
+    
+    serde_json::json!(result)
+}
+
+#[cfg_attr(mobile, tauri::mobile_entry_point)]
+pub fn run() {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_opener::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_pinia::init())
+        .setup(|app| {
+            // #[cfg(debug_assertions)] // 仅在调试构建时包含此代码
+            // {
+            //     let window = app.get_webview_window("main").unwrap();
+            //     window.open_devtools();
+            //     window.close_devtools();
+            // }
+            // 临时禁用托盘图标，避免文件系统权限问题
+            // modules::tray::setup_tray(app.handle())?;
+            // modules::menus::setup_menus(app.handle())?;
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            execute_ffmpeg_command,
+            stop_convert,
+            read_json_file,
+            probe_media_info,
+            check_ffmpeg_tools,
+            install_ffmpeg_command,
+            get_system_info_app,
+            check_ffmpeg_from_path,
+            test_ffmpeg,
+            write_concat_file,
+            extract_video_frame,
+            start_ffplay,
+            stop_ffplay,
+            get_system_metrics,
+            get_ffmpeg_processes,
+            kill_process_by_pid,
+            task_manager::start_ffmpeg,
+            task_manager::pause_process,
+            task_manager::resume_process,
+            task_manager::stop_process,
+            preset_manager::load_presets,
+            preset_manager::save_preset,
+            preset_manager::delete_preset,
+            preset_manager::export_preset,
+            preset_manager::import_preset
+        ])
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
