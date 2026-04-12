@@ -10,24 +10,25 @@ pub fn setup_tray(app: &AppHandle) -> tauri::Result<()> {
         &[
             &MenuItem::with_id(app, "hidden", "隐藏窗口", true, None::<&str>)?,
             &MenuItem::with_id(app, "show", "显示窗口", true, None::<&str>)?,
-            &MenuItem::with_id(app, "setting", "设置", true, None::<&str>)?,
+            // &MenuItem::with_id(app, "setting", "设置", true, None::<&str>)?,
             &MenuItem::with_id(app, "quit", "退出", true, None::<&str>)?,
         ],
     )?;
     let _tray = TrayIconBuilder::new()
         .menu(&menu)
+        .tooltip("ffmpeg_desktop")
         .on_menu_event(move |app, event| {
             let window = app
                 .get_webview_window("main")
                 .expect("Failed to get main window");
             match event.id.as_ref() {
-                "setting" => crate::modules::windows::open_or_focus_window(
-                    app,
-                    "settings",
-                    "Settings",
-                    "/#/setting",
-                    (800.0, 600.0),
-                ),
+                // "setting" => crate::modules::windows::open_or_focus_window(
+                //     app,
+                //     "settings",
+                //     "Settings",
+                //     "/#/setting",
+                //     (800.0, 600.0),
+                // ),
                 "quit" => app.exit(0),
                 "hidden" => window.hide().expect("Failed to hide window"),
                 "show" => {

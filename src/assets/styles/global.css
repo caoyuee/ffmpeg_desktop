@@ -270,6 +270,17 @@ input {
   box-sizing: border-box;
 }
 
+/* 重置所有浏览器的默认样式 */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  border: 0;
+  padding: 0;
+
+}
+
 /* 专门针对 WebKit 内核的时间/日期输入框内部样式重置 */
 input[type="time"]::-webkit-datetime-edit {
   display: flex;
@@ -388,7 +399,8 @@ select {
   display: inline-block;
   border-radius: 5px;
   border: 1px solid var(--input-border);
-  padding: 0.5rem 2.5rem 0.5rem 1rem; /* 增加右边距给自定义箭头 */
+  padding: 0.5rem 2.5rem 0.5rem 1rem;
+  /* 增加右边距给自定义箭头 */
   font-size: 1em;
   font-family: inherit;
   line-height: 1.5;

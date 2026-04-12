@@ -160,6 +160,70 @@ export const FORMAT_COMPATIBILITY: Record<string, FormatCompatibility> = {
     defaultAudio: "aac",
     description: "MPEG-TS - 传输流格式，用于流媒体和广播",
   },
+  // FLAC - 无损音频格式
+  flac: {
+    videoCodecs: [],
+    audioCodecs: ["flac", "copy"],
+    defaultVideo: "",
+    defaultAudio: "flac",
+    description: "FLAC - 无损音频格式",
+  },
+  // OPUS - 开源无损音频格式
+  opus: {
+    videoCodecs: [],
+    audioCodecs: ["opus", "copy"],
+    defaultVideo: "",
+    defaultAudio: "opus",
+    description: "OPUS - 开源无损音频格式",
+  },
+  // WAV - 无损音频格式
+  wav: {
+    videoCodecs: [],
+    audioCodecs: ["pcm_s16le", "copy"],
+    defaultVideo: "",
+    defaultAudio: "pcm_s16le",
+    description: "WAV - 无损音频格式",
+  },
+  // MPEG - 有损音频格式
+  mpeg: {
+    videoCodecs: [],
+    audioCodecs: ["mp3", "copy"],
+    defaultVideo: "",
+    defaultAudio: "mp3",
+    description: "MPEG - 有损音频格式",
+  },
+  // MP3 - 有损音频格式
+  mp3: {
+    videoCodecs: [],
+    audioCodecs: ["mp3", "copy"],
+    defaultVideo: "",
+    defaultAudio: "mp3",
+    description: "MP3 - 有损音频格式",
+  },
+  // AAC - 音频编码格式 
+  aac: {
+    videoCodecs: [],
+    audioCodecs: ["aac", "copy"],
+    defaultVideo: "",
+    defaultAudio: "aac",
+    description: "AAC - 音频编码格式",
+  },
+  // PCM - 无损音频格式
+  pcm: {
+    videoCodecs: [],
+    audioCodecs: ["pcm_s16le", "copy"],
+    defaultVideo: "",
+    defaultAudio: "pcm_s16le",
+    description: "PCM - 无损音频格式",
+  },
+  // VORBIS - 开源无损音频格式
+  vorbis: {
+    videoCodecs: [],
+    audioCodecs: ["vorbis", "copy"],
+    defaultVideo: "",
+    defaultAudio: "vorbis",
+    description: "VORBIS - 开源无损音频格式",
+  },
 };
 
 /**
