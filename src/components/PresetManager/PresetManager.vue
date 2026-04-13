@@ -117,6 +117,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { usePresetStore } from '@/store/presetStore';
 import { DEFAULT_PRESET } from '@/types/preset';
 import type { PresetData } from '@/types/preset';
@@ -125,6 +126,7 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue';
 import Toast from '@/components/Dialogs/Toast.vue';
 
+const { t } = useI18n();
 const presetStore = usePresetStore();
 const showEditor = ref(false);
 const editorMode = ref<'create' | 'edit'>('create');
@@ -163,12 +165,12 @@ async function savePreset() {
   try {
     await presetStore.savePreset(editingPreset.value);
     showEditor.value = false;
-    toastMessage.value = '预设保存成功';
+    toastMessage.value = t('page.params.presetSaveSuccess');
     toastType.value = 'success';
     showToast.value = true;
   } catch (error) {
     console.error('保存预设失败:', error);
-    toastMessage.value = '保存预设失败';
+    toastMessage.value = t('page.params.presetSaveFailed');
     toastType.value = 'error';
     showToast.value = true;
   }
@@ -183,12 +185,12 @@ async function confirmDelete() {
   if (pendingDeletePreset.value) {
     try {
       await presetStore.deletePreset(pendingDeletePreset.value);
-      toastMessage.value = '预设已删除';
+      toastMessage.value = t('page.params.presetDeleteSuccess');
       toastType.value = 'success';
       showToast.value = true;
     } catch (error) {
       console.error('删除预设失败:', error);
-      toastMessage.value = '删除预设失败';
+      toastMessage.value = t('page.params.presetDeleteFailed');
       toastType.value = 'error';
       showToast.value = true;
     }
@@ -209,13 +211,13 @@ async function exportPreset(presetId: string) {
     
     if (filePath) {
       await presetStore.exportPreset(presetId, filePath);
-      toastMessage.value = '预设导出成功';
+      toastMessage.value = t('page.params.presetExportSuccess');
       toastType.value = 'success';
       showToast.value = true;
     }
   } catch (error) {
     console.error('导出预设失败:', error);
-    toastMessage.value = '导出预设失败';
+    toastMessage.value = t('page.params.presetExportFailed');
     toastType.value = 'error';
     showToast.value = true;
   }
@@ -232,13 +234,13 @@ async function importPreset() {
     
     if (filePath && typeof filePath === 'string') {
       await presetStore.importPreset(filePath);
-      toastMessage.value = '预设导入成功';
+      toastMessage.value = t('page.params.presetImportSuccess');
       toastType.value = 'success';
       showToast.value = true;
     }
   } catch (error) {
     console.error('导入预设失败:', error);
-    toastMessage.value = '导入预设失败';
+    toastMessage.value = t('page.params.presetImportFailed');
     toastType.value = 'error';
     showToast.value = true;
   }

@@ -10,7 +10,7 @@
 </template>
 
 <script setup lang="ts">
-import { watch } from 'vue';
+import { watch, onUnmounted, ref } from 'vue';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -32,12 +32,29 @@ const iconMap: Record<ToastType, string> = {
   info: 'ℹ',
 };
 
+const timerRef = ref<ReturnType<typeof setTimeout> | null>(null);
+
 watch(() => props.modelValue, (val) => {
   if (val) {
-    const timer = setTimeout(() => {
+    if (timerRef.value) {
+      clearTimeout(timerRef.value);
+    }
+    timerRef.value = setTimeout(() => {
       emit('update:modelValue', false);
+      timerRef.value = null;
     }, props.duration || 2000);
-    return () => clearTimeout(timer);
+  } else {
+    if (timerRef.value) {
+      clearTimeout(timerRef.value);
+      timerRef.value = null;
+    }
+  }
+});
+
+onUnmounted(() => {
+  if (timerRef.value) {
+    clearTimeout(timerRef.value);
+    timerRef.value = null;
   }
 });
 </script>
