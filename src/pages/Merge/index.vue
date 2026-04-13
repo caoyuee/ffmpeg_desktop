@@ -1,23 +1,23 @@
 <template>
   <div class="merge-page">
     <div class="page-header">
-      <span class="header-text">仅提供最基础的合并，仅复制流，要求多个参数一致；高级需求请直接用剪辑软件</span>
+      <span class="header-text">{{ t('page.merge.hint') }}</span>
     </div>
     
     <div class="toolbar">
       <button class="btn btn-add" @click="addFiles">
-        <span class="icon">📁</span> 添加文件
+        <span class="icon">📁</span> {{ t('page.merge.addFiles') }}
       </button>
       <button class="btn btn-move" @click="moveUp" :disabled="selectedIndices.length === 0">
-        <span class="icon">⬆️</span> 上移
+        <span class="icon">⬆️</span> {{ t('page.merge.moveUp') }}
       </button>
       <button class="btn btn-move" @click="moveDown" :disabled="selectedIndices.length === 0">
-        <span class="icon">⬇️</span> 下移
+        <span class="icon">⬇️</span> {{ t('page.merge.moveDown') }}
       </button>
       <button class="btn btn-remove" @click="removeSelected" :disabled="selectedIndices.length === 0">
-        <span class="icon">🗑️</span> 移除
+        <span class="icon">🗑️</span> {{ t('page.merge.remove') }}
       </button>
-      <span class="hint">使用键盘 F3 和 F4 来排序，Delete 来移除</span>
+      <span class="hint">{{ t('page.merge.keyboardHint') }}</span>
     </div>
     
     <div 
@@ -41,22 +41,22 @@
         </div>
       </div>
       <div class="empty-hint" v-else>
-        <span>拖拽文件到此处或点击"添加文件"按钮</span>
+        <span>{{ t('page.prepare.dragHint') }}</span>
       </div>
     </div>
     
     <div class="bottom-bar">
       <button class="btn btn-browse" @click="selectOutput">
-        <span class="icon">📂</span> 选择位置
+        <span class="icon">📂</span> {{ t('page.merge.selectOutput') }}
       </button>
       <input 
         type="text" 
         class="output-input" 
         v-model="outputPath" 
-        placeholder="输出到目标位置"
+        :placeholder="t('page.merge.selectOutput')"
       />
       <button class="btn btn-start" @click="startMerge" :disabled="fileList.length < 2 || !outputPath">
-        <span class="icon">▶️</span> 启动合并
+        <span class="icon">▶️</span> {{ t('page.merge.startMerge') }}
       </button>
     </div>
   </div>
@@ -64,10 +64,12 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { useTaskStore } from '@/store/taskStore';
 
+const { t } = useI18n();
 const taskStore = useTaskStore();
 
 const fileList = ref<string[]>([]);
@@ -79,7 +81,7 @@ async function addFiles() {
   try {
     const files = await open({
       multiple: true,
-      filters: [{ name: '所有文件', extensions: ['*'] }],
+      filters: [{ name: t('common.allFiles'), extensions: ['*'] }],
     });
     if (files) {
       const paths = Array.isArray(files) ? files : [files];
@@ -149,7 +151,7 @@ function removeSelected() {
 async function selectOutput() {
   try {
     const path = await save({
-      filters: [{ name: '所有文件', extensions: ['*'] }],
+      filters: [{ name: t('common.allFiles'), extensions: ['*'] }],
     });
     if (path) {
       outputPath.value = path;

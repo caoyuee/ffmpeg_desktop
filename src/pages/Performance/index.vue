@@ -3,15 +3,15 @@
     <div class="toolbar">
       <button class="btn btn-refresh" @click="refreshInterval > 0 ? stopMonitoring() : startMonitoring()">
         <span class="icon">{{ refreshInterval > 0 ? '⏹️' : '▶️' }}</span>
-        {{ refreshInterval > 0 ? '停止监控' : '开始监控' }}
+        {{ refreshInterval > 0 ? t('page.performance.stopMonitor') : t('page.performance.startMonitor') }}
       </button>
       <span class="refresh-rate">
-        刷新间隔:
+        {{ t('page.performance.refreshRate') }}:
         <select v-model="refreshRate" @change="updateRefreshRate" :disabled="refreshInterval > 0">
           <option :value="500">500ms</option>
-          <option :value="1000">1秒</option>
-          <option :value="2000">2秒</option>
-          <option :value="5000">5秒</option>
+          <option :value="1000">1s</option>
+          <option :value="2000">2s</option>
+          <option :value="5000">5s</option>
         </select>
       </span>
     </div>
@@ -20,7 +20,7 @@
       <div class="metric-card cpu">
         <div class="metric-header">
           <span class="metric-icon">💻</span>
-          <span class="metric-title">CPU</span>
+          <span class="metric-title">{{ t('page.performance.cpu') }}</span>
         </div>
         <div class="metric-value">
           <span class="value">{{ metrics.cpu.usage.toFixed(1) }}</span>
@@ -31,11 +31,11 @@
         </div>
         <div class="metric-details">
           <div class="detail-row">
-            <span>核心数</span>
+            <span>{{ t('page.performance.cores') }}</span>
             <span>{{ metrics.cpu.cores }}</span>
           </div>
           <div class="detail-row">
-            <span>温度</span>
+            <span>{{ t('page.performance.temperature') }}</span>
             <span>{{ metrics.cpu.temperature ? metrics.cpu.temperature.toFixed(0) + '°C' : 'N/A' }}</span>
           </div>
         </div>
@@ -44,7 +44,7 @@
       <div class="metric-card memory">
         <div class="metric-header">
           <span class="metric-icon">🧠</span>
-          <span class="metric-title">内存</span>
+          <span class="metric-title">{{ t('page.performance.memory') }}</span>
         </div>
         <div class="metric-value">
           <span class="value">{{ metrics.memory.usedPercent.toFixed(1) }}</span>
@@ -55,11 +55,11 @@
         </div>
         <div class="metric-details">
           <div class="detail-row">
-            <span>已用</span>
+            <span>{{ t('page.performance.used') }}</span>
             <span>{{ formatBytes(metrics.memory.used) }}</span>
           </div>
           <div class="detail-row">
-            <span>总计</span>
+            <span>{{ t('page.performance.total') }}</span>
             <span>{{ formatBytes(metrics.memory.total) }}</span>
           </div>
         </div>
@@ -68,7 +68,7 @@
       <div class="metric-card gpu">
         <div class="metric-header">
           <span class="metric-icon">🎮</span>
-          <span class="metric-title">GPU</span>
+          <span class="metric-title">{{ t('page.performance.gpu') }}</span>
         </div>
         <div class="metric-value">
           <span class="value">{{ metrics.gpu.usage.toFixed(1) }}</span>
@@ -79,11 +79,11 @@
         </div>
         <div class="metric-details">
           <div class="detail-row">
-            <span>显存</span>
+            <span>{{ t('page.performance.vram') }}</span>
             <span>{{ formatBytes(metrics.gpu.memoryUsed) }} / {{ formatBytes(metrics.gpu.memoryTotal) }}</span>
           </div>
           <div class="detail-row">
-            <span>温度</span>
+            <span>{{ t('page.performance.temperature') }}</span>
             <span>{{ metrics.gpu.temperature ? metrics.gpu.temperature.toFixed(0) + '°C' : 'N/A' }}</span>
           </div>
         </div>
@@ -92,7 +92,7 @@
       <div class="metric-card disk">
         <div class="metric-header">
           <span class="metric-icon">💾</span>
-          <span class="metric-title">磁盘</span>
+          <span class="metric-title">{{ t('page.performance.disk') }}</span>
         </div>
         <div class="metric-value">
           <span class="value">{{ metrics.disk.readSpeed.toFixed(0) }}</span>
@@ -103,11 +103,11 @@
         </div>
         <div class="metric-details">
           <div class="detail-row">
-            <span>读取</span>
+            <span>{{ t('page.performance.readSpeed') }}</span>
             <span>{{ metrics.disk.readSpeed.toFixed(1) }} MB/s</span>
           </div>
           <div class="detail-row">
-            <span>写入</span>
+            <span>{{ t('page.performance.writeSpeed') }}</span>
             <span>{{ metrics.disk.writeSpeed.toFixed(1) }} MB/s</span>
           </div>
         </div>
@@ -116,19 +116,19 @@
     
     <div class="process-section">
       <div class="section-header">
-        <span class="section-title">FFmpeg 进程</span>
+        <span class="section-title">{{ t('page.performance.processes') }}</span>
       </div>
       <div class="process-list">
         <div v-if="ffmpegProcesses.length === 0" class="no-process">
-          暂无运行中的 FFmpeg 进程
+          {{ t('page.performance.noProcess') }}
         </div>
         <div v-for="proc in ffmpegProcesses" :key="proc.pid" class="process-item">
           <div class="process-info">
             <span class="process-name">ffmpeg (PID: {{ proc.pid }})</span>
             <span class="process-cpu">CPU: {{ proc.cpu.toFixed(1) }}%</span>
-            <span class="process-memory">内存: {{ formatBytes(proc.memory) }}</span>
+            <span class="process-memory">{{ t('page.performance.memory') }}: {{ formatBytes(proc.memory) }}</span>
           </div>
-          <button class="btn btn-kill" @click="killProcess(proc.pid)">终止</button>
+          <button class="btn btn-kill" @click="killProcess(proc.pid)">{{ t('page.performance.terminate') }}</button>
         </div>
       </div>
     </div>
@@ -137,7 +137,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
+
+const { t } = useI18n();
 
 interface CpuMetrics {
   usage: number;

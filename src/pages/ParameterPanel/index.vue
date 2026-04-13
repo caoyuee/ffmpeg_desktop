@@ -15,29 +15,29 @@
       <div v-show="activeTab === 'overview'" class="tab-page">
         <div class="overview-layout">
           <div class="command-preview">
-            <h4>即时命令行预览</h4>
+            <h4>{{ t('page.params.commandPreview') }}</h4>
             <div class="command-box">
               <pre>{{ commandPreview }}</pre>
             </div>
-            <button class="copy-btn" @click="copyCommand">复制命令行</button>
+            <button class="copy-btn" @click="copyCommand">{{ t('page.params.copyCommand') }}</button>
           </div>
           <div class="params-summary">
-            <h4>参数摘要</h4>
+            <h4>{{ t('page.params.paramsSummary') }}</h4>
             <div class="summary-list">
               <div class="summary-item">
-                <span class="label">视频编码:</span>
-                <span class="value">{{ preset.video.encoder.codec || '未设置' }}</span>
+                <span class="label">{{ t('page.params.videoEncoderLabel') }}</span>
+                <span class="value">{{ preset.video.encoder.codec || t('page.params.notSet') }}</span>
               </div>
               <div class="summary-item">
-                <span class="label">分辨率:</span>
+                <span class="label">{{ t('page.params.resolutionLabel') }}</span>
                 <span class="value">{{ resolutionSummary }}</span>
               </div>
               <div class="summary-item">
-                <span class="label">质量控制:</span>
+                <span class="label">{{ t('page.params.qualityControlLabel') }}</span>
                 <span class="value">{{ qualitySummary }}</span>
               </div>
               <div class="summary-item">
-                <span class="label">输出格式:</span>
+                <span class="label">{{ t('page.params.outputFormatLabel') }}</span>
                 <span class="value">{{ preset.output.container || 'mp4' }}</span>
               </div>
             </div>
@@ -90,6 +90,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 import { DEFAULT_PRESET } from '@/types/preset';
 import { FFmpegCommandBuilder } from '@/utils/commandBuilder';
@@ -100,11 +101,12 @@ import TrimPanel from '@/components/TrimPanel/TrimPanel.vue';
 import SubtitlePanel from '@/components/SubtitlePanel/SubtitlePanel.vue';
 import StreamPanel from '@/components/StreamPanel/StreamPanel.vue';
 import PresetManager from '@/components/PresetManager/PresetManager.vue';
-import OutputSettings from './tabs/OutputSettings.vue';
-import VideoEncoderSettings from './tabs/VideoEncoderSettings.vue';
-import VideoFrameSettings from './tabs/VideoFrameSettings.vue';
-import QualitySettings from './tabs/QualitySettings.vue';
+import OutputSettings from './components/OutputSettings.vue';
+import VideoEncoderSettings from './components/VideoEncoderSettings.vue';
+import VideoFrameSettings from './components/VideoFrameSettings.vue';
+import QualitySettings from './components/QualitySettings.vue';
 
+const { t } = useI18n();
 const presetStore = usePresetStore();
 
 const props = defineProps<{
@@ -115,25 +117,27 @@ const emit = defineEmits<{
   'update:preset': [preset: PresetData];
 }>();
 
-const localPreset = ref<PresetData>({ ...(props.preset || presetStore.currentPreset || DEFAULT_PRESET) });
+const localPreset = ref<PresetData>({ ...(props.preset || presetStore.currentPreset || DEFAULT_PRESET) } as PresetData);
 const activeTab = ref('overview');
 
-const tabs = [
-  { id: 'overview', label: '参数总览' },
-  { id: 'output', label: '输出文件' },
-  { id: 'video-encoder', label: '视频编码器' },
-  { id: 'video-frame', label: '画面帧' },
-  { id: 'quality', label: '质量控制' },
-  { id: 'color', label: '色彩管理' },
-  { id: 'filters', label: '常见滤镜' },
-  { id: 'trim', label: '剪辑区间' },
-  { id: 'subtitle', label: '字幕烧录' },
-  { id: 'stream', label: '流控制' },
-  { id: 'preset', label: '方案管理' },
-];
+const tabs = computed(() => [
+  { id: 'overview', label: t('page.params.overview') },
+  { id: 'output', label: t('page.params.output') },
+  { id: 'video-encoder', label: t('page.params.videoEncoder') },
+  { id: 'video-frame', label: t('page.params.videoFrame') },
+  { id: 'quality', label: t('page.params.quality') },
+  { id: 'color', label: t('page.params.color') },
+  { id: 'filters', label: t('page.params.filters') },
+  { id: 'trim', label: t('page.params.trim') },
+  { id: 'subtitle', label: t('page.params.subtitle') },
+  { id: 'stream', label: t('page.params.stream') },
+  { id: 'preset', label: t('page.params.preset') },
+]);
 
 watch(() => props.preset, (newVal) => {
-  localPreset.value = { ...newVal };
+  if (newVal) {
+    localPreset.value = { ...newVal };
+  }
 }, { deep: true });
 
 watch(localPreset, (newVal) => {
@@ -151,22 +155,27 @@ const commandPreview = computed(() => {
 });
 
 const resolutionSummary = computed(() => {
-  const w = localPreset.value.video.resolution.width;
-  const h = localPreset.value.video.resolution.height;
-  if (w && h) return `${w}x${h}`;
-  if (w) return `${w}x自动`;
-  if (h) return `自动x${h}`;
-  return '保持原样';
+  const size = localPreset.value.video.resolution.size;
+  const autoWidth = localPreset.value.video.resolution.autoWidth;
+  const autoHeight = localPreset.value.video.resolution.autoHeight;
+  if (size) return size;
+  if (autoWidth && autoHeight) return `${autoWidth}x${autoHeight}`;
+  if (autoWidth) return `${autoWidth}x${t('page.params.auto')}`;
+  if (autoHeight) return `${t('page.params.auto')}x${autoHeight}`;
+  return t('page.params.keepOriginal');
 });
 
 const qualitySummary = computed(() => {
-  const mode = localPreset.value.video.quality.mode;
-  if (mode === 'crf') {
-    return `CRF ${localPreset.value.video.quality.crf || 23}`;
-  } else if (mode === 'bitrate') {
-    return `${localPreset.value.video.quality.bitrate || '5000'}kbps`;
+  const mode = localPreset.value.video.bitrateControl.mode;
+  const qualityValue = localPreset.value.video.bitrateControl.qualityValue;
+  if (mode === 'CRF') {
+    return `CRF ${qualityValue || 23}`;
+  } else if (mode === 'VBR' || mode === 'VBR_HQ' || mode === 'CBR') {
+    return `${localPreset.value.video.bitrateControl.baseBitrate || '5000'}kbps`;
+  } else if (mode === 'CQP') {
+    return `QP ${qualityValue}`;
   }
-  return '未设置';
+  return t('page.params.notSet');
 });
 
 function onPresetUpdate(preset: PresetData) {

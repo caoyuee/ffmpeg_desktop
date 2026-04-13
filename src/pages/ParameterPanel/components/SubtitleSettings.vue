@@ -21,7 +21,7 @@
 
       <div v-if="subtitleMode === 'embedded'" class="form-group">
         <label>字幕流索引</label>
-        <input type="number" v-model.number="localPreset.video.subtitleBurn.streamIndex" min="0" />
+        <input type="text" v-model="localPreset.video.subtitleBurn.streamIndex" @input="onChange" placeholder="如: 0" />
       </div>
     </div>
 
@@ -72,15 +72,16 @@
       <div class="form-row">
         <div class="form-group third">
           <label>边框宽度</label>
-          <input type="number" v-model.number="localPreset.video.subtitleBurn.outlineWidth" @input="onChange" min="0" max="10" step="0.5" />
+          <input type="text" v-model="localPreset.video.subtitleBurn.outlineWidth" @input="onChange" placeholder="如: 2" />
         </div>
         <div class="form-group third">
           <label>阴影距离</label>
-          <input type="number" v-model.number="localPreset.video.subtitleBurn.shadowDistance" @input="onChange" min="0" max="10" step="0.5" />
+          <input type="text" v-model="localPreset.video.subtitleBurn.shadowDistance" @input="onChange" placeholder="如: 1" />
         </div>
         <div class="form-group third">
           <label>对齐方式</label>
           <select v-model.number="localPreset.video.subtitleBurn.alignment" @change="onChange">
+            <option :value="-1">默认</option>
             <option :value="2">底部居中</option>
             <option :value="1">底部居左</option>
             <option :value="3">底部居右</option>
@@ -93,15 +94,15 @@
       <div class="form-row">
         <div class="form-group third">
           <label>左边距</label>
-          <input type="number" v-model.number="localPreset.video.subtitleBurn.marginL" @input="onChange" min="0" />
+          <input type="text" v-model="localPreset.video.subtitleBurn.marginL" @input="onChange" placeholder="0" />
         </div>
         <div class="form-group third">
           <label>右边距</label>
-          <input type="number" v-model.number="localPreset.video.subtitleBurn.marginR" @input="onChange" min="0" />
+          <input type="text" v-model="localPreset.video.subtitleBurn.marginR" @input="onChange" placeholder="0" />
         </div>
         <div class="form-group third">
           <label>垂直边距</label>
-          <input type="number" v-model.number="localPreset.video.subtitleBurn.marginV" @input="onChange" min="0" />
+          <input type="text" v-model="localPreset.video.subtitleBurn.marginV" @input="onChange" placeholder="0" />
         </div>
       </div>
     </div>
@@ -126,8 +127,10 @@ const primaryColor = ref('#ffffff');
 const outlineColor = ref('#000000');
 
 watch(() => props.preset, (newVal) => {
-  localPreset.value = { ...newVal };
-  updateSubtitleMode();
+  if (newVal) {
+    localPreset.value = { ...newVal };
+    updateSubtitleMode();
+  }
 }, { deep: true });
 
 function updateSubtitleMode() {

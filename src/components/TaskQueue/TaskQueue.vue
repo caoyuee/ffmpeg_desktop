@@ -1,14 +1,14 @@
 <template>
   <div class="task-queue">
     <div class="queue-header">
-      <h3>编码队列 ({{ taskStore.tasks.length }})</h3>
+      <h3>{{ t('page.queue.title') }} ({{ taskStore.tasks.length }})</h3>
       <div class="queue-actions">
         <button 
           @click="clearCompleted" 
           :disabled="!hasCompletedTasks"
           class="btn-clear"
         >
-          清空已完成
+          {{ t('page.queue.clearCompleted') }}
         </button>
       </div>
     </div>
@@ -25,8 +25,8 @@
       />
       
       <div v-if="taskStore.tasks.length === 0" class="empty-tip">
-        <p>暂无任务</p>
-        <small>拖拽文件到此处添加任务</small>
+        <p>{{ t('page.queue.empty') }}</p>
+        <small>{{ t('page.prepare.dragHint') }}</small>
       </div>
     </div>
   </div>
@@ -34,10 +34,12 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useTaskStore } from '@/store/taskStore';
 import TaskItem from './TaskItem.vue';
 import { TaskStatus } from '@/types/task';
 
+const { t } = useI18n();
 const taskStore = useTaskStore();
 
 const hasCompletedTasks = computed(() => 

@@ -1,35 +1,35 @@
 <template>
   <div class="quality-assess-page">
     <div class="page-header">
-      <span class="header-text">视频画质评测工具 - 支持 VMAF/SSIM/PSNR 等指标</span>
+      <span class="header-text">{{ t('page.quality.hint') }}</span>
     </div>
     
     <div class="toolbar">
       <button class="btn btn-add" @click="selectReference">
-        <span class="icon">📁</span> 选择参考视频
+        <span class="icon">📁</span> {{ t('page.quality.selectReference') }}
       </button>
       <button class="btn btn-add" @click="selectDistorted">
-        <span class="icon">📁</span> 选择待测视频
+        <span class="icon">📁</span> {{ t('page.quality.selectDistorted') }}
       </button>
       <button class="btn btn-clear" @click="clearAll">
-        <span class="icon">🗑️</span> 清空
+        <span class="icon">🗑️</span> {{ t('page.quality.clear') }}
       </button>
     </div>
     
     <div class="files-section">
       <div class="file-row">
-        <label class="file-label">参考视频（原始）</label>
-        <input type="text" class="file-input" v-model="referenceFile" placeholder="选择原始/无损视频作为参考" readonly />
+        <label class="file-label">{{ t('page.quality.referenceVideo') }}</label>
+        <input type="text" class="file-input" v-model="referenceFile" :placeholder="t('page.quality.referenceVideoPlaceholder')" readonly />
       </div>
       <div class="file-row">
-        <label class="file-label">待测视频（压缩后）</label>
-        <input type="text" class="file-input" v-model="distortedFile" placeholder="选择需要评估画质的视频" readonly />
+        <label class="file-label">{{ t('page.quality.distortedVideo') }}</label>
+        <input type="text" class="file-input" v-model="distortedFile" :placeholder="t('page.quality.distortedVideoPlaceholder')" readonly />
       </div>
     </div>
     
     <div class="options-section">
       <div class="option-row">
-        <label class="option-label">评测指标</label>
+        <label class="option-label">{{ t('page.quality.metrics') }}</label>
         <div class="option-content">
           <label class="checkbox-label">
             <input type="checkbox" v-model="metrics.vmaf" />
@@ -47,18 +47,18 @@
       </div>
       
       <div class="option-row">
-        <label class="option-label">VMAF 模型</label>
+        <label class="option-label">{{ t('page.quality.vmafModel') }}</label>
         <div class="option-content">
           <select class="select-input" v-model="vmafModel">
-            <option value="model_vmaf_v0.6.1">默认模型 (v0.6.1)</option>
-            <option value="model_vmaf_4k_v0.6.1">4K 模型</option>
-            <option value="model_vmaf_v0.6.1neg">负向模型</option>
+            <option value="model_vmaf_v0.6.1">{{ t('page.quality.defaultModel') }}</option>
+            <option value="model_vmaf_4k_v0.6.1">{{ t('page.quality.model4k') }}</option>
+            <option value="model_vmaf_v0.6.1neg">{{ t('page.quality.negativeModel') }}</option>
           </select>
         </div>
       </div>
       
       <div class="option-row">
-        <label class="option-label">输出报告</label>
+        <label class="option-label">{{ t('page.quality.outputReport') }}</label>
         <div class="option-content">
           <select class="select-input" v-model="outputFormat">
             <option value="json">JSON</option>
@@ -66,19 +66,19 @@
             <option value="csv">CSV</option>
           </select>
           <button class="btn btn-browse" @click="selectOutputPath">
-            <span class="icon">📂</span> 选择保存位置
+            <span class="icon">📂</span> {{ t('page.quality.selectSaveLocation') }}
           </button>
-          <input type="text" class="file-input small" v-model="outputPath" placeholder="报告保存路径" />
+          <input type="text" class="file-input small" v-model="outputPath" :placeholder="t('page.quality.reportPath')" />
         </div>
       </div>
     </div>
     
     <div class="action-bar">
       <button class="btn btn-start" @click="startAssessment" :disabled="!canStart">
-        <span class="icon">▶️</span> 开始评测
+        <span class="icon">▶️</span> {{ t('page.quality.startAssessment') }}
       </button>
       <button class="btn btn-stop" @click="stopAssessment" :disabled="!isRunning">
-        <span class="icon">⏹️</span> 停止
+        <span class="icon">⏹️</span> {{ t('page.quality.stopAssessment') }}
       </button>
     </div>
     
@@ -92,33 +92,33 @@
     
     <div class="results-section" v-if="results">
       <div class="results-header">
-        <span class="results-title">评测结果</span>
+        <span class="results-title">{{ t('page.quality.results') }}</span>
       </div>
       <div class="results-grid">
         <div class="result-card" v-if="results.vmaf">
           <span class="result-label">VMAF</span>
           <span class="result-value">{{ results.vmaf.mean?.toFixed(2) || 'N/A' }}</span>
-          <span class="result-hint">均值</span>
-          <span class="result-minmax">最小: {{ results.vmaf.min?.toFixed(2) }} | 最大: {{ results.vmaf.max?.toFixed(2) }}</span>
+          <span class="result-hint">{{ t('page.quality.mean') }}</span>
+          <span class="result-minmax">{{ t('page.quality.min') }}: {{ results.vmaf.min?.toFixed(2) }} | {{ t('page.quality.max') }}: {{ results.vmaf.max?.toFixed(2) }}</span>
         </div>
         <div class="result-card" v-if="results.ssim">
           <span class="result-label">SSIM</span>
           <span class="result-value">{{ results.ssim.mean?.toFixed(4) || 'N/A' }}</span>
-          <span class="result-hint">均值</span>
-          <span class="result-minmax">范围: 0-1 (1=完全相同)</span>
+          <span class="result-hint">{{ t('page.quality.mean') }}</span>
+          <span class="result-minmax">{{ t('page.quality.range') }}: 0-1 (1={{ t('page.quality.identical') }})</span>
         </div>
         <div class="result-card" v-if="results.psnr">
           <span class="result-label">PSNR</span>
           <span class="result-value">{{ results.psnr.mean?.toFixed(2) || 'N/A' }} dB</span>
-          <span class="result-hint">均值</span>
-          <span class="result-minmax">范围: 0-∞ (越高越好)</span>
+          <span class="result-hint">{{ t('page.quality.mean') }}</span>
+          <span class="result-minmax">{{ t('page.quality.range') }}: 0-∞ ({{ t('page.quality.higherBetter') }})</span>
         </div>
       </div>
     </div>
     
     <div class="log-section">
       <div class="log-header">
-        <span>日志输出</span>
+        <span>{{ t('page.quality.log') }}</span>
       </div>
       <div class="log-content" ref="logContent">
         <div v-for="(line, index) in logLines" :key="index" class="log-line">{{ line }}</div>
@@ -129,9 +129,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+
+const { t } = useI18n();
 
 const referenceFile = ref('');
 const distortedFile = ref('');

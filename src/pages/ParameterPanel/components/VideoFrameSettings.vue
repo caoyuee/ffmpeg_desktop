@@ -3,62 +3,55 @@
     <div class="form-section">
       <h4>分辨率</h4>
       <div class="form-group">
-        <label>缩放模式</label>
-        <select v-model="localPreset.video.resolution.mode" @change="onChange">
-          <option value="keep">保持原样</option>
-          <option value="width">指定宽度</option>
-          <option value="height">指定高度</option>
+        <label>分辨率预设</label>
+        <select v-model="localPreset.video.resolution.size" @change="onChange">
+          <option value="">保持原样</option>
+          <option value="1920x1080">1920x1080 (Full HD)</option>
+          <option value="1280x720">1280x720 (HD)</option>
+          <option value="3840x2160">3840x2160 (4K)</option>
+          <option value="2560x1440">2560x1440 (2K)</option>
+          <option value="854x480">854x480 (480p)</option>
+          <option value="640x360">640x360 (360p)</option>
           <option value="custom">自定义</option>
         </select>
       </div>
 
-      <div v-if="localPreset.video.resolution.mode !== 'keep'" class="form-row">
+      <div v-if="localPreset.video.resolution.size === 'custom'" class="form-row">
         <div class="form-group half">
           <label>宽度</label>
-          <input type="number" v-model.number="localPreset.video.resolution.width" @input="onChange" min="1" />
+          <input type="text" v-model="localPreset.video.resolution.autoWidth" @input="onChange" placeholder="如: 1920" />
         </div>
         <div class="form-group half">
           <label>高度</label>
-          <input type="number" v-model.number="localPreset.video.resolution.height" @input="onChange" min="1" />
+          <input type="text" v-model="localPreset.video.resolution.autoHeight" @input="onChange" placeholder="如: 1080 或 -2" />
         </div>
       </div>
 
       <div class="form-group">
-        <label>缩放算法</label>
-        <select v-model="localPreset.video.resolution.scaler" @change="onChange">
-          <option value="bicubic">Bicubic (推荐)</option>
-          <option value="bilinear">Bilinear</option>
-          <option value="lanczos">Lanczos</option>
-          <option value="spline">Spline</option>
-          <option value="neighbor">Nearest Neighbor</option>
-        </select>
+        <label>裁剪滤镜</label>
+        <div class="input-row">
+          <input type="text" v-model="localPreset.video.resolution.cropFilter" @input="onChange" placeholder="如: 1920:1080:0:0" />
+          <button @click="openCropDialog">裁剪窗口</button>
+        </div>
       </div>
     </div>
 
     <div class="form-section">
       <h4>帧速率</h4>
       <div class="form-group">
-        <label>帧率模式</label>
-        <select v-model="localPreset.video.frameRate.mode" @change="onChange">
-          <option value="keep">保持原样</option>
-          <option value="custom">自定义</option>
+        <label>帧率</label>
+        <select v-model="localPreset.video.frameRate.fps" @change="onChange">
+          <option value="">保持原样</option>
+          <option value="23.976">23.976 fps</option>
+          <option value="24">24 fps</option>
+          <option value="25">25 fps</option>
+          <option value="29.97">29.97 fps</option>
+          <option value="30">30 fps</option>
+          <option value="50">50 fps</option>
+          <option value="59.94">59.94 fps</option>
+          <option value="60">60 fps</option>
+          <option value="120">120 fps</option>
         </select>
-      </div>
-
-      <div v-if="localPreset.video.frameRate.mode === 'custom'" class="form-group">
-        <label>帧率值</label>
-        <input type="number" v-model.number="localPreset.video.frameRate.value" @input="onChange" min="1" step="0.001" />
-      </div>
-    </div>
-
-    <div class="form-section">
-      <h4>画面裁剪</h4>
-      <div class="form-group">
-        <label>裁剪参数</label>
-        <div class="input-row">
-          <input type="text" v-model="localPreset.video.crop" @input="onChange" placeholder="如: 1920:1080:0:0" />
-          <button @click="openCropDialog">裁剪窗口</button>
-        </div>
       </div>
     </div>
 
@@ -88,7 +81,9 @@ const emit = defineEmits<{
 const localPreset = ref<PresetData>({ ...props.preset });
 
 watch(() => props.preset, (newVal) => {
-  localPreset.value = { ...newVal };
+  if (newVal) {
+    localPreset.value = { ...newVal };
+  }
 }, { deep: true });
 
 function onChange() {

@@ -3,39 +3,27 @@
     <div class="form-section">
       <div class="form-group">
         <label>输出容器</label>
-        <div class="input-row">
-          <select v-model="localPreset.output.container" @change="onChange">
-            <option value="mp4">MP4</option>
-            <option value="mkv">MKV</option>
-            <option value="webm">WebM</option>
-            <option value="avi">AVI</option>
-            <option value="mov">MOV</option>
-            <option value="flv">FLV</option>
-          </select>
-        </div>
+        <select v-model="localPreset.output.container" @change="onChange">
+          <option value=".mp4">MP4</option>
+          <option value=".mkv">MKV</option>
+          <option value=".webm">WebM</option>
+          <option value=".avi">AVI</option>
+          <option value=".mov">MOV</option>
+          <option value=".flv">FLV</option>
+        </select>
       </div>
 
       <div class="form-group">
         <label class="checkbox-label">
-          <input type="checkbox" v-model="localPreset.output.noOutputParams" @change="onChange" />
+          <input type="checkbox" v-model="localPreset.output.naming.noOutputFileParam" @change="onChange" />
           <span>不使用输出文件参数</span>
         </label>
       </div>
 
       <div class="form-group">
         <label>输出目录</label>
-        <select v-model="localPreset.output.directory" @change="onChange">
-          <option value="same">与源文件相同</option>
-          <option value="custom">自定义目录</option>
-          <option value="desktop">桌面</option>
-          <option value="documents">文档</option>
-        </select>
-      </div>
-
-      <div v-if="localPreset.output.directory === 'custom'" class="form-group">
-        <label>自定义目录</label>
         <div class="input-row">
-          <input type="text" v-model="localPreset.output.customDirectory" @input="onChange" />
+          <input type="text" v-model="localPreset.output.location" @input="onChange" placeholder="留空则与源文件相同" />
           <button @click="selectDirectory">选择</button>
         </div>
       </div>
@@ -46,35 +34,35 @@
       <div class="form-group">
         <label class="switch-label">
           <span>关闭</span>
-          <input type="checkbox" v-model="localPreset.output.autoNaming" @change="onChange" />
+          <input type="checkbox" v-model="localPreset.output.naming.useAutoNaming" @change="onChange" />
           <span>开启</span>
         </label>
       </div>
 
-      <template v-if="localPreset.output.autoNaming">
+      <template v-if="localPreset.output.naming.useAutoNaming">
         <div class="form-group">
           <label>自动命名选项</label>
-          <select v-model="localPreset.output.namingOption" @change="onChange">
-            <option value="suffix">仅添加后缀</option>
-            <option value="prefix">仅添加前缀</option>
-            <option value="replace">替换文件名</option>
-            <option value="custom">完全自定义</option>
+          <select v-model.number="localPreset.output.naming.autoNamingOption" @change="onChange">
+            <option :value="0">仅添加后缀</option>
+            <option :value="1">仅添加前缀</option>
+            <option :value="2">替换文件名</option>
+            <option :value="3">完全自定义</option>
           </select>
         </div>
 
         <div class="form-group">
           <label>开头文本</label>
-          <input type="text" v-model="localPreset.output.prefixText" @input="onChange" />
+          <input type="text" v-model="localPreset.output.naming.prefixText" @input="onChange" />
         </div>
 
         <div class="form-group">
           <label>替代文本</label>
-          <input type="text" v-model="localPreset.output.replaceText" @input="onChange" />
+          <input type="text" v-model="localPreset.output.naming.replaceText" @input="onChange" />
         </div>
 
         <div class="form-group">
           <label>结尾文本</label>
-          <input type="text" v-model="localPreset.output.suffixText" @input="onChange" />
+          <input type="text" v-model="localPreset.output.naming.suffixText" @input="onChange" />
         </div>
       </template>
     </div>
@@ -83,15 +71,15 @@
       <h4>时间戳保留</h4>
       <div class="form-row">
         <label class="checkbox-label">
-          <input type="checkbox" v-model="localPreset.output.preserveCreationTime" @change="onChange" />
+          <input type="checkbox" v-model="localPreset.output.naming.preserveCreationTime" @change="onChange" />
           <span>保留创建时间</span>
         </label>
         <label class="checkbox-label">
-          <input type="checkbox" v-model="localPreset.output.preserveModifyTime" @change="onChange" />
+          <input type="checkbox" v-model="localPreset.output.naming.preserveModifyTime" @change="onChange" />
           <span>保留修改时间</span>
         </label>
         <label class="checkbox-label">
-          <input type="checkbox" v-model="localPreset.output.preserveAccessTime" @change="onChange" />
+          <input type="checkbox" v-model="localPreset.output.naming.preserveAccessTime" @change="onChange" />
           <span>保留访问时间</span>
         </label>
       </div>
@@ -114,7 +102,9 @@ const emit = defineEmits<{
 const localPreset = ref<PresetData>({ ...props.preset });
 
 watch(() => props.preset, (newVal) => {
-  localPreset.value = { ...newVal };
+  if (newVal) {
+    localPreset.value = { ...newVal };
+  }
 }, { deep: true });
 
 function onChange() {
@@ -125,7 +115,7 @@ async function selectDirectory() {
   const { open } = await import('@tauri-apps/plugin-dialog');
   const selected = await open({ directory: true });
   if (selected && typeof selected === 'string') {
-    localPreset.value.output.customDirectory = selected;
+    localPreset.value.output.location = selected;
     onChange();
   }
 }

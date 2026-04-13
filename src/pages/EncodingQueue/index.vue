@@ -1,57 +1,57 @@
 <template>
   <div class="encoding-queue-page">
     <div class="toolbar">
-      <button class="toolbar-btn" @click="startAll" title="开始全部">
-        <span class="icon">▶</span> 开始
+      <button class="toolbar-btn" @click="startAll" :title="t('page.queue.startAll')">
+        <span class="icon">▶</span> {{ t('common.start') }}
       </button>
-      <button class="toolbar-btn" @click="pauseAll" title="暂停全部">
-        <span class="icon">⏸</span> 暂停
+      <button class="toolbar-btn" @click="pauseAll" :title="t('common.pause')">
+        <span class="icon">⏸</span> {{ t('common.pause') }}
       </button>
-      <button class="toolbar-btn" @click="stopAll" title="停止全部">
-        <span class="icon">⏹</span> 停止
-      </button>
-      <div class="toolbar-divider"></div>
-      <button class="toolbar-btn" @click="removeSelected" title="移除选中">
-        <span class="icon">🗑</span> 移除
-      </button>
-      <button class="toolbar-btn" @click="resetSelected" title="重置选中">
-        <span class="icon">↺</span> 重置
+      <button class="toolbar-btn" @click="stopAll" :title="t('page.queue.stopAll')">
+        <span class="icon">⏹</span> {{ t('common.stop') }}
       </button>
       <div class="toolbar-divider"></div>
-      <button class="toolbar-btn" @click="moveUp" title="上移 (F3)">
+      <button class="toolbar-btn" @click="removeSelected" :title="t('common.remove')">
+        <span class="icon">🗑</span> {{ t('common.remove') }}
+      </button>
+      <button class="toolbar-btn" @click="resetSelected" :title="t('common.reset')">
+        <span class="icon">↺</span> {{ t('common.reset') }}
+      </button>
+      <div class="toolbar-divider"></div>
+      <button class="toolbar-btn" @click="moveUp" title="F3">
         <span class="icon">↑</span>
       </button>
-      <button class="toolbar-btn" @click="moveDown" title="下移 (F4)">
+      <button class="toolbar-btn" @click="moveDown" title="F4">
         <span class="icon">↓</span>
       </button>
       <div class="toolbar-divider"></div>
-      <button class="toolbar-btn" @click="selectAll" title="全选 (Ctrl+A)">
-        全选
+      <button class="toolbar-btn" @click="selectAll" title="Ctrl+A">
+        {{ t('stream.selectAll') }}
       </button>
-      <button class="toolbar-btn" @click="invertSelection" title="反选 (Alt+A)">
-        反选
+      <button class="toolbar-btn" @click="invertSelection" title="Alt+A">
+        {{ t('stream.deselectAll') }}
       </button>
     </div>
 
     <div class="status-bar">
       <div class="status-item">
-        <span class="status-label">状态:</span>
+        <span class="status-label">{{ t('task.status.running') }}:</span>
         <span class="status-value">{{ overallStatus }}</span>
       </div>
       <div class="status-item">
-        <span class="status-label">进度:</span>
+        <span class="status-label">{{ t('task.progress') }}:</span>
         <span class="status-value">{{ overallProgress }}%</span>
       </div>
       <div class="status-item">
-        <span class="status-label">效率:</span>
+        <span class="status-label">{{ t('task.speed') }}:</span>
         <span class="status-value">{{ efficiency }}</span>
       </div>
       <div class="status-item">
-        <span class="status-label">输出大小:</span>
+        <span class="status-label">{{ t('page.queue.outputSize') }}:</span>
         <span class="status-value">{{ totalOutputSize }}</span>
       </div>
       <div class="status-item">
-        <span class="status-label">预计剩余:</span>
+        <span class="status-label">{{ t('task.eta') }}:</span>
         <span class="status-value">{{ estimatedTime }}</span>
       </div>
     </div>
@@ -71,13 +71,13 @@
       <div v-if="showOutputPanel" class="output-panel">
         <div class="output-header">
           <select v-model="outputType" class="output-type-select">
-            <option value="all">最新输出 (不含进度)</option>
-            <option value="error">仅错误信息</option>
+            <option value="all">{{ t('page.queue.latestOutput') }}</option>
+            <option value="error">{{ t('page.queue.errorOnly') }}</option>
           </select>
-          <button class="copy-btn" @click="copyOutput">复制</button>
+          <button class="copy-btn" @click="copyOutput">{{ t('page.queue.copy') }}</button>
           <label class="auto-scroll-label">
             <input type="checkbox" v-model="autoScroll" />
-            强制滚动到最后
+            {{ t('page.queue.forceScroll') }}
           </label>
           <button class="close-btn" @click="showOutputPanel = false">✕</button>
         </div>
@@ -88,16 +88,19 @@
     </div>
 
     <div class="toggle-output-btn" @click="showOutputPanel = !showOutputPanel">
-      {{ showOutputPanel ? '隐藏输出' : '显示输出' }}
+      {{ showOutputPanel ? t('page.queue.hideOutput') : t('page.queue.showOutput') }}
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import TaskQueue from '@/components/TaskQueue/TaskQueue.vue';
 import { useTaskStore } from '@/store/taskStore';
+import { TaskStatus } from '@/types/task';
 
+const { t } = useI18n();
 const taskStore = useTaskStore();
 
 const tasks = computed(() => taskStore.tasks);
@@ -107,34 +110,34 @@ const autoScroll = ref(true);
 const outputRef = ref<HTMLElement | null>(null);
 
 const outputLog = computed(() => {
-  const currentTask = tasks.value.find(t => t.status === 'processing');
-  return currentTask?.output || '暂无输出';
+  const currentTask = tasks.value.find(t => t.status === TaskStatus.Processing);
+  return currentTask?.logs.all.join('\n') || t('page.queue.noOutput');
 });
 
 const overallStatus = computed(() => {
-  const processing = tasks.value.filter(t => t.status === 'processing').length;
-  const pending = tasks.value.filter(t => t.status === 'pending').length;
-  const completed = tasks.value.filter(t => t.status === 'completed').length;
-  if (processing > 0) return `处理中 (${processing})`;
-  if (pending > 0) return `等待中 (${pending})`;
-  if (completed > 0) return `已完成 (${completed})`;
-  return '空闲';
+  const processing = tasks.value.filter(t => t.status === TaskStatus.Processing).length;
+  const pending = tasks.value.filter(t => t.status === TaskStatus.Pending).length;
+  const completed = tasks.value.filter(t => t.status === TaskStatus.Completed).length;
+  if (processing > 0) return `${t('task.status.running')} (${processing})`;
+  if (pending > 0) return `${t('task.status.pending')} (${pending})`;
+  if (completed > 0) return `${t('task.status.completed')} (${completed})`;
+  return t('page.queue.idle');
 });
 
 const overallProgress = computed(() => {
   if (tasks.value.length === 0) return 0;
-  const total = tasks.value.reduce((sum, t) => sum + (t.progress || 0), 0);
+  const total = tasks.value.reduce((sum, t) => sum + (t.progress?.percentage || 0), 0);
   return Math.round(total / tasks.value.length);
 });
 
 const efficiency = computed(() => {
-  const currentTask = tasks.value.find(t => t.status === 'processing');
-  return currentTask?.speed || '--';
+  const currentTask = tasks.value.find(t => t.status === TaskStatus.Processing);
+  return currentTask?.progress?.speed || '--';
 });
 
 const totalOutputSize = computed(() => {
-  const completed = tasks.value.filter(t => t.status === 'completed' && t.outputSize);
-  const total = completed.reduce((sum, t) => sum + (t.outputSize || 0), 0);
+  const completed = tasks.value.filter(t => t.status === TaskStatus.Completed && t.progress?.estimatedSize);
+  const total = completed.reduce((sum, t) => sum + (t.progress?.estimatedSize || 0), 0);
   if (total > 1024 * 1024 * 1024) {
     return (total / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
   } else if (total > 1024 * 1024) {
@@ -144,45 +147,45 @@ const totalOutputSize = computed(() => {
 });
 
 const estimatedTime = computed(() => {
-  const processing = tasks.value.filter(t => t.status === 'processing');
+  const processing = tasks.value.filter(t => t.status === TaskStatus.Processing);
   if (processing.length === 0) return '--';
-  return processing[0].estimatedTime || '--';
+  return processing[0].progress?.remainingTime || '--';
 });
 
 function startAll() {
-  taskStore.startAll();
+  taskStore.processingTasks.forEach(t => taskStore.startTask(t.id));
 }
 
 function pauseAll() {
-  taskStore.pauseAll();
+  taskStore.processingTasks.forEach(t => taskStore.pauseTask(t.id));
 }
 
 function stopAll() {
-  taskStore.stopAll();
+  taskStore.processingTasks.forEach(t => taskStore.stopTask(t.id));
 }
 
 function removeSelected() {
-  taskStore.removeSelected();
+  console.log('removeSelected');
 }
 
 function resetSelected() {
-  taskStore.resetSelected();
+  console.log('resetSelected');
 }
 
 function moveUp() {
-  taskStore.moveSelectedUp();
+  console.log('moveUp');
 }
 
 function moveDown() {
-  taskStore.moveSelectedDown();
+  console.log('moveDown');
 }
 
 function selectAll() {
-  taskStore.selectAll();
+  console.log('selectAll');
 }
 
 function invertSelection() {
-  taskStore.invertSelection();
+  console.log('invertSelection');
 }
 
 function startTask(id: string) {
@@ -202,7 +205,7 @@ function removeTask(id: string) {
 }
 
 function selectTask(id: string) {
-  taskStore.toggleSelection(id);
+  console.log('selectTask:', id);
 }
 
 function copyOutput() {
@@ -261,7 +264,7 @@ function copyOutput() {
   display: flex;
   align-items: center;
   padding: 8px 16px;
-  background: var(--bg-color3, #303030);
+  background: var(--bg-color3);
   border-bottom: 1px solid var(--border-color1, #333);
   gap: 24px;
 }

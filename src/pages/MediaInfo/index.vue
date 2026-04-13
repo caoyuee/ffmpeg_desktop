@@ -2,98 +2,98 @@
   <div class="media-info-page">
     <div class="toolbar">
       <div class="file-selector">
-        <label>选择文件:</label>
+        <label>{{ t('page.mediainfo.selectFile') }}</label>
         <select v-model="selectedFile" @change="loadMediaInfo">
-          <option value="">请选择文件...</option>
+          <option value="">{{ t('page.mediainfo.pleaseSelect') }}</option>
           <option v-for="file in recentFiles" :key="file" :value="file">
             {{ getFileName(file) }}
           </option>
         </select>
-        <button @click="browseFile">浏览...</button>
+        <button @click="browseFile">{{ t('common.browse') }}...</button>
       </div>
       <button class="refresh-btn" @click="loadMediaInfo" :disabled="!selectedFile">
-        刷新
+        {{ t('page.mediainfo.refresh') }}
       </button>
     </div>
 
     <div class="info-container">
       <div v-if="!selectedFile" class="empty-state">
         <div class="empty-icon">ℹ️</div>
-        <p>请选择一个文件查看媒体信息</p>
+        <p>{{ t('page.mediainfo.pleaseSelectFile') }}</p>
       </div>
 
       <div v-else-if="loading" class="loading-state">
         <div class="spinner"></div>
-        <p>正在加载媒体信息...</p>
+        <p>{{ t('page.mediainfo.loading') }}</p>
       </div>
 
       <div v-else-if="mediaInfo" class="media-info-content">
         <div class="info-section">
-          <h4>基本信息</h4>
+          <h4>{{ t('page.mediainfo.basicInfo') }}</h4>
           <div class="info-grid">
             <div class="info-item">
-              <span class="label">文件名:</span>
+              <span class="label">{{ t('page.mediainfo.filename') }}</span>
               <span class="value">{{ mediaInfo.filename }}</span>
             </div>
             <div class="info-item">
-              <span class="label">容器格式:</span>
+              <span class="label">{{ t('page.mediainfo.containerFormat') }}</span>
               <span class="value">{{ mediaInfo.format }}</span>
             </div>
             <div class="info-item">
-              <span class="label">时长:</span>
+              <span class="label">{{ t('page.mediainfo.duration') }}</span>
               <span class="value">{{ formatDuration(mediaInfo.duration) }}</span>
             </div>
             <div class="info-item">
-              <span class="label">文件大小:</span>
+              <span class="label">{{ t('page.mediainfo.fileSize') }}</span>
               <span class="value">{{ formatSize(mediaInfo.size) }}</span>
             </div>
             <div class="info-item">
-              <span class="label">总比特率:</span>
+              <span class="label">{{ t('page.mediainfo.totalBitrate') }}</span>
               <span class="value">{{ formatBitrate(mediaInfo.bitRate) }}</span>
             </div>
           </div>
         </div>
 
         <div v-for="(stream, index) in mediaInfo.streams" :key="index" class="info-section stream-section">
-          <h4>{{ getStreamType(stream.codec_type) }}流 #{{ stream.index }}</h4>
+          <h4>{{ getStreamType(stream.codec_type) }} {{ t('page.mediainfo.stream') }} #{{ stream.index }}</h4>
           <div class="info-grid">
             <div class="info-item">
-              <span class="label">编码:</span>
+              <span class="label">{{ t('page.mediainfo.codec') }}</span>
               <span class="value">{{ stream.codec_name }}</span>
             </div>
             <div v-if="stream.codec_type === 'video'" class="info-item">
-              <span class="label">分辨率:</span>
+              <span class="label">{{ t('page.mediainfo.resolution') }}</span>
               <span class="value">{{ stream.width }}x{{ stream.height }}</span>
             </div>
             <div v-if="stream.codec_type === 'video'" class="info-item">
-              <span class="label">帧率:</span>
+              <span class="label">{{ t('page.mediainfo.frameRate') }}</span>
               <span class="value">{{ stream.frameRate }} fps</span>
             </div>
             <div v-if="stream.codec_type === 'video'" class="info-item">
-              <span class="label">宽高比:</span>
+              <span class="label">{{ t('page.mediainfo.aspectRatio') }}</span>
               <span class="value">{{ stream.displayAspectRatio || 'N/A' }}</span>
             </div>
             <div v-if="stream.codec_type === 'audio'" class="info-item">
-              <span class="label">采样率:</span>
+              <span class="label">{{ t('page.mediainfo.sampleRate') }}</span>
               <span class="value">{{ stream.sampleRate }} Hz</span>
             </div>
             <div v-if="stream.codec_type === 'audio'" class="info-item">
-              <span class="label">声道:</span>
+              <span class="label">{{ t('page.mediainfo.channels') }}</span>
               <span class="value">{{ getChannelLayout(stream.channels) }}</span>
             </div>
             <div v-if="stream.bit_rate" class="info-item">
-              <span class="label">比特率:</span>
+              <span class="label">{{ t('page.mediainfo.bitrate') }}</span>
               <span class="value">{{ formatBitrate(stream.bit_rate) }}</span>
             </div>
             <div v-if="stream.language" class="info-item">
-              <span class="label">语言:</span>
+              <span class="label">{{ t('page.mediainfo.language') }}</span>
               <span class="value">{{ stream.language }}</span>
             </div>
           </div>
         </div>
 
         <div class="info-section">
-          <h4>元数据</h4>
+          <h4>{{ t('page.mediainfo.metadata') }}</h4>
           <div class="metadata-list">
             <div v-for="(value, key) in mediaInfo.metadata" :key="key" class="metadata-item">
               <span class="key">{{ key }}:</span>
@@ -108,7 +108,10 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
+
+const { t } = useI18n();
 
 interface MediaStream {
   index: number;
@@ -212,23 +215,23 @@ function formatBitrate(bitrate: number | string): string {
 
 function getStreamType(type: string): string {
   const types: Record<string, string> = {
-    video: '视频',
-    audio: '音频',
-    subtitle: '字幕',
-    data: '数据',
-    attachment: '附件',
+    video: t('page.mediainfo.video'),
+    audio: t('page.mediainfo.audio'),
+    subtitle: t('page.mediainfo.subtitle'),
+    data: t('page.mediainfo.data'),
+    attachment: t('page.mediainfo.attachment'),
   };
   return types[type] || type;
 }
 
 function getChannelLayout(channels: number): string {
   const layouts: Record<number, string> = {
-    1: '单声道',
-    2: '立体声',
-    6: '5.1 声道',
-    8: '7.1 声道',
+    1: t('page.mediainfo.mono'),
+    2: t('page.mediainfo.stereo'),
+    6: t('page.mediainfo.channel51'),
+    8: t('page.mediainfo.channel71'),
   };
-  return layouts[channels] || `${channels} 声道`;
+  return layouts[channels] || `${channels} ${t('page.mediainfo.channel')}`;
 }
 </script>
 

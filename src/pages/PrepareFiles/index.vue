@@ -2,24 +2,24 @@
   <div class="prepare-files-page">
     <div class="toolbar">
       <button class="toolbar-btn" @click="addFiles">
-        <span class="icon">📁</span> 添加文件
+        <span class="icon">📁</span> {{ t('page.prepare.addFiles') }}
       </button>
       <button class="toolbar-btn" @click="addFolder">
-        <span class="icon">📂</span> 添加文件夹
+        <span class="icon">📂</span> {{ t('page.prepare.addFolder') }}
       </button>
       <div class="toolbar-divider"></div>
       <button class="toolbar-btn" @click="sortFiles">
-        <span class="icon">↕️</span> 排序
+        <span class="icon">↕️</span> {{ t('common.sort') }}
       </button>
       <button class="toolbar-btn" @click="removeSelected">
-        <span class="icon">🗑</span> 快速移除
+        <span class="icon">🗑</span> {{ t('common.remove') }}
       </button>
     </div>
 
     <div class="file-list-container">
       <div v-if="files.length === 0" class="empty-state">
         <div class="empty-icon">📄</div>
-        <p>拖拽文件到此处或点击上方按钮添加</p>
+        <p>{{ t('page.prepare.dragHint') }}</p>
       </div>
       <div v-else class="file-list">
         <div
@@ -46,10 +46,10 @@
 
     <div class="footer">
       <div class="file-count">
-        已选择 {{ selectedFiles.length }} / {{ files.length }} 个文件
+        {{ t('page.prepare.selectedCount', { count: selectedFiles.length, total: files.length }) }}
       </div>
       <button class="add-to-queue-btn" @click="addToQueue" :disabled="selectedFiles.length === 0">
-        添加到编码队列
+        {{ t('page.prepare.addToQueue') }}
       </button>
     </div>
   </div>
@@ -58,9 +58,11 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useTaskStore } from '@/store/taskStore';
 import { usePresetStore } from '@/store/presetStore';
 
+const { t } = useI18n();
 const router = useRouter();
 const taskStore = useTaskStore();
 const presetStore = usePresetStore();
@@ -73,8 +75,8 @@ async function addFiles() {
   const selected = await open({
     multiple: true,
     filters: [
-      { name: '视频文件', extensions: ['mp4', 'mkv', 'avi', 'mov', 'flv', 'webm', 'wmv', 'm4v'] },
-      { name: '所有文件', extensions: ['*'] },
+      { name: t('page.prepare.videoFiles'), extensions: ['mp4', 'mkv', 'avi', 'mov', 'flv', 'webm', 'wmv', 'm4v'] },
+      { name: t('common.allFiles'), extensions: ['*'] },
     ],
   });
 
@@ -89,7 +91,6 @@ async function addFolder() {
   const selected = await open({ directory: true });
 
   if (selected && typeof selected === 'string') {
-    // TODO: 扫描目录中的视频文件
     files.value = [...files.value, selected];
   }
 }
@@ -132,7 +133,6 @@ function removeFile(index: number) {
 }
 
 function previewFile(file: string) {
-  // TODO: 打开预览
   console.log('Preview:', file);
 }
 
@@ -153,7 +153,6 @@ function addToQueue() {
     });
   });
 
-  // 清空列表并跳转到编码队列
   files.value = [];
   selectedFiles.value = [];
   router.push('/queue');

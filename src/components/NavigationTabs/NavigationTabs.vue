@@ -15,24 +15,26 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
 const route = useRoute();
+const { t } = useI18n();
 
 const currentRoute = computed(() => route.path);
 
-const tabs = [
-  { id: 'home', label: '3FUI', icon: '🏠', route: '/home' },
-  { id: 'queue', label: '编码队列', icon: '📋', route: '/queue' },
-  { id: 'prepare', label: '准备文件', icon: '📁', route: '/prepare' },
-  { id: 'params', label: '参数面板', icon: '⚙️', route: '/params' },
-  { id: 'merge', label: '视频合并', icon: '🔗', route: '/merge' },
-  { id: 'mux', label: '混流', icon: '🔀', route: '/mux' },
-  { id: 'player', label: '播放器', icon: '▶️', route: '/player' },
-  { id: 'performance', label: '性能监控', icon: '📊', route: '/performance' },
-  { id: 'mediainfo', label: '媒体信息', icon: 'ℹ️', route: '/mediainfo' },
-  { id: 'settings', label: '设置', icon: '🔧', route: '/settings' },
-];
+const tabs = computed(() => [
+  { id: 'home', label: t('nav.home'), icon: '🏠', route: '/home' },
+  { id: 'queue', label: t('nav.queue'), icon: '📋', route: '/queue' },
+  { id: 'prepare', label: t('nav.prepare'), icon: '📁', route: '/prepare' },
+  { id: 'params', label: t('nav.params'), icon: '⚙️', route: '/params' },
+  { id: 'merge', label: t('nav.merge'), icon: '🔗', route: '/merge' },
+  { id: 'mux', label: t('nav.mux'), icon: '🔀', route: '/mux' },
+  { id: 'player', label: t('nav.player'), icon: '▶️', route: '/player' },
+  { id: 'performance', label: t('nav.performance'), icon: '📊', route: '/performance' },
+  { id: 'mediainfo', label: t('nav.mediainfo'), icon: 'ℹ️', route: '/mediainfo' },
+  { id: 'settings', label: t('nav.settings'), icon: '🔧', route: '/settings' },
+]);
 
 function navigateTo(path: string) {
   router.push(path);

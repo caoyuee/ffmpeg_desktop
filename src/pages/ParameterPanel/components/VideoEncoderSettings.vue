@@ -3,7 +3,7 @@
     <div class="form-section">
       <div class="form-group">
         <label>编码类别</label>
-        <select v-model="encoderCategory" @change="onCategoryChange">
+        <select v-model="localPreset.video.encoder.category" @change="onCategoryChange">
           <option value="h264">H.264/AVC</option>
           <option value="h265">H.265/HEVC</option>
           <option value="av1">AV1</option>
@@ -70,7 +70,7 @@
         </div>
         <div class="form-group half">
           <label>线程数</label>
-          <input type="number" v-model.number="localPreset.video.encoder.threads" @input="onChange" min="0" />
+          <input type="text" v-model="localPreset.video.encoder.threads" @input="onChange" placeholder="留空自动" />
         </div>
       </div>
     </div>
@@ -78,7 +78,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import type { PresetData } from '@/types/preset';
 
 const props = defineProps<{
@@ -90,7 +90,6 @@ const emit = defineEmits<{
 }>();
 
 const localPreset = ref<PresetData>({ ...props.preset });
-const encoderCategory = ref('h264');
 
 const encoderOptions: Record<string, { value: string; label: string }[]> = {
   h264: [
@@ -123,15 +122,17 @@ const encoderOptions: Record<string, { value: string; label: string }[]> = {
 };
 
 const availableEncoders = computed(() => {
-  return encoderOptions[encoderCategory.value] || [];
+  return encoderOptions[localPreset.value.video.encoder.category] || [];
 });
 
 watch(() => props.preset, (newVal) => {
-  localPreset.value = { ...newVal };
+  if (newVal) {
+    localPreset.value = { ...newVal };
+  }
 }, { deep: true });
 
 function onCategoryChange() {
-  const encoders = encoderOptions[encoderCategory.value];
+  const encoders = encoderOptions[localPreset.value.video.encoder.category];
   if (encoders && encoders.length > 0) {
     localPreset.value.video.encoder.codec = encoders[0].value;
   }

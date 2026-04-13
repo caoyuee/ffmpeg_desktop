@@ -1,33 +1,33 @@
 <template>
   <div class="mux-page">
     <div class="page-header">
-      <span class="header-text">仅提供最基础的混流，高级功能请移步 MKVToolNix GUI；分离请用 MKVExtract GUI</span>
+      <span class="header-text">{{ t('page.mux.hint') }}</span>
     </div>
     
     <div class="toolbar">
       <button class="btn btn-add" @click="addFiles">
-        <span class="icon">📁</span> 添加文件
+        <span class="icon">📁</span> {{ t('page.mux.addFiles') }}
       </button>
-      <button class="btn btn-move" @click="moveUp" :disabled="selectedIndices.length === 0">
-        <span class="icon">⬆️</span> 上移
+      <button class="btn btn-move" @click="moveUp" :disabled="selectedIndex === null">
+        <span class="icon">⬆️</span> {{ t('page.mux.moveUp') }}
       </button>
-      <button class="btn btn-move" @click="moveDown" :disabled="selectedIndices.length === 0">
-        <span class="icon">⬇️</span> 下移
+      <button class="btn btn-move" @click="moveDown" :disabled="selectedIndex === null">
+        <span class="icon">⬇️</span> {{ t('page.mux.moveDown') }}
       </button>
-      <button class="btn btn-remove" @click="removeSelected" :disabled="selectedIndices.length === 0">
-        <span class="icon">🗑️</span> 移除
+      <button class="btn btn-remove" @click="removeSelected" :disabled="selectedIndex === null">
+        <span class="icon">🗑️</span> {{ t('page.mux.remove') }}
       </button>
       <div class="column-headers">
-        <span class="col-header">视频</span>
-        <span class="col-header">音频</span>
-        <span class="col-header">字幕</span>
-        <span class="col-header">章节</span>
-        <span class="col-header">元数据</span>
+        <span class="col-header">{{ t('page.mux.video') }}</span>
+        <span class="col-header">{{ t('page.mux.audio') }}</span>
+        <span class="col-header">{{ t('page.mux.subtitle') }}</span>
+        <span class="col-header">{{ t('page.mux.chapters') }}</span>
+        <span class="col-header">{{ t('page.mux.metadata') }}</span>
       </div>
     </div>
     
     <div class="hint-bar">
-      <span>添加输入文件，然后选中来编辑要使用哪些流，使用键盘 F3 和 F4 来排序，Delete 来移除</span>
+      <span>{{ t('page.merge.keyboardHint') }}</span>
     </div>
     
     <div 
@@ -55,59 +55,59 @@
         </div>
       </div>
       <div class="empty-hint" v-else>
-        <span>拖拽文件到此处或点击"添加文件"按钮</span>
+        <span>{{ t('page.mux.dragHint') }}</span>
       </div>
     </div>
     
     <div class="stream-editor" v-if="selectedFile">
       <div class="stream-row">
-        <label class="stream-label">视频流索引号：</label>
+        <label class="stream-label">{{ t('page.mux.videoStreamIndex') }}</label>
         <input 
           type="text" 
           class="stream-input" 
           v-model="selectedFile.videoStreams" 
-          placeholder="多个流用英文逗号隔开"
+          :placeholder="t('page.mux.multipleStreamsHint')"
         />
-        <label class="stream-label">音频流索引号：</label>
+        <label class="stream-label">{{ t('page.mux.audioStreamIndex') }}</label>
         <input 
           type="text" 
           class="stream-input" 
           v-model="selectedFile.audioStreams" 
-          placeholder="多个流用英文逗号隔开"
+          :placeholder="t('page.mux.multipleStreamsHint')"
         />
-        <label class="stream-label">字幕流索引号：</label>
+        <label class="stream-label">{{ t('page.mux.subtitleStreamIndex') }}</label>
         <input 
           type="text" 
           class="stream-input" 
           v-model="selectedFile.subtitleStreams" 
-          placeholder="多个流用英文逗号隔开"
+          :placeholder="t('page.mux.multipleStreamsHint')"
         />
       </div>
       <div class="option-row">
-        <label class="stream-label">章节和元数据</label>
+        <label class="stream-label">{{ t('page.mux.chaptersAndMetadata') }}</label>
         <label class="checkbox-label">
           <input type="checkbox" v-model="selectedFile.useChapters" @change="onChapterChange" />
-          使用此文件的章节
+          {{ t('page.mux.useChapters') }}
         </label>
         <label class="checkbox-label">
           <input type="checkbox" v-model="selectedFile.useMetadata" @change="onMetadataChange" />
-          使用此文件的元数据
+          {{ t('page.mux.useMetadata') }}
         </label>
       </div>
     </div>
     
     <div class="bottom-bar">
       <button class="btn btn-browse" @click="selectOutput">
-        <span class="icon">📂</span> 选择位置
+        <span class="icon">📂</span> {{ t('page.mux.selectOutput') }}
       </button>
       <input 
         type="text" 
         class="output-input" 
         v-model="outputPath" 
-        placeholder="输出到目标位置"
+        :placeholder="t('page.mux.outputTo')"
       />
       <button class="btn btn-start" @click="startMux" :disabled="fileList.length < 1 || !outputPath">
-        <span class="icon">▶️</span> 启动混流
+        <span class="icon">▶️</span> {{ t('page.mux.startMux') }}
       </button>
     </div>
   </div>
@@ -115,8 +115,11 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { useTaskStore } from '@/store/taskStore';
+
+const { t } = useI18n();
 
 interface MuxFile {
   path: string;

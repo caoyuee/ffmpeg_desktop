@@ -2,10 +2,10 @@
   <div class="player-page">
     <div class="toolbar">
       <button class="btn btn-open" @click="openFile">
-        <span class="icon">📁</span> 打开
+        <span class="icon">📁</span> {{ t('page.player.open') }}
       </button>
       <button class="btn btn-stop" @click="stopPlayback">
-        <span class="icon">⏹️</span> 关闭进程
+        <span class="icon">⏹️</span> {{ t('page.player.close') }}
       </button>
       <div class="file-name" v-if="currentFile">
         {{ currentFile }}
@@ -21,7 +21,7 @@
       :class="{ 'drag-over': isDragOver }"
     >
       <div class="player-hint" v-if="!isPlaying">
-        <span>拖拽视频文件到此处或点击"打开"按钮</span>
+        <span>{{ t('page.player.dragHint') }}</span>
       </div>
     </div>
     
@@ -50,9 +50,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+
+const { t } = useI18n();
 
 const playerContainer = ref<HTMLDivElement | null>(null);
 const currentFile = ref('');
@@ -71,7 +74,7 @@ async function openFile() {
   try {
     const file = await open({
       multiple: false,
-      filters: [{ name: '视频文件', extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', 'wmv', '*'] }],
+      filters: [{ name: t('page.player.videoFiles'), extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', 'wmv', '*'] }],
     });
     if (file) {
       await playFile(file as string);

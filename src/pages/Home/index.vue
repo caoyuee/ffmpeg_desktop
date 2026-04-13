@@ -3,32 +3,32 @@
     <div class="welcome-section">
       <div class="logo-area">
         <div class="logo">🎬</div>
-        <h1>FFmpeg Desktop</h1>
-        <p class="subtitle">基于 Tauri 2.x 的 FFmpeg 图形化界面</p>
+        <h1>{{ t('page.home.title') }}</h1>
+        <p class="subtitle">{{ t('page.home.subtitle') }}</p>
       </div>
 
       <div class="quick-actions">
-        <h3>快速开始</h3>
+        <h3>{{ t('page.home.quickStart') }}</h3>
         <div class="action-grid">
           <div class="action-card" @click="goToQueue">
             <span class="icon">📋</span>
-            <span class="title">编码队列</span>
-            <span class="desc">添加文件并开始转换</span>
+            <span class="title">{{ t('page.home.encodingQueue') }}</span>
+            <span class="desc">{{ t('page.home.encodingQueueDesc') }}</span>
           </div>
           <div class="action-card" @click="goToParams">
             <span class="icon">⚙️</span>
-            <span class="title">参数设置</span>
-            <span class="desc">配置编码参数</span>
+            <span class="title">{{ t('page.home.paramSettings') }}</span>
+            <span class="desc">{{ t('page.home.paramSettingsDesc') }}</span>
           </div>
           <div class="action-card" @click="goToMediaInfo">
             <span class="icon">ℹ️</span>
-            <span class="title">媒体信息</span>
-            <span class="desc">查看文件详细信息</span>
+            <span class="title">{{ t('page.home.mediaInfo') }}</span>
+            <span class="desc">{{ t('page.home.mediaInfoDesc') }}</span>
           </div>
           <div class="action-card" @click="goToSettings">
             <span class="icon">🔧</span>
-            <span class="title">软件设置</span>
-            <span class="desc">配置软件选项</span>
+            <span class="title">{{ t('page.home.softwareSettings') }}</span>
+            <span class="desc">{{ t('page.home.softwareSettingsDesc') }}</span>
           </div>
         </div>
       </div>
@@ -36,49 +36,49 @@
 
     <div class="info-section">
       <div class="info-card">
-        <h4>使用说明</h4>
+        <h4>{{ t('page.home.instructions') }}</h4>
         <ol>
-          <li>将 FFmpeg 可执行文件放入程序目录或添加到系统环境变量</li>
-          <li>在编码队列页面添加要转换的视频文件</li>
-          <li>在参数面板设置编码参数</li>
-          <li>点击开始按钮开始转换</li>
+          <li>{{ t('page.home.step1') }}</li>
+          <li>{{ t('page.home.step2') }}</li>
+          <li>{{ t('page.home.step3') }}</li>
+          <li>{{ t('page.home.step4') }}</li>
         </ol>
       </div>
 
       <div class="info-card">
-        <h4>快捷键</h4>
+        <h4>{{ t('page.home.shortcuts') }}</h4>
         <div class="shortcut-list">
           <div class="shortcut-item">
             <kbd>Enter</kbd>
-            <span>开始任务</span>
+            <span>{{ t('page.home.startTask') }}</span>
           </div>
           <div class="shortcut-item">
             <kbd>Space</kbd>
-            <span>暂停任务</span>
+            <span>{{ t('page.home.pauseTask') }}</span>
           </div>
           <div class="shortcut-item">
             <kbd>Delete</kbd>
-            <span>移除任务</span>
+            <span>{{ t('page.home.removeTask') }}</span>
           </div>
           <div class="shortcut-item">
             <kbd>Ctrl+A</kbd>
-            <span>全选任务</span>
+            <span>{{ t('page.home.selectAll') }}</span>
           </div>
         </div>
       </div>
 
       <div class="info-card links">
-        <h4>相关链接</h4>
+        <h4>{{ t('page.home.relatedLinks') }}</h4>
         <div class="link-list">
-          <a href="#" @click.prevent="openFFmpegDocs">FFmpeg 官方文档</a>
-          <a href="#" @click.prevent="openFFmpegDownload">下载 FFmpeg</a>
-          <a href="#" @click.prevent="openGitHub">GitHub 仓库</a>
+          <a href="#" @click.prevent="openFFmpegDocs">{{ t('page.home.ffmpegDocs') }}</a>
+          <a href="#" @click.prevent="openFFmpegDownload">{{ t('page.home.downloadFFmpeg') }}</a>
+          <a href="#" @click.prevent="openGitHub">{{ t('page.home.githubRepo') }}</a>
         </div>
       </div>
     </div>
 
     <div class="version-info">
-      <span>版本: 0.1.0</span>
+      <span>{{ t('page.home.version') }}: 0.1.0</span>
       <span>|</span>
       <span>Tauri 2.x + Vue 3</span>
     </div>
@@ -87,8 +87,10 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
 const router = useRouter();
+const { t } = useI18n();
 
 function goToQueue() {
   router.push('/queue');

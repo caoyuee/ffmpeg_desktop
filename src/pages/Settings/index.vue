@@ -26,7 +26,7 @@
 
         <div class="form-group">
           <label>{{ t('page.settings.theme') }}</label>
-          <select v-model="settings.theme" @change="saveSettings">
+          <select v-model="settings.theme" @change="onThemeChange">
             <option value="dark">{{ t('page.settings.themeDark') }}</option>
             <option value="light">{{ t('page.settings.themeLight') }}</option>
             <option value="system">{{ t('page.settings.themeSystem') }}</option>
@@ -191,12 +191,14 @@
 import { ref, onMounted, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { setLocale, availableLanguages, type LanguageCode } from '@/i18n';
+import { useSettingStore, type ThemeMode } from '@/store/settingStore';
 
 const { t, locale } = useI18n();
+const settingStore = useSettingStore();
 
 interface AppSettings {
   language: LanguageCode;
-  theme: string;
+  theme: ThemeMode;
   autoCheckUpdate: boolean;
   minimizeToTray: boolean;
   closeToTray: boolean;
@@ -224,7 +226,7 @@ const tabs = [
 const activeTab = ref('general');
 const settings = ref<AppSettings>({
   language: 'zh-CN',
-  theme: 'dark',
+  theme: 'system',
   autoCheckUpdate: true,
   minimizeToTray: false,
   closeToTray: false,
@@ -252,10 +254,13 @@ watch(() => settings.value.language, (newLang) => {
 });
 
 function loadSettings() {
+  settings.value.theme = settingStore.theme as ThemeMode;
+  settings.value.language = settingStore.language as LanguageCode;
   const saved = localStorage.getItem('appSettings');
   if (saved) {
     try {
-      settings.value = { ...settings.value, ...JSON.parse(saved) };
+      const parsed = JSON.parse(saved);
+      settings.value = { ...settings.value, ...parsed };
     } catch (e) {
       console.error('Failed to load settings:', e);
     }
@@ -264,6 +269,11 @@ function loadSettings() {
 
 function saveSettings() {
   localStorage.setItem('appSettings', JSON.stringify(settings.value));
+}
+
+function onThemeChange() {
+  settingStore.updateTheme(settings.value.theme);
+  saveSettings();
 }
 
 async function browseFFmpeg() {
