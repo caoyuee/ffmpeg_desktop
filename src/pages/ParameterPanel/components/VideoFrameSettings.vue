@@ -63,12 +63,15 @@
         <button class="advanced-btn" @click="openSuperResolution">超分参数</button>
       </div>
     </div>
+
+    <Toast v-model="showToast" :message="toastMessage" type="info" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { PresetData } from '@/types/preset';
+import Toast from '@/components/Dialogs/Toast.vue';
 
 const props = defineProps<{
   preset: PresetData;
@@ -79,6 +82,8 @@ const emit = defineEmits<{
 }>();
 
 const localPreset = ref<PresetData>({ ...props.preset });
+const showToast = ref(false);
+const toastMessage = ref('');
 
 watch(() => props.preset, (newVal) => {
   if (newVal) {
@@ -91,19 +96,23 @@ function onChange() {
 }
 
 function openCropDialog() {
-  alert('裁剪窗口功能开发中...');
+  toastMessage.value = '裁剪窗口功能开发中...';
+  showToast.value = true;
 }
 
 function openInterpolation() {
-  alert('插帧参数功能开发中...');
+  toastMessage.value = '插帧参数功能开发中...';
+  showToast.value = true;
 }
 
 function openDenoise() {
-  alert('降噪参数功能开发中...');
+  toastMessage.value = '降噪参数功能开发中...';
+  showToast.value = true;
 }
 
 function openSuperResolution() {
-  alert('超分参数功能开发中...');
+  toastMessage.value = '超分参数功能开发中...';
+  showToast.value = true;
 }
 </script>
 

@@ -1,11 +1,31 @@
 import { defineStore } from 'pinia'
+import type { LanguageCode } from '@/i18n'
+import { availableLanguages } from '@/i18n'
 
 export type ThemeMode = 'light' | 'dark' | 'system'
+
+const SUPPORTED_LANGUAGES = availableLanguages.map(l => l.code)
+
+function isValidLanguage(lang: string | null): lang is LanguageCode {
+  return lang !== null && SUPPORTED_LANGUAGES.includes(lang as LanguageCode)
+}
+
+function getValidLanguage(): LanguageCode {
+  const saved = localStorage.getItem('language')
+  if (isValidLanguage(saved)) {
+    return saved
+  }
+  const browserLang = navigator.language
+  if (browserLang.startsWith('zh')) {
+    return 'zh-CN'
+  }
+  return 'en-US'
+}
 
 export const useSettingStore = defineStore('setting_info', {
   state: () => ({
     theme: (localStorage.getItem('theme') as ThemeMode) || 'system',
-    language: localStorage.getItem('language') || 'zh-CN',
+    language: getValidLanguage(),
   }),
   actions: {
     updateTheme(theme: ThemeMode) {
@@ -22,7 +42,7 @@ export const useSettingStore = defineStore('setting_info', {
         root.setAttribute('data-theme', this.theme)
       }
     },
-    updateLanguage(language: string) {
+    updateLanguage(language: LanguageCode) {
       this.language = language
       localStorage.setItem('language', language)
     },

@@ -35,21 +35,21 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.autoCheckUpdate" @change="saveSettings" />
+            <input type="checkbox" class="checkbox-input" v-model="settings.autoCheckUpdate" @change="saveSettings" />
             <span>{{ t('page.settings.autoCheckUpdate') }}</span>
           </label>
         </div>
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.minimizeToTray" @change="saveSettings" />
+            <input type="checkbox" class="checkbox-input" v-model="settings.minimizeToTray" @change="saveSettings" />
             <span>{{ t('page.settings.minimizeToTray') }}</span>
           </label>
         </div>
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.closeToTray" @change="saveSettings" />
+            <input type="checkbox" class="checkbox-input" v-model="settings.closeToTray" @change="saveSettings" />
             <span>{{ t('page.settings.closeToTray') }}</span>
           </label>
         </div>
@@ -156,8 +156,8 @@
         </div>
 
         <div class="form-group">
-          <button class="danger-btn" @click="clearCache">{{ t('page.settings.clearCache') }}</button>
-          <button class="danger-btn" @click="clearLogs">{{ t('page.settings.clearLogs') }}</button>
+          <button class="danger-btn" @click="showClearCacheDialog = true">{{ t('page.settings.clearCache') }}</button>
+          <button class="danger-btn" @click="showClearLogsDialog = true">{{ t('page.settings.clearLogs') }}</button>
         </div>
       </div>
 
@@ -184,6 +184,30 @@
         </div>
       </div>
     </div>
+
+    <ConfirmDialog
+      v-model="showClearCacheDialog"
+      :title="t('page.settings.clearCache')"
+      :message="t('page.settings.clearCacheConfirm')"
+      :confirmText="t('common.confirm')"
+      :cancelText="t('common.cancel')"
+      @confirm="clearCache"
+    />
+
+    <ConfirmDialog
+      v-model="showClearLogsDialog"
+      :title="t('page.settings.clearLogs')"
+      :message="t('page.settings.clearLogsConfirm')"
+      :confirmText="t('common.confirm')"
+      :cancelText="t('common.cancel')"
+      @confirm="clearLogs"
+    />
+
+    <Toast
+      v-model="showToast"
+      :message="toastMessage"
+      :type="toastType"
+    />
   </div>
 </template>
 
@@ -192,6 +216,8 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { setLocale, availableLanguages, type LanguageCode } from '@/i18n';
 import { useSettingStore, type ThemeMode } from '@/store/settingStore';
+import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue';
+import Toast from '@/components/Dialogs/Toast.vue';
 
 const { t, locale } = useI18n();
 const settingStore = useSettingStore();
@@ -244,6 +270,12 @@ const settings = ref<AppSettings>({
 });
 
 const ffmpegTestResult = ref<{ success: boolean; message: string } | null>(null);
+
+const showClearCacheDialog = ref(false);
+const showClearLogsDialog = ref(false);
+const showToast = ref(false);
+const toastMessage = ref('');
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success');
 
 onMounted(() => {
   loadSettings();
@@ -331,17 +363,17 @@ async function testFFmpeg() {
 }
 
 function clearCache() {
-  if (confirm('确定要清除所有缓存吗？')) {
-    localStorage.removeItem('presetCache');
-    alert('缓存已清除');
-  }
+  localStorage.removeItem('presetCache');
+  toastMessage.value = t('message.cacheCleared');
+  toastType.value = 'success';
+  showToast.value = true;
 }
 
 function clearLogs() {
-  if (confirm('确定要清除所有日志吗？')) {
-    localStorage.removeItem('taskLogs');
-    alert('日志已清除');
-  }
+  localStorage.removeItem('taskLogs');
+  toastMessage.value = t('message.logsCleared');
+  toastType.value = 'success';
+  showToast.value = true;
 }
 
 function openGitHub() {
@@ -463,6 +495,11 @@ function openReleases() {
   cursor: pointer;
   font-size: 13px;
   color: var(--text-color1, #c0c0c0);
+}
+
+.checkbox-label .checkbox-input {
+  width: 10px;
+  height: 10px;
 }
 
 .test-btn {
