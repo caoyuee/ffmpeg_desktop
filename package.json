@@ -8,7 +8,13 @@
     "build": "vue-tsc --noEmit && vite build",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:report": "bash scripts/generate-test-report.sh",
+    "test:all": "pnpm test:coverage && cd src-tauri && cargo tarpaulin --out Html --out Json --out Lcov --output-dir ../test-reports/backend && cd .. && pnpm test:report"
   },
   "dependencies": {
     "@tauri-apps/api": "^2.6.2",
@@ -24,9 +30,14 @@
     "@tauri-apps/cli": "^2.6.2",
     "@types/node": "^24.1.0",
     "@vitejs/plugin-vue": "^6.0.3",
+    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/ui": "^4.1.4",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^20.9.0",
     "pnpm": "^10.27.0",
     "typescript": "~5.9.3",
     "vite": "^7.3.0",
+    "vitest": "^4.1.4",
     "vue-tsc": "^3.2.2"
   },
   "packageManager": "pnpm@10.27.0",
