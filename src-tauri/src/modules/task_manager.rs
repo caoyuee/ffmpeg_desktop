@@ -1,11 +1,38 @@
 use std::collections::HashMap;
 use std::sync::Mutex;
-use std::process::{Child, Command, Stdio};
+use std::process::{Command, Stdio};
 use std::io::{BufRead, BufReader};
-use tauri::{AppHandle, Emitter, Manager};
+use tauri::{AppHandle, Emitter};
 use once_cell::sync::Lazy;
+use regex::Regex;
+
+const EXIT_CODE_ERROR: i32 = -1;
 
 static TASK_PROCESSES: Lazy<Mutex<HashMap<String, u32>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+
+static FRAME_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"frame=\s*(\d+)").unwrap()
+});
+
+static FPS_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"fps=\s*([\d\.]+)").unwrap()
+});
+
+static TIME_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"time=\s*(\d+:\d{2}:\d{2}\.\d{2})").unwrap()
+});
+
+static BITRATE_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"bitrate=\s*([\d\.]+)\s*kbits/s").unwrap()
+});
+
+static SPEED_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"speed=\s*([\d\.eE\+\-]+)\s*x").unwrap()
+});
+
+static SIZE_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"size=\s*(\d+)\s*([KMG]iB)").unwrap()
+});
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TaskInfo {
@@ -47,22 +74,25 @@ pub fn start_ffmpeg(
     let app_clone = app.clone();
     
     std::thread::spawn(move || {
-        if let Some(stderr) = child.stderr.take() {
-            let reader = BufReader::new(stderr);
-            for line in reader.lines() {
-                if let Ok(line) = line {
-                    if let Ok(progress) = parse_progress(&line) {
-                        let _ = app_clone.emit("ffmpeg-progress", serde_json::json!({
-                            "taskId": task_id_clone,
-                            "progress": progress
-                        }));
+        let exit_code = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            if let Some(stderr) = child.stderr.take() {
+                let reader = BufReader::new(stderr);
+                for line in reader.lines() {
+                    if let Ok(line) = line {
+                        if let Ok(progress) = parse_progress(&line) {
+                            let _ = app_clone.emit("ffmpeg-progress", serde_json::json!({
+                                "taskId": task_id_clone,
+                                "progress": progress
+                            }));
+                        }
                     }
                 }
             }
-        }
 
-        let status = child.wait();
-        let exit_code = status.map(|s| s.code().unwrap_or(-1)).unwrap_or(-1);
+            child.wait()
+                .map(|s| s.code().unwrap_or(EXIT_CODE_ERROR))
+                .unwrap_or(EXIT_CODE_ERROR)
+        })).unwrap_or(EXIT_CODE_ERROR);
         
         TASK_PROCESSES.lock().unwrap().remove(&task_id_clone);
         
@@ -157,34 +187,27 @@ fn parse_progress(line: &str) -> Result<ProgressInfo, ()> {
         size: None,
     };
 
-    let frame_re = regex::Regex::new(r"frame=\s*(\d+)").unwrap();
-    let fps_re = regex::Regex::new(r"fps=\s*([\d\.]+)").unwrap();
-    let time_re = regex::Regex::new(r"time=\s*(\d+:\d{2}:\d{2}\.\d{2})").unwrap();
-    let bitrate_re = regex::Regex::new(r"bitrate=\s*([\d\.]+)\s*kbits/s").unwrap();
-    let speed_re = regex::Regex::new(r"speed=\s*([\d\.eE\+\-]+)\s*x").unwrap();
-    let size_re = regex::Regex::new(r"size=\s*(\d+)\s*([KMG]iB)").unwrap();
-
-    if let Some(caps) = frame_re.captures(line) {
+    if let Some(caps) = FRAME_RE.captures(line) {
         progress.frame = caps[1].parse().ok();
     }
     
-    if let Some(caps) = fps_re.captures(line) {
+    if let Some(caps) = FPS_RE.captures(line) {
         progress.fps = caps[1].parse().ok();
     }
     
-    if let Some(caps) = time_re.captures(line) {
+    if let Some(caps) = TIME_RE.captures(line) {
         progress.time = Some(caps[1].to_string());
     }
     
-    if let Some(caps) = bitrate_re.captures(line) {
+    if let Some(caps) = BITRATE_RE.captures(line) {
         progress.bitrate = Some(format!("{} kbps", &caps[1]));
     }
     
-    if let Some(caps) = speed_re.captures(line) {
+    if let Some(caps) = SPEED_RE.captures(line) {
         progress.speed = Some(format!("{}x", &caps[1]));
     }
     
-    if let Some(caps) = size_re.captures(line) {
+    if let Some(caps) = SIZE_RE.captures(line) {
         progress.size = Some(format!("{}{}", &caps[1], &caps[2]));
     }
 
@@ -192,5 +215,149 @@ fn parse_progress(line: &str) -> Result<ProgressInfo, ()> {
         Ok(progress)
     } else {
         Err(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_progress_frame() {
+        let line = "frame=  123 fps= 30 q=28.0 size=  12345kB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
+        let result = parse_progress(line);
+        
+        assert!(result.is_ok());
+        let progress = result.unwrap();
+        assert_eq!(progress.frame, Some(123));
+    }
+
+    #[test]
+    fn test_parse_progress_fps() {
+        let line = "frame=  123 fps= 30.5 q=28.0 size=  12345kB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
+        let result = parse_progress(line);
+        
+        assert!(result.is_ok());
+        let progress = result.unwrap();
+        assert_eq!(progress.fps, Some(30.5));
+    }
+
+    #[test]
+    fn test_parse_progress_time() {
+        let line = "frame=  123 fps= 30 q=28.0 size=  12345kB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
+        let result = parse_progress(line);
+        
+        assert!(result.is_ok());
+        let progress = result.unwrap();
+        assert_eq!(progress.time, Some("00:01:23.45".to_string()));
+    }
+
+    #[test]
+    fn test_parse_progress_bitrate() {
+        let line = "frame=  123 fps= 30 q=28.0 size=  12345kB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
+        let result = parse_progress(line);
+        
+        assert!(result.is_ok());
+        let progress = result.unwrap();
+        assert_eq!(progress.bitrate, Some("1234.5 kbps".to_string()));
+    }
+
+    #[test]
+    fn test_parse_progress_speed() {
+        let line = "frame=  123 fps= 30 q=28.0 size=  12345kB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
+        let result = parse_progress(line);
+        
+        assert!(result.is_ok());
+        let progress = result.unwrap();
+        assert_eq!(progress.speed, Some("1.23x".to_string()));
+    }
+
+    #[test]
+    fn test_parse_progress_size() {
+        let line = "frame=  123 fps= 30 q=28.0 size=  12345KiB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
+        let result = parse_progress(line);
+        
+        assert!(result.is_ok());
+        let progress = result.unwrap();
+        assert_eq!(progress.size, Some("12345KiB".to_string()));
+    }
+
+    #[test]
+    fn test_parse_progress_combined() {
+        let line = "frame=  456 fps= 60.5 q=25.0 size=  67890KiB time=00:05:30.12 bitrate=2345.6kbits/s speed=2.5x";
+        let result = parse_progress(line);
+        
+        assert!(result.is_ok());
+        let progress = result.unwrap();
+        assert_eq!(progress.frame, Some(456));
+        assert_eq!(progress.fps, Some(60.5));
+        assert_eq!(progress.time, Some("00:05:30.12".to_string()));
+        assert_eq!(progress.bitrate, Some("2345.6 kbps".to_string()));
+        assert_eq!(progress.speed, Some("2.5x".to_string()));
+        assert_eq!(progress.size, Some("67890KiB".to_string()));
+    }
+
+    #[test]
+    fn test_parse_progress_invalid() {
+        let line = "This is not a progress line";
+        let result = parse_progress(line);
+        
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_progress_partial() {
+        let line = "frame=  123 fps= 30";
+        let result = parse_progress(line);
+        
+        assert!(result.is_ok());
+        let progress = result.unwrap();
+        assert_eq!(progress.frame, Some(123));
+        assert_eq!(progress.fps, Some(30.0));
+        assert_eq!(progress.time, None);
+    }
+
+    #[test]
+    fn test_frame_regex() {
+        let captures = FRAME_RE.captures("frame=  123");
+        assert!(captures.is_some());
+        assert_eq!(captures.unwrap()[1].parse::<u64>().unwrap(), 123);
+    }
+
+    #[test]
+    fn test_fps_regex() {
+        let captures = FPS_RE.captures("fps= 30.5");
+        assert!(captures.is_some());
+        assert_eq!(captures.unwrap()[1].parse::<f64>().unwrap(), 30.5);
+    }
+
+    #[test]
+    fn test_time_regex() {
+        let captures = TIME_RE.captures("time=00:01:23.45");
+        assert!(captures.is_some());
+        assert_eq!(&captures.unwrap()[1], "00:01:23.45");
+    }
+
+    #[test]
+    fn test_bitrate_regex() {
+        let captures = BITRATE_RE.captures("bitrate=1234.5kbits/s");
+        assert!(captures.is_some());
+        assert_eq!(&captures.unwrap()[1], "1234.5");
+    }
+
+    #[test]
+    fn test_speed_regex() {
+        let captures = SPEED_RE.captures("speed=1.23x");
+        assert!(captures.is_some());
+        assert_eq!(&captures.unwrap()[1], "1.23");
+    }
+
+    #[test]
+    fn test_size_regex() {
+        let captures = SIZE_RE.captures("size=  12345KiB");
+        assert!(captures.is_some());
+        let caps = captures.unwrap();
+        assert_eq!(&caps[1], "12345");
+        assert_eq!(&caps[2], "KiB");
     }
 }
