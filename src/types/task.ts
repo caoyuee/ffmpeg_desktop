@@ -38,6 +38,7 @@ export interface Task {
   elapsedTime: number;
   pid?: number;
   error?: string;
+  errorType?: "network" | "permission" | "not_found" | "invalid_input" | "process" | "unknown";
 }
 
 export interface TaskQueueState {

@@ -3,13 +3,48 @@ import { ref, computed } from "vue";
 import type { Task, TaskProgress } from "@/types/task";
 import { TaskStatus } from "@/types/task";
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { listen, UnlistenFn } from "@tauri-apps/api/event";
+
+type ErrorType = "network" | "permission" | "not_found" | "invalid_input" | "process" | "unknown";
+
+function formatError(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (typeof error === "string") {
+    return error;
+  }
+  return String(error);
+}
+
+function classifyError(error: unknown): ErrorType {
+  const message = formatError(error).toLowerCase();
+  
+  if (message.includes("network") || message.includes("connection") || message.includes("timeout")) {
+    return "network";
+  }
+  if (message.includes("permission") || message.includes("access denied") || message.includes("权限")) {
+    return "permission";
+  }
+  if (message.includes("not found") || message.includes("不存在") || message.includes("未找到")) {
+    return "not_found";
+  }
+  if (message.includes("invalid") || message.includes("无效") || message.includes("格式")) {
+    return "invalid_input";
+  }
+  if (message.includes("process") || message.includes("ffmpeg") || message.includes("进程")) {
+    return "process";
+  }
+  return "unknown";
+}
 
 export const useTaskStore = defineStore("tasks", () => {
   const tasks = ref<Task[]>([]);
   const maxConcurrent = ref(1);
   const runningCount = ref(0);
   const currentTaskId = ref<string | null>(null);
+  let isStarting = false;
+  let unlisteners: UnlistenFn[] = [];
 
   const pendingTasks = computed(() =>
     tasks.value.filter((t) => t.status === TaskStatus.Pending),
@@ -20,7 +55,12 @@ export const useTaskStore = defineStore("tasks", () => {
   );
 
   function generateId(): string {
-    return `task_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const timestamp = Date.now().toString(36);
+    const randomPart = Array.from(crypto.getRandomValues(new Uint8Array(8)))
+      .map((b) => b.toString(36).padStart(2, "0"))
+      .join("")
+      .slice(0, 16);
+    return `task_${timestamp}_${randomPart}`;
   }
 
   async function addTask(
@@ -77,7 +117,9 @@ export const useTaskStore = defineStore("tasks", () => {
       runningCount.value++;
     } catch (error) {
       task.status = TaskStatus.Error;
-      task.error = String(error);
+      task.error = formatError(error);
+      task.errorType = classifyError(error);
+      addTaskLog(taskId, `任务启动失败: ${task.error}`, true);
       await tryStartNext();
     }
   }
@@ -89,7 +131,8 @@ export const useTaskStore = defineStore("tasks", () => {
         await invoke("pause_process", { pid: task.pid });
         task.status = TaskStatus.Paused;
       } catch (error) {
-        console.error("暂停任务失败:", error);
+        const errorMsg = formatError(error);
+        addTaskLog(taskId, `暂停任务失败: ${errorMsg}`, true);
       }
     }
   }
@@ -101,7 +144,8 @@ export const useTaskStore = defineStore("tasks", () => {
         await invoke("resume_process", { pid: task.pid });
         task.status = TaskStatus.Processing;
       } catch (error) {
-        console.error("恢复任务失败:", error);
+        const errorMsg = formatError(error);
+        addTaskLog(taskId, `恢复任务失败: ${errorMsg}`, true);
       }
     }
   }
@@ -135,11 +179,18 @@ export const useTaskStore = defineStore("tasks", () => {
   }
 
   async function tryStartNext() {
-    if (runningCount.value >= maxConcurrent.value) return;
+    if (isStarting) return;
+    isStarting = true;
 
-    const nextTask = tasks.value.find((t) => t.status === TaskStatus.Pending);
-    if (nextTask) {
-      await startTask(nextTask.id);
+    try {
+      if (runningCount.value >= maxConcurrent.value) return;
+
+      const nextTask = tasks.value.find((t) => t.status === TaskStatus.Pending);
+      if (nextTask) {
+        await startTask(nextTask.id);
+      }
+    } finally {
+      isStarting = false;
     }
   }
 
@@ -161,32 +212,43 @@ export const useTaskStore = defineStore("tasks", () => {
   }
 
   async function setupEventListeners() {
-    await listen("ffmpeg-progress", (event: any) => {
-      const { taskId, progress } = event.payload;
-      updateTaskProgress(taskId, progress);
-    });
+    unlisteners.push(
+      await listen("ffmpeg-progress", (event: any) => {
+        const { taskId, progress } = event.payload;
+        updateTaskProgress(taskId, progress);
+      })
+    );
 
-    await listen("ffmpeg-finish", (event: any) => {
-      const { taskId, exitCode } = event.payload;
-      const task = tasks.value.find((t) => t.id === taskId);
-      if (task) {
-        task.status = exitCode === 0 ? TaskStatus.Completed : TaskStatus.Error;
-        task.completedAt = new Date();
-        runningCount.value--;
-        tryStartNext();
-      }
-    });
+    unlisteners.push(
+      await listen("ffmpeg-finish", (event: any) => {
+        const { taskId, exitCode } = event.payload;
+        const task = tasks.value.find((t) => t.id === taskId);
+        if (task) {
+          task.status = exitCode === 0 ? TaskStatus.Completed : TaskStatus.Error;
+          task.completedAt = new Date();
+          runningCount.value--;
+          tryStartNext();
+        }
+      })
+    );
 
-    await listen("ffmpeg-error", (event: any) => {
-      const { taskId, error } = event.payload;
-      const task = tasks.value.find((t) => t.id === taskId);
-      if (task) {
-        task.status = TaskStatus.Error;
-        task.error = error;
-        runningCount.value--;
-        tryStartNext();
-      }
-    });
+    unlisteners.push(
+      await listen("ffmpeg-error", (event: any) => {
+        const { taskId, error } = event.payload;
+        const task = tasks.value.find((t) => t.id === taskId);
+        if (task) {
+          task.status = TaskStatus.Error;
+          task.error = error;
+          runningCount.value--;
+          tryStartNext();
+        }
+      })
+    );
+  }
+
+  function cleanupEventListeners() {
+    unlisteners.forEach((unlisten) => unlisten());
+    unlisteners = [];
   }
 
   return {
@@ -206,5 +268,6 @@ export const useTaskStore = defineStore("tasks", () => {
     updateTaskProgress,
     addTaskLog,
     setupEventListeners,
+    cleanupEventListeners,
   };
 });

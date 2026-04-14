@@ -108,6 +108,7 @@ const showOutputPanel = ref(false);
 const outputType = ref('all');
 const autoScroll = ref(true);
 const outputRef = ref<HTMLElement | null>(null);
+const selectedTaskIds = ref<Set<string>>(new Set());
 
 const outputLog = computed(() => {
   const currentTask = tasks.value.find(t => t.status === TaskStatus.Processing);
@@ -165,27 +166,69 @@ function stopAll() {
 }
 
 function removeSelected() {
-  console.log('removeSelected');
+  selectedTaskIds.value.forEach(id => {
+    const task = tasks.value.find(t => t.id === id);
+    if (task && task.status !== TaskStatus.Processing) {
+      taskStore.removeTask(id);
+    }
+  });
+  selectedTaskIds.value.clear();
 }
 
 function resetSelected() {
-  console.log('resetSelected');
+  selectedTaskIds.value.forEach(id => {
+    const task = tasks.value.find(t => t.id === id);
+    if (task && (task.status === TaskStatus.Error || task.status === TaskStatus.Stopped)) {
+      taskStore.removeTask(id);
+    }
+  });
+  selectedTaskIds.value.clear();
 }
 
 function moveUp() {
-  console.log('moveUp');
+  const selectedArray = Array.from(selectedTaskIds.value);
+  if (selectedArray.length === 0) return;
+  
+  const taskIds = tasks.value.map(t => t.id);
+  for (const selectedId of selectedArray) {
+    const index = taskIds.indexOf(selectedId);
+    if (index > 0 && taskIds[index] && taskIds[index - 1]) {
+      const temp = taskIds[index]!;
+      taskIds[index] = taskIds[index - 1]!;
+      taskIds[index - 1] = temp;
+    }
+  }
 }
 
 function moveDown() {
-  console.log('moveDown');
+  const selectedArray = Array.from(selectedTaskIds.value);
+  if (selectedArray.length === 0) return;
+  
+  const taskIds = tasks.value.map(t => t.id);
+  for (let i = selectedArray.length - 1; i >= 0; i--) {
+    const selectedId = selectedArray[i];
+    if (!selectedId) continue;
+    const index = taskIds.indexOf(selectedId);
+    if (index < taskIds.length - 1 && taskIds[index] && taskIds[index + 1]) {
+      const temp = taskIds[index]!;
+      taskIds[index] = taskIds[index + 1]!;
+      taskIds[index + 1] = temp;
+    }
+  }
 }
 
 function selectAll() {
-  console.log('selectAll');
+  tasks.value.forEach(t => selectedTaskIds.value.add(t.id));
 }
 
 function invertSelection() {
-  console.log('invertSelection');
+  tasks.value.forEach(t => {
+    if (selectedTaskIds.value.has(t.id)) {
+      selectedTaskIds.value.delete(t.id);
+    } else {
+      selectedTaskIds.value.add(t.id);
+    }
+  });
 }
 
 function startTask(id: string) {
@@ -202,10 +245,15 @@ function stopTask(id: string) {
 
 function removeTask(id: string) {
   taskStore.removeTask(id);
+  selectedTaskIds.value.delete(id);
 }
 
 function selectTask(id: string) {
-  console.log('selectTask:', id);
+  if (selectedTaskIds.value.has(id)) {
+    selectedTaskIds.value.delete(id);
+  } else {
+    selectedTaskIds.value.add(id);
+  }
 }
 
 function copyOutput() {

@@ -1,25 +1,40 @@
 use std::process::Command;
 use serde_json;
 
-/// 验证命令字符串
-/// 确保命令不包含危险操作
+const ALLOWED_PROGRAMS: &[&str] = &["ffprobe", "ffprobe.exe"];
+
+const DANGEROUS_PATTERNS: &[&str] = &[
+    "&&", "||", ";", "`", "$(", "${",
+];
+
 pub fn validate_command_string(command: &str) -> Result<(), String> {
-    // 基本验证：确保命令不为空
     if command.trim().is_empty() {
         return Err("命令不能为空".to_string());
     }
 
-    // 安全检查：禁止某些危险操作
-    let dangerous_patterns = [
-        "rm ", "del ", "delete ", "format ",
-        "&&", "||", ";",
-        " | ",  // 管道符（前后有空格）
-        ">>", " > ", " < ",
-    ];
+    let trimmed = command.trim();
+    
+    let program_name = if trimmed.starts_with('"') {
+        trimmed.split('"').nth(1).unwrap_or("")
+    } else {
+        trimmed.split_whitespace().next().unwrap_or("")
+    };
+    
+    let program_lower = program_name.to_lowercase();
+    let program_basename = std::path::Path::new(&program_lower)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or(&program_lower);
+    
+    if !ALLOWED_PROGRAMS.contains(&program_basename) {
+        return Err(format!(
+            "只允许执行 ffprobe 命令，检测到: {}",
+            program_name
+        ));
+    }
 
-    let cmd_lower = command.to_lowercase();
-    for pattern in &dangerous_patterns {
-        if cmd_lower.contains(pattern) {
+    for pattern in DANGEROUS_PATTERNS {
+        if command.contains(pattern) {
             return Err(format!("命令包含不安全的操作符: {}", pattern));
         }
     }
