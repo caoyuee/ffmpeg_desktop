@@ -79,7 +79,7 @@
             </div>
             <div v-if="stream.codec_type === 'audio'" class="info-item">
               <span class="label">{{ t('page.mediainfo.channels') }}</span>
-              <span class="value">{{ getChannelLayout(stream.channels) }}</span>
+              <span class="value">{{ stream.channels ? getChannelLayout(stream.channels) : 'N/A' }}</span>
             </div>
             <div v-if="stream.bit_rate" class="info-item">
               <span class="label">{{ t('page.mediainfo.bitrate') }}</span>
@@ -330,7 +330,9 @@ function getChannelLayout(channels: number): string {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .media-info-content {

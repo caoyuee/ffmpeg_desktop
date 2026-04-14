@@ -180,8 +180,8 @@ function moveUp() {
   if (selectedIndex.value === null || selectedIndex.value === 0) return;
   const index = selectedIndex.value;
   const temp = fileList.value[index];
-  fileList.value[index] = fileList.value[index - 1];
-  fileList.value[index - 1] = temp;
+  fileList.value[index] = fileList.value[index - 1]!;
+  fileList.value[index - 1] = temp!;
   selectedIndex.value = index - 1;
 }
 
@@ -189,8 +189,8 @@ function moveDown() {
   if (selectedIndex.value === null || selectedIndex.value === fileList.value.length - 1) return;
   const index = selectedIndex.value;
   const temp = fileList.value[index];
-  fileList.value[index] = fileList.value[index + 1];
-  fileList.value[index + 1] = temp;
+  fileList.value[index] = fileList.value[index + 1]!;
+  fileList.value[index + 1] = temp!;
   selectedIndex.value = index + 1;
 }
 
@@ -271,25 +271,25 @@ async function startMux() {
   for (let i = 0; i < fileList.value.length; i++) {
     const file = fileList.value[i];
     
-    const videoStreams = file.videoStreams.split(',').filter(s => s.trim());
+    const videoStreams = file?.videoStreams?.split(',').filter(s => s.trim()) || [];
     for (const stream of videoStreams) {
       command += `-map ${i}:v:${stream.trim()} -c:v copy `;
     }
 
-    const audioStreams = file.audioStreams.split(',').filter(s => s.trim());
+    const audioStreams = file?.audioStreams?.split(',').filter(s => s.trim()) || [];
     for (const stream of audioStreams) {
       command += `-map ${i}:a:${stream.trim()} -c:a copy `;
     }
 
-    const subtitleStreams = file.subtitleStreams.split(',').filter(s => s.trim());
+    const subtitleStreams = file?.subtitleStreams?.split(',').filter(s => s.trim()) || [];
     for (const stream of subtitleStreams) {
       command += `-map ${i}:s:${stream.trim()} -c:s copy `;
     }
 
-    if (file.useChapters) {
+    if (file?.useChapters) {
       command += `-map_chapters ${i} `;
     }
-    if (file.useMetadata) {
+    if (file?.useMetadata) {
       command += `-map_metadata ${i} `;
     }
   }
@@ -298,7 +298,7 @@ async function startMux() {
 
   try {
     await taskStore.addTask({
-      inputFile: fileList.value[0].path,
+        inputFile: fileList.value[0]?.path ?? '',
       outputFile: outputPath.value,
       commandLine: command,
       presetId: 'mux',

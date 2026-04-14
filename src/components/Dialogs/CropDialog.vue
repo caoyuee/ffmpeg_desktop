@@ -338,8 +338,8 @@ function applyCropParams() {
   const parts = cropParams.value.split(':');
   if (parts.length === 4) {
     const [w, h, x, y] = parts.map(Number);
-    if (w > 0 && h > 0) {
-      cropRect = { x, y, width: w, height: h };
+    if (!isNaN(w!) && !isNaN(h!) && w! > 0 && h! > 0) {
+      cropRect = { x: x!, y: y!, width: w!, height: h! };
       if (centerCrop.value) {
         cropRect.x = Math.floor((imageWidth - cropRect.width) / 2);
         cropRect.y = Math.floor((imageHeight - cropRect.height) / 2);

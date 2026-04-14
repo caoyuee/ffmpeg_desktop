@@ -1,5 +1,10 @@
 // 全局类型声明
 
+// Tauri 扩展的 File 类型
+interface File {
+  path?: string;
+}
+
 // FFmpeg 配置相关类型
 export interface VideoCodecConfig {
   key: string;

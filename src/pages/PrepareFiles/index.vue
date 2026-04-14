@@ -114,9 +114,9 @@ function toggleSelect(index: number, event: MouseEvent) {
       selectedFiles.value.splice(pos, 1);
     }
   } else if (event.shiftKey && selectedFiles.value.length > 0) {
-    const last = selectedFiles.value[selectedFiles.value.length - 1];
-    const start = Math.min(last, index);
-    const end = Math.max(last, index);
+    const last = selectedFiles.value[selectedFiles.value.length - 1] ?? 0;
+    const start = Math.min(last ?? 0, index);
+    const end = Math.max(last ?? 0, index);
     for (let i = start; i <= end; i++) {
       if (!selectedFiles.value.includes(i)) {
         selectedFiles.value.push(i);
@@ -144,12 +144,10 @@ function addToQueue() {
   const selectedPaths = selectedFiles.value.map(i => files.value[i]);
   selectedPaths.forEach(path => {
     taskStore.addTask({
-      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-      inputFile: path,
+      inputFile: path!,
       outputFile: '',
-      preset: presetStore.currentPreset,
-      status: 'pending',
-      progress: 0,
+      commandLine: '',
+      presetId: presetStore.currentPreset?.id,
     });
   });
 

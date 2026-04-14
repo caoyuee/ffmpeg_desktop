@@ -196,8 +196,11 @@ export const useFFmpegSettingsStore = defineStore("ffmpeg_settings", () => {
       },
     };
 
-    if (hwType in hardwareEncoders && baseCodec in hardwareEncoders[hwType]) {
-      return hardwareEncoders[hwType][baseCodec];
+    if (
+      hwType in hardwareEncoders &&
+      baseCodec in (hardwareEncoders[hwType] ?? {})
+    ) {
+      return hardwareEncoders[hwType]![baseCodec] ?? baseCodec;
     }
 
     return baseCodec;

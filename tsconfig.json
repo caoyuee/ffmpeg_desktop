@@ -1,4 +1,4 @@
-{ //全局的ts配置
+{
   "files": [],
   "references": [
     {
@@ -7,5 +7,5 @@
     {
       "path": "./tsconfig.node.json"
     }
-  ],
+  ]
 }

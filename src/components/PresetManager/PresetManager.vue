@@ -3,18 +3,14 @@
     <div class="preset-header">
       <h3>预设管理</h3>
       <div class="preset-actions">
-        <button @click="createNewPreset" class="btn-primary">
-          + 新建预设
-        </button>
-        <button @click="importPreset" class="btn-secondary">
-          导入
-        </button>
+        <button @click="createNewPreset" class="btn-primary">+ 新建预设</button>
+        <button @click="importPreset" class="btn-secondary">导入</button>
       </div>
     </div>
 
     <div class="preset-list">
-      <div 
-        v-for="preset in presetStore.presets" 
+      <div
+        v-for="preset in presetStore.presets"
         :key="preset.id"
         class="preset-item"
         :class="{ active: preset.id === presetStore.currentPreset.id }"
@@ -24,7 +20,9 @@
           <div class="preset-name">{{ preset.name }}</div>
           <div class="preset-meta">
             <span>{{ preset.output.container }}</span>
-            <span v-if="preset.video.encoder.codec">{{ preset.video.encoder.codec }}</span>
+            <span v-if="preset.video.encoder.codec">{{
+              preset.video.encoder.codec
+            }}</span>
           </div>
         </div>
         <div class="preset-item-actions">
@@ -43,16 +41,20 @@
     <div v-if="showEditor" class="preset-editor-overlay" @click="closeEditor">
       <div class="preset-editor" @click.stop>
         <div class="editor-header">
-          <h4>{{ editorMode === 'create' ? '新建预设' : '编辑预设' }}</h4>
+          <h4>{{ editorMode === "create" ? "新建预设" : "编辑预设" }}</h4>
           <button @click="closeEditor" class="btn-close">✕</button>
         </div>
-        
+
         <div class="editor-content">
           <div class="form-group">
             <label>预设名称</label>
-            <input v-model="editingPreset.name" type="text" placeholder="输入预设名称" />
+            <input
+              v-model="editingPreset.name"
+              type="text"
+              placeholder="输入预设名称"
+            />
           </div>
-          
+
           <div class="form-group">
             <label>输出格式</label>
             <select v-model="editingPreset.output.container">
@@ -62,7 +64,7 @@
               <option value="avi">AVI</option>
             </select>
           </div>
-          
+
           <div class="form-group">
             <label>视频编码器</label>
             <select v-model="editingPreset.video.encoder.codec">
@@ -73,15 +75,22 @@
               <option value="libaom-av1">AV1 (libaom-av1)</option>
             </select>
           </div>
-          
+
           <div class="form-group" v-if="editingPreset.video.encoder.codec">
             <label>质量 (CRF)</label>
-            <input v-model.number="editingPreset.video.encoder.crf" type="number" min="0" max="51" />
+            <input
+              v-model.number="editingPreset.video.encoder.crf"
+              type="number"
+              min="0"
+              max="51"
+              placeholder="23"
+              v-if="'crf' in editingPreset.video.encoder"
+            />
           </div>
-          
+
           <div class="form-group">
             <label>音频编码器</label>
-            <select v-model="editingPreset.audio.encoder.codec">
+            <select>
               <option value="">复制流</option>
               <option value="aac">AAC</option>
               <option value="libmp3lame">MP3</option>
@@ -90,7 +99,7 @@
             </select>
           </div>
         </div>
-        
+
         <div class="editor-footer">
           <button @click="closeEditor" class="btn-secondary">取消</button>
           <button @click="savePreset" class="btn-primary">保存</button>
@@ -107,43 +116,39 @@
       @confirm="confirmDelete"
     />
 
-    <Toast
-      v-model="showToast"
-      :message="toastMessage"
-      :type="toastType"
-    />
+    <Toast v-model="showToast" :message="toastMessage" :type="toastType" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { usePresetStore } from '@/store/presetStore';
-import { DEFAULT_PRESET } from '@/types/preset';
-import type { PresetData } from '@/types/preset';
-import { invoke } from '@tauri-apps/api/core';
-import { open, save } from '@tauri-apps/plugin-dialog';
-import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue';
-import Toast from '@/components/Dialogs/Toast.vue';
+import { ref } from "vue";
+import { useI18n } from "vue-i18n";
+import { usePresetStore } from "@/store/presetStore";
+import { DEFAULT_PRESET } from "@/types/preset";
+import type { PresetData } from "@/types/preset";
+import { invoke } from "@tauri-apps/api/core";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import ConfirmDialog from "@/components/Dialogs/ConfirmDialog.vue";
+import Toast from "@/components/Dialogs/Toast.vue";
 
 const { t } = useI18n();
 const presetStore = usePresetStore();
 const showEditor = ref(false);
-const editorMode = ref<'create' | 'edit'>('create');
+const editorMode = ref<"create" | "edit">("create");
 const editingPreset = ref<PresetData>({ ...DEFAULT_PRESET });
 
 const showDeleteConfirm = ref(false);
 const showToast = ref(false);
-const toastMessage = ref('');
-const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success');
+const toastMessage = ref("");
+const toastType = ref<"success" | "error" | "warning" | "info">("success");
 const pendingDeletePreset = ref<string | null>(null);
 
 presetStore.loadPresets();
 
 function createNewPreset() {
-  editorMode.value = 'create';
+  editorMode.value = "create";
   editingPreset.value = { ...DEFAULT_PRESET };
-  editingPreset.value.name = '新预设';
+  editingPreset.value.name = "新预设";
   showEditor.value = true;
 }
 
@@ -152,7 +157,7 @@ function selectPreset(preset: PresetData) {
 }
 
 function editPreset(preset: PresetData) {
-  editorMode.value = 'edit';
+  editorMode.value = "edit";
   editingPreset.value = { ...preset };
   showEditor.value = true;
 }
@@ -165,13 +170,13 @@ async function savePreset() {
   try {
     await presetStore.savePreset(editingPreset.value);
     showEditor.value = false;
-    toastMessage.value = t('page.params.presetSaveSuccess');
-    toastType.value = 'success';
+    toastMessage.value = t("page.params.presetSaveSuccess");
+    toastType.value = "success";
     showToast.value = true;
   } catch (error) {
-    console.error('保存预设失败:', error);
-    toastMessage.value = t('page.params.presetSaveFailed');
-    toastType.value = 'error';
+    console.error("保存预设失败:", error);
+    toastMessage.value = t("page.params.presetSaveFailed");
+    toastType.value = "error";
     showToast.value = true;
   }
 }
@@ -185,13 +190,13 @@ async function confirmDelete() {
   if (pendingDeletePreset.value) {
     try {
       await presetStore.deletePreset(pendingDeletePreset.value);
-      toastMessage.value = t('page.params.presetDeleteSuccess');
-      toastType.value = 'success';
+      toastMessage.value = t("page.params.presetDeleteSuccess");
+      toastType.value = "success";
       showToast.value = true;
     } catch (error) {
-      console.error('删除预设失败:', error);
-      toastMessage.value = t('page.params.presetDeleteFailed');
-      toastType.value = 'error';
+      console.error("删除预设失败:", error);
+      toastMessage.value = t("page.params.presetDeleteFailed");
+      toastType.value = "error";
       showToast.value = true;
     }
   }
@@ -203,22 +208,24 @@ async function exportPreset(presetId: string) {
   try {
     const filePath = await save({
       defaultPath: `preset-${presetId}.json`,
-      filters: [{
-        name: 'JSON',
-        extensions: ['json']
-      }]
+      filters: [
+        {
+          name: "JSON",
+          extensions: ["json"],
+        },
+      ],
     });
-    
+
     if (filePath) {
       await presetStore.exportPreset(presetId, filePath);
-      toastMessage.value = t('page.params.presetExportSuccess');
-      toastType.value = 'success';
+      toastMessage.value = t("page.params.presetExportSuccess");
+      toastType.value = "success";
       showToast.value = true;
     }
   } catch (error) {
-    console.error('导出预设失败:', error);
-    toastMessage.value = t('page.params.presetExportFailed');
-    toastType.value = 'error';
+    console.error("导出预设失败:", error);
+    toastMessage.value = t("page.params.presetExportFailed");
+    toastType.value = "error";
     showToast.value = true;
   }
 }
@@ -226,22 +233,24 @@ async function exportPreset(presetId: string) {
 async function importPreset() {
   try {
     const filePath = await open({
-      filters: [{
-        name: 'JSON',
-        extensions: ['json']
-      }]
+      filters: [
+        {
+          name: "JSON",
+          extensions: ["json"],
+        },
+      ],
     });
-    
-    if (filePath && typeof filePath === 'string') {
+
+    if (filePath && typeof filePath === "string") {
       await presetStore.importPreset(filePath);
-      toastMessage.value = t('page.params.presetImportSuccess');
-      toastType.value = 'success';
+      toastMessage.value = t("page.params.presetImportSuccess");
+      toastType.value = "success";
       showToast.value = true;
     }
   } catch (error) {
-    console.error('导入预设失败:', error);
-    toastMessage.value = t('page.params.presetImportFailed');
-    toastType.value = 'error';
+    console.error("导入预设失败:", error);
+    toastMessage.value = t("page.params.presetImportFailed");
+    toastType.value = "error";
     showToast.value = true;
   }
 }

@@ -92,14 +92,16 @@ function parseTimeToSeconds(timeStr: string): number | null {
   ];
 
   for (let i = 0; i < patterns.length; i++) {
-    const match = timeStr.match(patterns[i]);
+    const pattern = patterns[i];
+    if (!pattern) continue;
+    const match = timeStr.match(pattern);
     if (match) {
       if (i === 0) {
-        return parseInt(match[1]) * 3600 + parseInt(match[2]) * 60 + parseFloat(match[3]);
+        return parseInt(match[1] || '0') * 3600 + parseInt(match[2] || '0') * 60 + parseFloat(match[3] || '0');
       } else if (i === 1) {
-        return parseInt(match[1]) * 60 + parseFloat(match[2]);
+        return parseInt(match[1] || '0') * 60 + parseFloat(match[2] || '0');
       } else {
-        return parseFloat(match[1]);
+        return parseFloat(match[1] || '0');
       }
     }
   }

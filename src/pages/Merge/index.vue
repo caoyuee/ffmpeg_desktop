@@ -102,8 +102,8 @@ function toggleSelect(index: number, event: MouseEvent) {
     }
   } else if (event.shiftKey && selectedIndices.value.length > 0) {
     const lastSelected = selectedIndices.value[selectedIndices.value.length - 1];
-    const start = Math.min(lastSelected, index);
-    const end = Math.max(lastSelected, index);
+    const start = Math.min(lastSelected!, index);
+    const end = Math.max(lastSelected!, index);
     for (let i = start; i <= end; i++) {
       if (!selectedIndices.value.includes(i)) {
         selectedIndices.value.push(i);
@@ -119,8 +119,8 @@ function moveUp() {
   for (const index of sorted) {
     if (index > 0 && !selectedIndices.value.includes(index - 1)) {
       const temp = fileList.value[index];
-      fileList.value[index] = fileList.value[index - 1];
-      fileList.value[index - 1] = temp;
+      fileList.value[index] = fileList.value[index - 1]!;
+      fileList.value[index - 1] = temp!;
       const idx = selectedIndices.value.indexOf(index);
       selectedIndices.value[idx] = index - 1;
     }
@@ -132,8 +132,8 @@ function moveDown() {
   for (const index of sorted) {
     if (index < fileList.value.length - 1 && !selectedIndices.value.includes(index + 1)) {
       const temp = fileList.value[index];
-      fileList.value[index] = fileList.value[index + 1];
-      fileList.value[index + 1] = temp;
+      fileList.value[index] = fileList.value[index + 1]!;
+      fileList.value[index + 1] = temp!;
       const idx = selectedIndices.value.indexOf(index);
       selectedIndices.value[idx] = index + 1;
     }
@@ -201,7 +201,7 @@ async function startMerge() {
     const command = `-hide_banner -nostdin -f concat -safe 0 -i "${concatFilePath}" -c copy "${outputPath.value}" -y`;
 
     await taskStore.addTask({
-      inputFile: fileList.value[0],
+      inputFile: fileList.value[0] || '',
       outputFile: outputPath.value,
       commandLine: command,
       presetId: 'merge',

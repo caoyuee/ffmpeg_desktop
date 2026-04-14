@@ -149,7 +149,7 @@ const totalOutputSize = computed(() => {
 const estimatedTime = computed(() => {
   const processing = tasks.value.filter(t => t.status === TaskStatus.Processing);
   if (processing.length === 0) return '--';
-  return processing[0].progress?.remainingTime || '--';
+  return processing[0]?.progress?.remainingTime || '--';
 });
 
 function startAll() {

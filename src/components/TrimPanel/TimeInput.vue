@@ -48,21 +48,23 @@ function parseTime(input: string): number | null {
   ];
 
   for (let i = 0; i < patterns.length; i++) {
-    const match = input.match(patterns[i]);
+    const pattern = patterns[i];
+    if (!pattern) continue;
+    const match = input.match(pattern);
     if (match) {
       if (i === 0) {
-        const hours = parseInt(match[1]);
-        const minutes = parseInt(match[2]);
-        const seconds = parseFloat(match[3]);
+        const hours = parseInt(match[1] ?? '0');
+        const minutes = parseInt(match[2] ?? '0');
+        const seconds = parseFloat(match[3] ?? '0');
         if (minutes > 59 || seconds >= 60) return null;
         return hours * 3600 + minutes * 60 + seconds;
       } else if (i === 1) {
-        const minutes = parseInt(match[1]);
-        const seconds = parseFloat(match[2]);
+        const minutes = parseInt(match[1] ?? '0');
+        const seconds = parseFloat(match[2] ?? '0');
         if (seconds >= 60) return null;
         return minutes * 60 + seconds;
       } else {
-        const seconds = parseFloat(match[1]);
+        const seconds = parseFloat(match[1] ?? '0');
         if (seconds < 0) return null;
         return seconds;
       }

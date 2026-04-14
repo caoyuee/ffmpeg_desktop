@@ -232,11 +232,11 @@ const result = await invoke('command_name', { arg1: value });
 # 开发
 pnpm dev
 
+# 类型检查 (每次修改代码后必须运行)
+pnpm typecheck
+
 # 构建
 pnpm build
-
-# 类型检查
-vue-tsc --noEmit
 
 # Tauri 开发
 pnpm tauri dev

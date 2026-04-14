@@ -134,7 +134,7 @@ watch(() => props.preset, (newVal) => {
 function onCategoryChange() {
   const encoders = encoderOptions[localPreset.value.video.encoder.category];
   if (encoders && encoders.length > 0) {
-    localPreset.value.video.encoder.codec = encoders[0].value;
+    localPreset.value.video.encoder.codec = encoders[0]?.value || '';
   }
   onChange();
 }

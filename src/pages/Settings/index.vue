@@ -35,21 +35,21 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" class="checkbox-input" v-model="settings.autoCheckUpdate" @change="saveSettings" />
+            <input type="checkbox" v-model="settings.autoCheckUpdate" @change="saveSettings" />
             <span>{{ t('page.settings.autoCheckUpdate') }}</span>
           </label>
         </div>
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" class="checkbox-input" v-model="settings.minimizeToTray" @change="saveSettings" />
+            <input type="checkbox" v-model="settings.minimizeToTray" @change="saveSettings" />
             <span>{{ t('page.settings.minimizeToTray') }}</span>
           </label>
         </div>
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" class="checkbox-input" v-model="settings.closeToTray" @change="saveSettings" />
+            <input type="checkbox" v-model="settings.closeToTray" @change="saveSettings" />
             <span>{{ t('page.settings.closeToTray') }}</span>
           </label>
         </div>
@@ -497,10 +497,19 @@ function openReleases() {
   color: var(--text-color1, #c0c0c0);
 }
 
-.checkbox-label .checkbox-input {
-  width: 10px;
-  height: 10px;
+.checkbox-label input[type="checkbox"] {
+  -webkit-appearance: checkbox;
+  appearance: checkbox;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  accent-color: var(--info-color, #3498db);
 }
+
 
 .test-btn {
   padding: 10px 20px;

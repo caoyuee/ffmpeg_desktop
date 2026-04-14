@@ -2,7 +2,7 @@
   <Teleport to="body">
     <Transition name="toast">
       <div v-if="modelValue" class="toast-container" :class="type">
-        <span class="toast-icon">{{ iconMap[type] }}</span>
+        <span class="toast-icon">{{ iconMap[type || 'info'] }}</span>
         <span class="toast-message">{{ message }}</span>
       </div>
     </Transition>

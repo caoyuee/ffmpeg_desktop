@@ -180,8 +180,8 @@ function removeShader() {
 function moveShaderUp() {
   if (selectedShaderIndex.value > 0) {
     const temp = shaders.value[selectedShaderIndex.value];
-    shaders.value[selectedShaderIndex.value] = shaders.value[selectedShaderIndex.value - 1];
-    shaders.value[selectedShaderIndex.value - 1] = temp;
+    shaders.value[selectedShaderIndex.value] = shaders.value[selectedShaderIndex.value - 1]!;
+    shaders.value[selectedShaderIndex.value - 1] = temp!;
     selectedShaderIndex.value--;
   }
 }
@@ -189,8 +189,8 @@ function moveShaderUp() {
 function moveShaderDown() {
   if (selectedShaderIndex.value < shaders.value.length - 1) {
     const temp = shaders.value[selectedShaderIndex.value];
-    shaders.value[selectedShaderIndex.value] = shaders.value[selectedShaderIndex.value + 1];
-    shaders.value[selectedShaderIndex.value + 1] = temp;
+    shaders.value[selectedShaderIndex.value] = shaders.value[selectedShaderIndex.value + 1]!;
+    shaders.value[selectedShaderIndex.value + 1] = temp!;
     selectedShaderIndex.value++;
   }
 }
