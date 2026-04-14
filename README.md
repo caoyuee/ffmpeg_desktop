@@ -228,6 +228,48 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
+## 🧪 测试
+
+### 测试框架
+
+- **前端**: Vitest + @vue/test-utils + happy-dom
+- **后端**: Rust 内置测试框架 + cargo-tarpaulin
+
+### 运行测试
+
+```bash
+# 运行前端测试（监听模式）
+pnpm test
+
+# 运行前端测试（单次）
+pnpm test:run
+
+# 运行前端测试并生成覆盖率
+pnpm test:coverage
+
+# 运行后端测试
+cd src-tauri && cargo test
+
+# 运行后端测试并生成覆盖率
+cd src-tauri && cargo tarpaulin
+
+# 运行所有测试并生成报告
+pnpm test:all
+```
+
+### 测试覆盖率目标
+
+- **前端**: ≥ 85%
+- **后端**: ≥ 80%
+
+### 查看测试报告
+
+测试完成后，可以在以下位置查看详细报告：
+
+- 前端覆盖率: `test-reports/frontend/coverage/index.html`
+- 后端覆盖率: `test-reports/backend/tarpaulin-report.html`
+- 综合报告: `test-reports/TEST_REPORT.md`
+
 ## 📄 许可证
 
 MIT License
