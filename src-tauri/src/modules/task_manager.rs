@@ -96,10 +96,18 @@ pub fn start_ffmpeg(
         
         TASK_PROCESSES.lock().unwrap().remove(&task_id_clone);
         
-        let _ = app_clone.emit("ffmpeg-finish", serde_json::json!({
-            "taskId": task_id_clone,
-            "exitCode": exit_code
-        }));
+        if exit_code == 0 {
+            let _ = app_clone.emit("ffmpeg-finish", serde_json::json!({
+                "taskId": task_id_clone,
+                "exitCode": exit_code
+            }));
+        } else {
+            let _ = app_clone.emit("ffmpeg-error", serde_json::json!({
+                "taskId": task_id_clone,
+                "exitCode": exit_code,
+                "message": format!("FFmpeg exited with code {}", exit_code)
+            }));
+        }
     });
 
     Ok(pid)

@@ -223,7 +223,7 @@ function updateRefreshRate() {
 
 async function killProcess(pid: number) {
   try {
-    await invoke('kill_process', { pid });
+    await invoke('kill_process_by_pid', { pid });
     await fetchMetrics();
   } catch (error) {
     console.error('终止进程失败:', error);

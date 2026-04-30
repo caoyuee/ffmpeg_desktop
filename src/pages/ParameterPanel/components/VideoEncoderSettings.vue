@@ -8,7 +8,9 @@
           <option value="h265">H.265/HEVC</option>
           <option value="av1">AV1</option>
           <option value="vp9">VP9</option>
+          <option value="vp8">VP8</option>
           <option value="mpeg4">MPEG-4</option>
+          <option value="prores">ProRes</option>
         </select>
       </div>
 
@@ -98,6 +100,8 @@ const encoderOptions: Record<string, { value: string; label: string }[]> = {
     { value: 'h264_qsv', label: 'h264_qsv (Intel QSV)' },
     { value: 'h264_amf', label: 'h264_amf (AMD)' },
     { value: 'h264_videotoolbox', label: 'h264_videotoolbox (macOS)' },
+    { value: 'h264_vaapi', label: 'h264_vaapi (VAAPI/Linux)' },
+    { value: 'h264_vulkan', label: 'h264_vulkan (Vulkan)' },
   ],
   h265: [
     { value: 'libx265', label: 'libx265 (CPU)' },
@@ -105,6 +109,8 @@ const encoderOptions: Record<string, { value: string; label: string }[]> = {
     { value: 'hevc_qsv', label: 'hevc_qsv (Intel QSV)' },
     { value: 'hevc_amf', label: 'hevc_amf (AMD)' },
     { value: 'hevc_videotoolbox', label: 'hevc_videotoolbox (macOS)' },
+    { value: 'hevc_vaapi', label: 'hevc_vaapi (VAAPI/Linux)' },
+    { value: 'hevc_vulkan', label: 'hevc_vulkan (Vulkan)' },
   ],
   av1: [
     { value: 'libaom-av1', label: 'libaom-av1 (CPU)' },
@@ -112,12 +118,19 @@ const encoderOptions: Record<string, { value: string; label: string }[]> = {
     { value: 'av1_nvenc', label: 'av1_nvenc (NVIDIA)' },
     { value: 'av1_qsv', label: 'av1_qsv (Intel QSV)' },
     { value: 'av1_amf', label: 'av1_amf (AMD)' },
+    { value: 'av1_vaapi', label: 'av1_vaapi (VAAPI/Linux)' },
   ],
   vp9: [
     { value: 'libvpx-vp9', label: 'libvpx-vp9 (CPU)' },
   ],
+  vp8: [
+    { value: 'libvpx', label: 'libvpx (CPU)' },
+  ],
   mpeg4: [
     { value: 'mpeg4', label: 'mpeg4' },
+  ],
+  prores: [
+    { value: 'prores_ks', label: 'ProRes (CPU)' },
   ],
 };
 

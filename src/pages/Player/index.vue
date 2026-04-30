@@ -4,208 +4,130 @@
       <button class="btn btn-open" @click="openFile">
         <span class="icon">📁</span> {{ t('page.player.open') }}
       </button>
-      <button class="btn btn-stop" @click="stopPlayback">
+      <button class="btn btn-stop" @click="closeVideo" :disabled="!currentFile">
         <span class="icon">⏹️</span> {{ t('page.player.close') }}
       </button>
       <div class="file-name" v-if="currentFile">
         {{ currentFile }}
       </div>
     </div>
-    
-    <div 
+
+    <div
       class="player-container"
-      ref="playerContainer"
-      @dragover.prevent="onDragOver"
-      @dragleave="onDragLeave"
-      @drop.prevent="onDrop"
+      @dragover.prevent
+      @dragleave="isDragOver = false"
+      @drop.prevent
       :class="{ 'drag-over': isDragOver }"
     >
-      <div class="player-hint" v-if="!isPlaying">
+      <VideoPlayer
+        v-if="videoSrc"
+        ref="videoPlayerRef"
+        :src="videoSrc"
+        :autoplay="true"
+        @ended="onVideoEnded"
+        @error="onVideoError"
+      />
+      <div v-else class="player-hint">
         <span>{{ t('page.player.dragHint') }}</span>
-      </div>
-    </div>
-    
-    <div class="controls-bar">
-      <button class="btn btn-control" @click="togglePause" :disabled="!isPlaying">
-        <span class="icon">{{ isPaused ? '▶️' : '⏸️' }}</span>
-      </button>
-      <div class="progress-bar" @click="seek">
-        <div class="progress-fill" :style="{ width: progressPercent + '%' }"></div>
-      </div>
-      <span class="time-display">{{ formatTime(currentTime) }} / {{ formatTime(duration) }}</span>
-      <div class="volume-control">
-        <span class="icon">🔊</span>
-        <input 
-          type="range" 
-          min="0" 
-          max="100" 
-          v-model="volume" 
-          @change="setVolume"
-          class="volume-slider"
-        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { open } from '@tauri-apps/plugin-dialog';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
+import { ref, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { open } from '@tauri-apps/plugin-dialog'
+import { invoke } from '@tauri-apps/api/core'
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
+import type { UnlistenFn } from '@tauri-apps/api/event'
+import VideoPlayer from '@/components/VideoPlayer/VideoPlayer.vue'
 
-const { t } = useI18n();
+const { t } = useI18n()
 
-const playerContainer = ref<HTMLDivElement | null>(null);
-const currentFile = ref('');
-const isPlaying = ref(false);
-const isPaused = ref(false);
-const isDragOver = ref(false);
-const currentTime = ref(0);
-const duration = ref(0);
-const volume = ref(80);
-const progressPercent = ref(0);
+const videoPlayerRef = ref<InstanceType<typeof VideoPlayer> | null>(null)
+const currentFile = ref('')
+const videoSrc = ref('')
+const isDragOver = ref(false)
 
-let ffplayProcess: string | null = null;
-let progressInterval: number | null = null;
+let dragDropUnlisten: UnlistenFn | null = null
+let currentBlobUrl: string | null = null
 
 async function openFile() {
   try {
     const file = await open({
       multiple: false,
       filters: [{ name: t('page.player.videoFiles'), extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', 'wmv', '*'] }],
-    });
+    })
     if (file) {
-      await playFile(file as string);
+      await playFile(file as string)
     }
   } catch (error) {
-    console.error('打开文件失败:', error);
+    console.error('打开文件失败:', error)
   }
 }
 
 async function playFile(filePath: string) {
-  await stopPlayback();
-  
-  currentFile.value = filePath;
-  isPlaying.value = true;
-  isPaused.value = false;
-  
+  closeVideo()
+  currentFile.value = filePath
+
   try {
-    const containerWidth = playerContainer.value?.clientWidth || 800;
-    const containerHeight = playerContainer.value?.clientHeight || 450;
-    
-    await invoke('start_ffplay', {
-      filePath,
-      width: containerWidth,
-      height: containerHeight,
-      volume: volume.value,
-    });
-    
-    startProgressTracking();
+    const base64 = await invoke<string>('read_video_file', { path: filePath })
+    const binary = atob(base64)
+    const bytes = new Uint8Array(binary.length)
+    for (let i = 0; i < binary.length; i++) {
+      bytes[i] = binary.charCodeAt(i)
+    }
+    const ext = filePath.split('.').pop()?.toLowerCase() || 'mp4'
+    const mimeType =
+      { mp4: 'video/mp4', webm: 'video/webm', ogv: 'video/ogg', ogg: 'video/ogg', mkv: 'video/x-matroska', avi: 'video/x-msvideo', mov: 'video/quicktime', flv: 'video/x-flv', wmv: 'video/x-ms-wmv' }[ext] || 'video/mp4'
+
+    const blob = new Blob([bytes], { type: mimeType })
+    currentBlobUrl = URL.createObjectURL(blob)
+    videoSrc.value = currentBlobUrl
   } catch (error) {
-    console.error('播放失败:', error);
-    isPlaying.value = false;
+    console.error('加载视频文件失败:', error)
   }
 }
 
-async function stopPlayback() {
-  if (ffplayProcess) {
-    try {
-      await invoke('stop_ffplay');
-    } catch (error) {
-      console.error('停止播放失败:', error);
-    }
-    ffplayProcess = null;
+function closeVideo() {
+  videoPlayerRef.value?.stop()
+  if (currentBlobUrl) {
+    URL.revokeObjectURL(currentBlobUrl)
+    currentBlobUrl = null
   }
-  
-  if (progressInterval) {
-    clearInterval(progressInterval);
-    progressInterval = null;
-  }
-  
-  isPlaying.value = false;
-  isPaused.value = false;
-  currentFile.value = '';
-  currentTime.value = 0;
-  duration.value = 0;
-  progressPercent.value = 0;
+  videoSrc.value = ''
+  currentFile.value = ''
 }
 
-function togglePause() {
-  if (!isPlaying.value) return;
-  isPaused.value = !isPaused.value;
-  invoke('toggle_ffplay_pause', { pause: isPaused.value });
+function onVideoEnded() {
+  // VideoPlayer handles internal state, no action needed here
 }
 
-function setVolume() {
-  invoke('set_ffplay_volume', { volume: volume.value });
-}
-
-function seek(event: MouseEvent) {
-  if (!playerContainer.value || !isPlaying.value) return;
-  
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
-  const percent = (event.clientX - rect.left) / rect.width;
-  const seekTime = duration.value * percent;
-  
-  invoke('seek_ffplay', { time: seekTime });
-}
-
-function startProgressTracking() {
-  progressInterval = window.setInterval(async () => {
-    try {
-      const info = await invoke<{ currentTime: number; duration: number }>('get_ffplay_progress');
-      currentTime.value = info.currentTime;
-      duration.value = info.duration;
-      progressPercent.value = duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0;
-    } catch (error) {
-      console.error('获取进度失败:', error);
-    }
-  }, 500);
-}
-
-function formatTime(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  
-  if (h > 0) {
-    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  }
-  return `${m}:${s.toString().padStart(2, '0')}`;
-}
-
-function onDragOver() {
-  isDragOver.value = true;
-}
-
-function onDragLeave() {
-  isDragOver.value = false;
-}
-
-async function onDrop(event: DragEvent) {
-  isDragOver.value = false;
-  const files = event.dataTransfer?.getData('text/uri-list')?.split('\n');
-  if (files && files[0]) {
-    const path = files[0].trim().replace('file://', '');
-    await playFile(decodeURIComponent(path));
-  }
+function onVideoError(event: Event) {
+  console.error('视频播放错误:', event)
 }
 
 onMounted(async () => {
-  await listen('ffplay-exited', () => {
-    isPlaying.value = false;
-    if (progressInterval) {
-      clearInterval(progressInterval);
-      progressInterval = null;
+  dragDropUnlisten = await getCurrentWebviewWindow().onDragDropEvent((event) => {
+    if (event.payload.type === 'over') {
+      isDragOver.value = true
+    } else if (event.payload.type === 'leave') {
+      isDragOver.value = false
+    } else if (event.payload.type === 'drop') {
+      isDragOver.value = false
+      const firstPath = event.payload.paths[0]
+      if (firstPath) {
+        playFile(firstPath)
+      }
     }
-  });
-});
+  })
+})
 
 onUnmounted(() => {
-  stopPlayback();
-});
+  closeVideo()
+  dragDropUnlisten?.()
+})
 </script>
 
 <style scoped>
@@ -251,12 +173,6 @@ onUnmounted(() => {
   color: #cd5c5c;
 }
 
-.btn-control {
-  background: var(--bg-color4, #383838);
-  color: #c0c0c0;
-  padding: 6px 12px;
-}
-
 .file-name {
   flex: 1;
   color: #888;
@@ -274,6 +190,7 @@ onUnmounted(() => {
   justify-content: center;
   border: 2px dashed transparent;
   transition: border-color 0.2s;
+  overflow: hidden;
 }
 
 .player-container.drag-over {
@@ -283,60 +200,5 @@ onUnmounted(() => {
 .player-hint {
   color: #555;
   font-size: 14px;
-}
-
-.controls-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  background: var(--bg-color3, #242424);
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
-  background: var(--bg-color1, #181818);
-  border-radius: 3px;
-  cursor: pointer;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  background: #9acd32;
-  border-radius: 3px;
-  transition: width 0.1s;
-}
-
-.time-display {
-  color: #888;
-  font-size: 12px;
-  min-width: 100px;
-  text-align: center;
-}
-
-.volume-control {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.volume-slider {
-  width: 80px;
-  height: 4px;
-  -webkit-appearance: none;
-  background: var(--bg-color1, #181818);
-  border-radius: 2px;
-  cursor: pointer;
-}
-
-.volume-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 12px;
-  height: 12px;
-  background: #9acd32;
-  border-radius: 50%;
-  cursor: pointer;
 }
 </style>

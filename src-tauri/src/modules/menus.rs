@@ -16,7 +16,7 @@ pub fn setup_menus(app: &AppHandle) -> tauri::Result<()> {
                     app_handle,
                     "settings",
                     "Settings",
-                    "/#/setting",
+                    "/settings",
                     (960.0, 540.0),
                 );
             }

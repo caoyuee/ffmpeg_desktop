@@ -11,9 +11,17 @@
           <option value="libfdk_aac">AAC (FDK)</option>
           <option value="libmp3lame">MP3</option>
           <option value="libopus">Opus</option>
+          <option value="libvorbis">Vorbis</option>
           <option value="flac">FLAC (无损)</option>
+          <option value="alac">ALAC (Apple 无损)</option>
           <option value="ac3">AC3</option>
           <option value="eac3">E-AC3</option>
+          <option value="dca">DTS</option>
+          <option value="truehd">TrueHD</option>
+          <option value="pcm_s16le">PCM 16-bit</option>
+          <option value="pcm_s24le">PCM 24-bit</option>
+          <option value="pcm_s32le">PCM 32-bit</option>
+          <option value="wavpack">WavPack</option>
         </select>
       </div>
     </div>

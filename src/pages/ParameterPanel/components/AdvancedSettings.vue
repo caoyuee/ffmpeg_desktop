@@ -1,6 +1,21 @@
 <template>
   <div class="advanced-settings">
     <div class="form-section">
+      <h4>全自定义命令模式</h4>
+      <div class="form-group">
+        <label class="checkbox-label">
+          <input type="checkbox" v-model="useFullCustom" @change="onFullCustomToggle" />
+          <span>启用全自定义命令（将忽略所有其他参数设置）</span>
+        </label>
+      </div>
+      <div v-if="useFullCustom" class="form-group">
+        <label>自定义命令</label>
+        <textarea v-model="localPreset.custom.fullCustom" @input="onChange" rows="4" placeholder="ffmpeg -i &quot;$INPUT&quot; -c:v libx264 -crf 23 -c:a aac &quot;$OUTPUT.mp4&quot;"></textarea>
+        <div class="hint">支持占位符: $INPUT (输入文件), $OUTPUT (输出文件)</div>
+      </div>
+    </div>
+
+    <div class="form-section">
       <h4>解码设置</h4>
       <div class="form-group">
         <label>解码器</label>
@@ -104,6 +119,27 @@
         </select>
       </div>
     </div>
+
+    <div class="form-section">
+      <h4>图像编码</h4>
+      <div class="form-group">
+        <label>图像编码器</label>
+        <select v-model="localPreset.image.encoder" @change="onChange">
+          <option value="">不处理</option>
+          <option value="png">PNG</option>
+          <option value="apng">APNG (动态PNG)</option>
+          <option value="mjpeg">JPEG</option>
+          <option value="libwebp">WebP</option>
+          <option value="gif">GIF</option>
+          <option value="bmp">BMP</option>
+          <option value="tiff">TIFF</option>
+        </select>
+      </div>
+      <div v-if="localPreset.image.encoder && localPreset.image.encoder !== 'bmp'" class="form-group">
+        <label>图像质量</label>
+        <input type="text" v-model="localPreset.image.quality" @input="onChange" placeholder="如: 90 (1-100)" />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -120,6 +156,15 @@ const emit = defineEmits<{
 }>();
 
 const localPreset = ref<PresetData>({ ...props.preset });
+
+const useFullCustom = ref(!!localPreset.value.custom.fullCustom);
+
+function onFullCustomToggle() {
+  if (!useFullCustom.value) {
+    localPreset.value.custom.fullCustom = '';
+  }
+  onChange();
+}
 
 watch(() => props.preset, (newVal) => {
   if (newVal) {
@@ -185,5 +230,22 @@ function onChange() {
 .form-group textarea {
   resize: vertical;
   min-height: 50px;
+}
+
+.hint {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-color3, #666);
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto;
 }
 </style>

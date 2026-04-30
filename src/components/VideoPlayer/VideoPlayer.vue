@@ -20,8 +20,9 @@
     ></video>
 
     <div class="video-overlay" v-if="showOverlay" @click="togglePlay">
-      <div class="play-button" v-if="!isPlaying">
-        <span>▶</span>
+      <div class="play-button">
+        <span v-if="isPlaying">⏸</span>
+        <span v-else>▶</span>
       </div>
     </div>
 
@@ -73,13 +74,26 @@
         </div>
 
         <div class="controls-right">
-          <button class="control-btn" @click="changeSpeed" :title="'播放速度: ' + playbackRate + 'x'">
-            <span>{{ playbackRate }}x</span>
-          </button>
+          <div class="speed-control" @mouseenter="showSpeedMenu = true" @mouseleave="showSpeedMenu = false">
+            <button class="control-btn" :title="'播放速度: ' + playbackRate + 'x'">
+              <span>{{ playbackRate }}x</span>
+            </button>
+            <div class="speed-menu" v-show="showSpeedMenu">
+              <div
+                v-for="speed in speedOptions"
+                :key="speed"
+                class="speed-option"
+                :class="{ active: speed === playbackRate }"
+                @click="selectSpeed(speed)"
+              >
+                {{ speed }}x
+              </div>
+            </div>
+          </div>
 
           <button class="control-btn" @click="toggleFullscreen" title="全屏">
-            <span v-if="isFullscreen">⤓</span>
-            <span v-else>⤢</span>
+            <span v-if="isFullscreen">⇲</span>
+            <span v-else>⛶</span>
           </button>
         </div>
       </div>
@@ -132,6 +146,9 @@ const volume = ref(80);
 const bufferedPercent = ref(0);
 const playbackRate = ref(1);
 const hasVideo = ref(false);
+const showSpeedMenu = ref(false);
+
+const speedOptions = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
 const progressPercent = computed(() => {
   return duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0;
@@ -182,6 +199,7 @@ function onPlay() {
 }
 
 function onPause() {
+  isPlaying.value = false;
   isPaused.value = true;
   emit('update:playing', false);
 }
@@ -202,7 +220,7 @@ function onCanPlay() {
 
 function togglePlay() {
   if (!videoRef.value) return;
-  
+
   if (videoRef.value.paused) {
     videoRef.value.play();
   } else {
@@ -233,11 +251,11 @@ function stop() {
 
 function seek(event: MouseEvent) {
   if (!videoRef.value || !progressRef.value) return;
-  
+
   const rect = progressRef.value.getBoundingClientRect();
   const percent = (event.clientX - rect.left) / rect.width;
   const seekTime = duration.value * percent;
-  
+
   videoRef.value.currentTime = Math.max(0, Math.min(seekTime, duration.value));
 }
 
@@ -263,7 +281,7 @@ function setVolume(event: Event) {
   const target = event.target as HTMLInputElement;
   const newVolume = parseInt(target.value);
   volume.value = newVolume;
-  
+
   if (videoRef.value) {
     videoRef.value.volume = newVolume / 100;
     if (newVolume > 0) {
@@ -280,40 +298,39 @@ function toggleMute() {
   }
 }
 
-function changeSpeed() {
-  const speeds = [0.5, 0.75, 1, 1.25, 1.5, 2];
-  const currentIndex = speeds.indexOf(playbackRate.value);
-  const nextIndex = (currentIndex + 1) % speeds.length;
-  playbackRate.value = speeds[nextIndex] ?? 1;
-  
+function selectSpeed(speed: number) {
+  playbackRate.value = speed;
   if (videoRef.value) {
-    videoRef.value.playbackRate = playbackRate.value;
+    videoRef.value.playbackRate = speed;
   }
+  showSpeedMenu.value = false;
 }
 
 async function toggleFullscreen() {
   if (!playerRef.value) return;
-  
+
   try {
     if (!document.fullscreenElement) {
       await playerRef.value.requestFullscreen();
-      isFullscreen.value = true;
     } else {
       await document.exitFullscreen();
-      isFullscreen.value = false;
     }
   } catch (e) {
     console.error('Fullscreen error:', e);
   }
 }
 
+function onFullscreenChange() {
+  isFullscreen.value = !!document.fullscreenElement;
+}
+
 function formatTime(seconds: number): string {
   if (!seconds || isNaN(seconds)) return '0:00';
-  
+
   const h = Math.floor(seconds / 3600);
   const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
-  
+
   if (h > 0) {
     return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   }
@@ -322,7 +339,7 @@ function formatTime(seconds: number): string {
 
 function handleKeydown(event: KeyboardEvent) {
   if (!hasVideo.value) return;
-  
+
   switch (event.key) {
     case ' ':
     case 'k':
@@ -364,10 +381,11 @@ function handleKeydown(event: KeyboardEvent) {
 
 onMounted(() => {
   document.addEventListener('keydown', handleKeydown);
-  
+  document.addEventListener('fullscreenchange', onFullscreenChange);
+
   if (videoRef.value) {
     videoRef.value.volume = volume.value / 100;
-    
+
     if (props.src) {
       loadVideo(props.src);
     }
@@ -376,10 +394,10 @@ onMounted(() => {
 
 function loadVideo(src: string) {
   if (!src || !videoRef.value) return;
-  
+
   isLoading.value = true;
   hasVideo.value = true;
-  
+
   let videoSrc = src;
   if (!src.startsWith('http') && !src.startsWith('blob:')) {
     try {
@@ -388,14 +406,15 @@ function loadVideo(src: string) {
       console.error('Failed to convert file src:', e);
     }
   }
-  
+
   videoRef.value.src = videoSrc;
   videoRef.value.load();
 }
 
 onUnmounted(() => {
   document.removeEventListener('keydown', handleKeydown);
-  
+  document.removeEventListener('fullscreenchange', onFullscreenChange);
+
   if (hideControlsTimer) {
     clearTimeout(hideControlsTimer);
   }
@@ -632,6 +651,41 @@ defineExpose({
   font-size: 12px;
   font-family: monospace;
   margin-left: 8px;
+}
+
+.speed-control {
+  position: relative;
+}
+
+.speed-menu {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 4px;
+  background: rgba(0, 0, 0, 0.9);
+  border-radius: 6px;
+  padding: 4px 0;
+  min-width: 64px;
+  z-index: 10;
+}
+
+.speed-option {
+  padding: 6px 16px;
+  color: #ccc;
+  font-size: 13px;
+  cursor: pointer;
+  text-align: center;
+  transition: background 0.15s;
+}
+
+.speed-option:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.speed-option.active {
+  color: #9acd32;
 }
 
 .video-player:fullscreen .controls {

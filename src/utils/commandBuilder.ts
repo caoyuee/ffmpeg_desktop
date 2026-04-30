@@ -62,6 +62,8 @@ export class FFmpegCommandBuilder {
 
     parts.push(...this.buildStreamControl(preset.streamControl));
 
+    parts.push(...this.buildImageEncodeParams(preset.image));
+
     if (preset.custom.beforeOutputParams) {
       parts.push(preset.custom.beforeOutputParams);
     }
@@ -119,6 +121,38 @@ export class FFmpegCommandBuilder {
       }
       if (preset.trim.outPoint) {
         params.push(`-t ${preset.trim.outPoint}`);
+      }
+    }
+
+    return params;
+  }
+
+  private static buildImageEncodeParams(
+    image: PresetData["image"],
+  ): string[] {
+    const params: string[] = [];
+    if (!image.encoder) return params;
+
+    const encoderMap: Record<string, string> = {
+      png: "png",
+      apng: "apng",
+      mjpeg: "mjpeg",
+      libwebp: "libwebp",
+      gif: "gif",
+      bmp: "bmp",
+      tiff: "tiff",
+    };
+
+    const ffmpegEncoder = encoderMap[image.encoder] || image.encoder;
+    params.push(`-c:v ${ffmpegEncoder}`);
+
+    if (image.quality) {
+      if (image.encoder === "mjpeg") {
+        params.push(`-q:v ${image.quality}`);
+      } else if (image.encoder === "libwebp") {
+        params.push(`-quality ${image.quality}`);
+      } else if (image.encoder === "apng") {
+        params.push(`-plays 0`);
       }
     }
 

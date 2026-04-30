@@ -61,6 +61,10 @@
         <QualitySettings v-model:preset="localPreset" @update:preset="onPresetUpdate" />
       </div>
 
+      <div v-show="activeTab === 'audio'" class="tab-page">
+        <AudioSettings v-model:preset="localPreset" @update:preset="onPresetUpdate" />
+      </div>
+
       <div v-show="activeTab === 'color'" class="tab-page">
         <ColorPanel v-model:preset="localPreset" @update:preset="onPresetUpdate" />
       </div>
@@ -84,6 +88,10 @@
       <div v-show="activeTab === 'preset'" class="tab-page">
         <PresetManager v-model:preset="localPreset" @update:preset="onPresetUpdate" />
       </div>
+
+      <div v-show="activeTab === 'advanced'" class="tab-page">
+        <AdvancedSettings v-model:preset="localPreset" @update:preset="onPresetUpdate" />
+      </div>
     </div>
   </div>
 </template>
@@ -101,6 +109,8 @@ import TrimPanel from '@/components/TrimPanel/TrimPanel.vue';
 import SubtitlePanel from '@/components/SubtitlePanel/SubtitlePanel.vue';
 import StreamPanel from '@/components/StreamPanel/StreamPanel.vue';
 import PresetManager from '@/components/PresetManager/PresetManager.vue';
+import AudioSettings from './components/AudioSettings.vue';
+import AdvancedSettings from './components/AdvancedSettings.vue';
 import OutputSettings from './components/OutputSettings.vue';
 import VideoEncoderSettings from './components/VideoEncoderSettings.vue';
 import VideoFrameSettings from './components/VideoFrameSettings.vue';
@@ -126,12 +136,14 @@ const tabs = computed(() => [
   { id: 'video-encoder', label: t('page.params.videoEncoder') },
   { id: 'video-frame', label: t('page.params.videoFrame') },
   { id: 'quality', label: t('page.params.quality') },
+  { id: 'audio', label: t('page.params.audio') },
   { id: 'color', label: t('page.params.color') },
   { id: 'filters', label: t('page.params.filters') },
   { id: 'trim', label: t('page.params.trim') },
   { id: 'subtitle', label: t('page.params.subtitle') },
   { id: 'stream', label: t('page.params.stream') },
   { id: 'preset', label: t('page.params.preset') },
+  { id: 'advanced', label: t('page.params.advanced') },
 ]);
 
 watch(() => props.preset, (newVal) => {

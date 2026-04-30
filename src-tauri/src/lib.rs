@@ -219,6 +219,16 @@ fn extract_video_frame(video_path: String, timestamp: String) -> Result<String, 
     Ok(base64_data)
 }
 
+#[tauri::command]
+fn read_video_file(path: String) -> Result<String, String> {
+    use base64::{Engine as _, engine::general_purpose};
+    
+    let data = std::fs::read(&path)
+        .map_err(|e| format!("Failed to read file: {}", e))?;
+    
+    Ok(general_purpose::STANDARD.encode(&data))
+}
+
 static FFPLAY_PROCESS: Lazy<Mutex<Option<std::process::Child>>> = Lazy::new(|| Mutex::new(None));
 
 #[tauri::command]
@@ -251,6 +261,43 @@ fn stop_ffplay() {
         let _ = child.wait();
     }
     *process = None;
+}
+
+#[tauri::command]
+fn toggle_ffplay_pause(pause: bool) {
+    use std::io::Write;
+    let mut process = FFPLAY_PROCESS.lock().unwrap();
+    if let Some(ref mut child) = *process {
+        if let Some(ref mut stdin) = child.stdin {
+            let _ = stdin.write_all(b" ");
+            let _ = stdin.flush();
+        }
+    }
+    let _ = pause;
+}
+
+#[tauri::command]
+fn set_ffplay_volume(volume: u32) {
+    use std::io::Write;
+    let mut process = FFPLAY_PROCESS.lock().unwrap();
+    if let Some(ref mut child) = *process {
+        if let Some(ref mut stdin) = child.stdin {
+            let _ = writeln!(stdin, "volume {}", volume);
+            let _ = stdin.flush();
+        }
+    }
+}
+
+#[tauri::command]
+fn seek_ffplay(time: f64) {
+    use std::io::Write;
+    let mut process = FFPLAY_PROCESS.lock().unwrap();
+    if let Some(ref mut child) = *process {
+        if let Some(ref mut stdin) = child.stdin {
+            let _ = writeln!(stdin, "seek {}", time);
+            let _ = stdin.flush();
+        }
+    }
 }
 
 #[tauri::command]
@@ -404,8 +451,12 @@ pub fn run() {
             test_ffmpeg,
             write_concat_file,
             extract_video_frame,
+            read_video_file,
             start_ffplay,
             stop_ffplay,
+            toggle_ffplay_pause,
+            set_ffplay_volume,
+            seek_ffplay,
             get_system_metrics,
             get_ffmpeg_processes,
             kill_process_by_pid,
