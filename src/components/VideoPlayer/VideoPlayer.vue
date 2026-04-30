@@ -74,11 +74,11 @@
         </div>
 
         <div class="controls-right">
-          <div class="speed-control" @mouseenter="showSpeedMenu = true" @mouseleave="showSpeedMenu = false">
+          <div class="speed-control" @mouseenter="onSpeedMenuEnter" @mouseleave="onSpeedMenuLeave">
             <button class="control-btn" :title="'播放速度: ' + playbackRate + 'x'">
               <span>{{ playbackRate }}x</span>
             </button>
-            <div class="speed-menu" v-show="showSpeedMenu">
+            <div class="speed-menu" v-show="showSpeedMenu" @mouseenter="onSpeedMenuEnter" @mouseleave="onSpeedMenuLeave">
               <div
                 v-for="speed in speedOptions"
                 :key="speed"
@@ -147,6 +147,7 @@ const bufferedPercent = ref(0);
 const playbackRate = ref(1);
 const hasVideo = ref(false);
 const showSpeedMenu = ref(false);
+let hideSpeedMenuTimer: ReturnType<typeof setTimeout> | null = null;
 
 const speedOptions = [0.5, 0.75, 1, 1.25, 1.5, 2];
 
@@ -306,6 +307,20 @@ function selectSpeed(speed: number) {
   showSpeedMenu.value = false;
 }
 
+function onSpeedMenuEnter() {
+  if (hideSpeedMenuTimer) {
+    clearTimeout(hideSpeedMenuTimer)
+    hideSpeedMenuTimer = null
+  }
+  showSpeedMenu.value = true
+}
+
+function onSpeedMenuLeave() {
+  hideSpeedMenuTimer = setTimeout(() => {
+    showSpeedMenu.value = false
+  }, 150)
+}
+
 async function toggleFullscreen() {
   if (!playerRef.value) return;
 
@@ -417,6 +432,9 @@ onUnmounted(() => {
 
   if (hideControlsTimer) {
     clearTimeout(hideControlsTimer);
+  }
+  if (hideSpeedMenuTimer) {
+    clearTimeout(hideSpeedMenuTimer);
   }
 });
 

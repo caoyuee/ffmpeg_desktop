@@ -168,8 +168,8 @@ async function loadMediaInfo() {
 
   loading.value = true;
   try {
-    const info = await invoke<MediaInfo>('get_media_info', { path: selectedFile.value });
-    mediaInfo.value = info;
+    const raw = await invoke<any>('probe_media_info', { path: selectedFile.value });
+    mediaInfo.value = mapFfprobeToMediaInfo(raw);
   } catch (error) {
     console.error('Failed to load media info:', error);
     mediaInfo.value = null;
@@ -178,8 +178,60 @@ async function loadMediaInfo() {
   }
 }
 
+function mapFfprobeToMediaInfo(raw: any): MediaInfo {
+  const fmt = raw.format || {};
+  const streams: MediaStream[] = (raw.streams || []).map((s: any) => {
+    const lang = s.tags?.language || s.language;
+    return {
+      index: s.index,
+      codec_type: s.codec_type,
+      codec_name: s.codec_name || s.codec_long_name || 'Unknown',
+      width: s.width,
+      height: s.height,
+      frameRate: s.r_frame_rate,
+      displayAspectRatio: s.display_aspect_ratio || computeAspectRatio(s.width, s.height),
+      sampleRate: s.sample_rate,
+      channels: s.channels,
+      bit_rate: s.bit_rate,
+      language: lang && lang !== 'und' ? lang : undefined,
+    };
+  });
+
+  return {
+    filename: fmt.filename || selectedFile.value,
+    format: fmt.format_long_name || fmt.format_name || '',
+    duration: parseFloat(fmt.duration) || 0,
+    size: parseInt(fmt.size) || 0,
+    bitRate: parseInt(fmt.bit_rate) || 0,
+    streams,
+    metadata: fmt.tags || {},
+  };
+}
+
 function getFileName(path: string) {
   return path.split('/').pop() || path;
+}
+
+function computeAspectRatio(width: number, height: number): string {
+  if (!width || !height) return '';
+  const ratios: [number, number, string][] = [
+    [16, 9, '16:9'],
+    [4, 3, '4:3'],
+    [21, 9, '21:9'],
+    [2.35, 1, '2.35:1'],
+    [2.39, 1, '2.39:1'],
+    [1, 1, '1:1'],
+    [3, 2, '3:2'],
+    [5, 4, '5:4'],
+  ];
+  const ratio = width / height;
+  for (const [w, h, label] of ratios) {
+    const expected = w / h;
+    if (Math.abs(ratio - expected) < 0.02) {
+      return label;
+    }
+  }
+  return `${width}:${height}`;
 }
 
 function formatDuration(seconds: number): string {

@@ -344,16 +344,27 @@ fn get_system_metrics() -> serde_json::Value {
 
 #[tauri::command]
 fn get_ffmpeg_processes() -> Vec<serde_json::Value> {
-    use sysinfo::{System, Process, ProcessStatus};
+    use sysinfo::{System, ProcessStatus};
+    use std::collections::HashSet;
     
     let mut sys = System::new_all();
     sys.refresh_all();
     
+    let thread_pids: HashSet<sysinfo::Pid> = sys.processes()
+        .values()
+        .filter_map(|p| p.tasks())
+        .flatten()
+        .copied()
+        .collect();
+    
     let processes: Vec<serde_json::Value> = sys.processes()
         .iter()
-        .filter(|(_, process)| {
+        .filter(|(pid, process)| {
             let name = process.name().to_string_lossy().to_lowercase();
-            name.contains("ffmpeg") || name.contains("ffprobe")
+            let is_ffmpeg = name.contains("ffmpeg") || name.contains("ffprobe");
+            let is_main = !thread_pids.contains(pid);
+            let is_alive = !matches!(process.status(), ProcessStatus::Zombie | ProcessStatus::Dead);
+            is_ffmpeg && is_main && is_alive
         })
         .map(|(pid, process)| {
             serde_json::json!({

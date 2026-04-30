@@ -14,32 +14,8 @@ export interface MediaInfo {
   formatName?: string;
 }
 
-export function useMediaProbe(ffprobePath: string) {
+export function useMediaProbe() {
   const isProbing = ref(false);
-
-  /**
-   * 构建完整的 ffprobe 命令行
-   */
-  function buildProbeCommand(filePath: string): string {
-    // 处理包含空格的路径，用引号包裹
-    const quotePath = (path: string) => {
-      if (path.includes(" ")) {
-        return `"${path}"`;
-      }
-      return path;
-    };
-
-    return [
-      quotePath(ffprobePath),
-      "-v",
-      "quiet",
-      "-print_format",
-      "json",
-      "-show_format",
-      "-show_streams",
-      quotePath(filePath),
-    ].join(" ");
-  }
 
   /**
    * 从 ffprobe 原始输出中提取关键信息
@@ -87,14 +63,8 @@ export function useMediaProbe(ffprobePath: string) {
     isProbing.value = true;
 
     try {
-      // 构建完整的命令行
-      const command = buildProbeCommand(filePath);
-
-      console.log("Executing ffprobe command:", command);
-
-      // 调用后端 API，传递完整命令行
       const result = await invoke<any>("probe_media_info", {
-        command,
+        path: filePath,
       });
 
       // 提取关键信息
