@@ -6,6 +6,7 @@ import { createPlugin } from '@tauri-store/pinia';
 import router from '@/router/index'
 import i18n from '@/i18n'
 import { useSettingStore } from '@/store/settingStore'
+import { useTaskStore } from '@/store/taskStore'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -18,3 +19,8 @@ const settingStore = useSettingStore()
 settingStore.initTheme()
 
 app.mount("#app");
+
+window.addEventListener('beforeunload', () => {
+  const taskStore = useTaskStore()
+  taskStore.cleanupEventListeners()
+})

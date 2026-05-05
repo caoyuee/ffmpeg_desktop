@@ -163,7 +163,6 @@ import type { PresetData } from '@/types/preset';
 import InterpolationDialog from '@/components/Dialogs/InterpolationDialog.vue';
 import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue';
 import SuperResolutionDialog from '@/components/Dialogs/SuperResolutionDialog.vue';
-import type { PresetData } from '@/types/preset';
 
 const props = defineProps<{
   preset: PresetData;
