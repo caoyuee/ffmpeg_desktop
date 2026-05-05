@@ -123,7 +123,7 @@ export const FORMAT_COMPATIBILITY: Record<string, FormatCompatibility> = {
   // OGG - 开源容器
   ogg: {
     videoCodecs: ["libtheora", "copy"],
-    audioCodecs: ["libvorbis", "libopus", "flac", "copy"],
+    audioCodecs: ["libvorbis", "libopus", "flac", "libtheora", "copy"],
     defaultVideo: "libtheora",
     defaultAudio: "libvorbis",
     description: "OGG - 开源容器格式",

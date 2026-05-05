@@ -26,7 +26,11 @@
     { "key": "vp8", "value": "-c:v libvpx -c:a libvorbis", "label": "VP8", "ffmpegEncoder": "libvpx" },
     { "key": "mpeg4", "value": "-c:v mpeg4 -pix_fmt yuv420p -c:a aac", "label": "MPEG-4", "ffmpegEncoder": "mpeg4" },
     { "key": "prores", "value": "-c:v prores_ks -profile:v 3 -pix_fmt yuv422p10le -c:a pcm_s16le", "label": "ProRes", "ffmpegEncoder": "prores_ks" },
-    { "key": "mpeg2", "value": "-c:v mpeg2video -pix_fmt yuv420p -c:a mp2", "label": "MPEG-2", "ffmpegEncoder": "mpeg2video" }
+    { "key": "prores_aw", "value": "-c:v prores_aw -profile:v 3 -pix_fmt yuv422p10le -c:a pcm_s16le", "label": "ProRes AW (Apple)", "ffmpegEncoder": "prores_aw" },
+    { "key": "mpeg2", "value": "-c:v mpeg2video -pix_fmt yuv420p -c:a mp2", "label": "MPEG-2", "ffmpegEncoder": "mpeg2video" },
+    { "key": "theora", "value": "-c:v libtheora -c:a libvorbis", "label": "Theora", "ffmpegEncoder": "libtheora" },
+    { "key": "librav1e", "value": "-c:v librav1e -c:a libopus", "label": "AV1 (rav1e)", "ffmpegEncoder": "librav1e" },
+    { "key": "vp9_qsv", "value": "-c:v vp9_qsv -c:a libopus", "label": "VP9 (Intel QSV)", "ffmpegEncoder": "vp9_qsv" }
   ],
   "format": [
     { "key": "mp4", "value": ".mp4", "label": "MP4" },

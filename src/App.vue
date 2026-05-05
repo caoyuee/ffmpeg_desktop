@@ -5,8 +5,23 @@
 import { onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { setLocale, getLocale } from '@/i18n';
+import { getCurrentWindow } from '@tauri-apps/api/window';
 
 const { locale } = useI18n();
+
+function onVisibilityChange() {
+  if (document.hidden) {
+    try {
+      const saved = localStorage.getItem('appSettings');
+      if (saved) {
+        const settings = JSON.parse(saved);
+        if (settings.minimizeToTray) {
+          getCurrentWindow().hide();
+        }
+      }
+    } catch (_) {}
+  }
+}
 
 onMounted(() => {
   const savedLang = localStorage.getItem('language') || 'zh-CN';
@@ -20,9 +35,11 @@ onMounted(() => {
   };
 
   window.addEventListener('storage', handleLangChange);
+  document.addEventListener('visibilitychange', onVisibilityChange);
 
   onUnmounted(() => {
     window.removeEventListener('storage', handleLangChange);
+    document.removeEventListener('visibilitychange', onVisibilityChange);
   });
 });
 </script>

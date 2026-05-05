@@ -8,7 +8,12 @@ use regex::Regex;
 
 const EXIT_CODE_ERROR: i32 = -1;
 
-static TASK_PROCESSES: Lazy<Mutex<HashMap<String, u32>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+struct TaskProcess {
+    pid: u32,
+}
+
+static TASK_PROCESSES: Lazy<Mutex<HashMap<String, TaskProcess>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+static TASK_STDINS: Lazy<Mutex<HashMap<String, std::process::ChildStdin>>> = Lazy::new(|| Mutex::new(HashMap::new()));
 
 static FRAME_RE: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"frame=\s*(\d+)").unwrap()
@@ -34,6 +39,10 @@ static SIZE_RE: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"size=\s*(\d+)\s*([KMG]iB)").unwrap()
 });
 
+static ERROR_RE: Lazy<Regex> = Lazy::new(|| {
+    Regex::new(r"(?i)(Error|Invalid|cannot find|failed|No such file|Permission denied|not found|not recognized|unrecognized|Unknown|missing)").unwrap()
+});
+
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct TaskInfo {
     pub id: String,
@@ -48,6 +57,7 @@ pub fn start_ffmpeg(
     app: AppHandle,
     command: String,
     task_id: String,
+    cpu_affinity: Option<String>,
 ) -> Result<u32, String> {
     let parts = shell_words::split(&command)
         .map_err(|e| format!("Failed to parse command: {}", e))?;
@@ -67,8 +77,28 @@ pub fn start_ffmpeg(
         .map_err(|e| format!("Failed to start FFmpeg: {}", e))?;
 
     let pid = child.id();
-    
-    TASK_PROCESSES.lock().unwrap().insert(task_id.clone(), pid);
+
+    let stdin = child.stdin.take();
+    if let Some(stdin) = stdin {
+        TASK_STDINS.lock().unwrap().insert(task_id.clone(), stdin);
+    }
+
+    TASK_PROCESSES.lock().unwrap().insert(task_id.clone(), TaskProcess { pid });
+
+    if let Some(ref affinity_str) = cpu_affinity {
+        #[cfg(unix)]
+        {
+            use nix::unistd::Pid;
+            use nix::sched::{CpuSet, sched_setaffinity};
+            let mut cpuset = CpuSet::new();
+            for s in affinity_str.split(',') {
+                if let Ok(core) = s.trim().parse::<usize>() {
+                    cpuset.set(core).ok();
+                }
+            }
+            let _ = sched_setaffinity(Pid::from_raw(pid as i32), &cpuset);
+        }
+    }
 
     let task_id_clone = task_id.clone();
     let app_clone = app.clone();
@@ -78,7 +108,13 @@ pub fn start_ffmpeg(
             if let Some(stderr) = child.stderr.take() {
                 let reader = BufReader::new(stderr);
                 for line in reader.lines() {
-                    if let Ok(line) = line {
+                     if let Ok(line) = line {
+                        if ERROR_RE.is_match(&line) {
+                            let _ = app_clone.emit("ffmpeg-error", serde_json::json!({
+                                "taskId": task_id_clone,
+                                "message": line
+                            }));
+                        }
                         if let Ok(progress) = parse_progress(&line) {
                             let _ = app_clone.emit("ffmpeg-progress", serde_json::json!({
                                 "taskId": task_id_clone,
@@ -95,6 +131,7 @@ pub fn start_ffmpeg(
         })).unwrap_or(EXIT_CODE_ERROR);
         
         TASK_PROCESSES.lock().unwrap().remove(&task_id_clone);
+        TASK_STDINS.lock().unwrap().remove(&task_id_clone);
         
         if exit_code == 0 {
             let _ = app_clone.emit("ffmpeg-finish", serde_json::json!({
@@ -224,6 +261,17 @@ fn parse_progress(line: &str) -> Result<ProgressInfo, ()> {
     } else {
         Err(())
     }
+}
+
+#[tauri::command]
+pub fn send_ffmpeg_stdin(task_id: String, input: String) -> Result<(), String> {
+    use std::io::Write;
+    let mut stdins = TASK_STDINS.lock().unwrap();
+    if let Some(stdin) = stdins.get_mut(&task_id) {
+        stdin.write_all(input.as_bytes()).map_err(|e| format!("写入失败: {}", e))?;
+        stdin.flush().map_err(|e| format!("刷新失败: {}", e))?;
+    }
+    Ok(())
 }
 
 #[cfg(test)]

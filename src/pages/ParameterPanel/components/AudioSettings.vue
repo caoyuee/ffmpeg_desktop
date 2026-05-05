@@ -18,6 +18,8 @@
           <option value="eac3">E-AC3</option>
           <option value="dca">DTS</option>
           <option value="truehd">TrueHD</option>
+          <option value="libtwolame">MP2 (TwoLAME)</option>
+          <option value="tta">TTA (无损)</option>
           <option value="pcm_s16le">PCM 16-bit</option>
           <option value="pcm_s24le">PCM 24-bit</option>
           <option value="pcm_s32le">PCM 32-bit</option>

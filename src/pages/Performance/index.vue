@@ -65,7 +65,7 @@
         </div>
       </div>
       
-      <div class="metric-card gpu">
+      <div class="metric-card gpu" v-if="metrics.gpu.memoryTotal > 0">
         <div class="metric-header">
           <span class="metric-icon">🎮</span>
           <span class="metric-title">{{ t('page.performance.gpu') }}</span>

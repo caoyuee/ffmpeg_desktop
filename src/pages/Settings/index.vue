@@ -214,6 +214,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { invoke } from '@tauri-apps/api/core';
 import { setLocale, availableLanguages, type LanguageCode } from '@/i18n';
 import { useSettingStore, type ThemeMode } from '@/store/settingStore';
 import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue';
@@ -297,10 +298,18 @@ function loadSettings() {
       console.error('Failed to load settings:', e);
     }
   }
+  invoke('set_tray_settings', {
+    minimizeToTray: settings.value.minimizeToTray,
+    closeToTray: settings.value.closeToTray,
+  }).catch(() => {});
 }
 
 function saveSettings() {
   localStorage.setItem('appSettings', JSON.stringify(settings.value));
+  invoke('set_tray_settings', {
+    minimizeToTray: settings.value.minimizeToTray,
+    closeToTray: settings.value.closeToTray,
+  }).catch(() => {});
 }
 
 function onThemeChange() {
@@ -312,7 +321,7 @@ async function browseFFmpeg() {
   const { open } = await import('@tauri-apps/plugin-dialog');
   const selected = await open({
     multiple: false,
-    filters: [{ name: '可执行文件', extensions: ['exe', ''] }],
+    filters: [{ name: t('common.executable'), extensions: ['exe', ''] }],
   });
   if (selected && typeof selected === 'string') {
     settings.value.ffmpegPath = selected;
@@ -324,7 +333,7 @@ async function browseFFprobe() {
   const { open } = await import('@tauri-apps/plugin-dialog');
   const selected = await open({
     multiple: false,
-    filters: [{ name: '可执行文件', extensions: ['exe', ''] }],
+    filters: [{ name: t('common.executable'), extensions: ['exe', ''] }],
   });
   if (selected && typeof selected === 'string') {
     settings.value.ffprobePath = selected;

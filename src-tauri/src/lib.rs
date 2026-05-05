@@ -20,6 +20,32 @@ use modules::preset_manager;
 
 static GLOBAL_PID: Lazy<Mutex<Option<u32>>> = Lazy::new(|| Mutex::new(None));
 
+struct TraySettings {
+    minimize_to_tray: bool,
+    close_to_tray: bool,
+}
+
+static TRAY_SETTINGS: Lazy<Mutex<TraySettings>> = Lazy::new(|| Mutex::new(TraySettings {
+    minimize_to_tray: false,
+    close_to_tray: false,
+}));
+
+#[tauri::command]
+fn delete_file(path: String) -> Result<(), String> {
+    std::fs::remove_file(&path).map_err(|e| format!("删除文件失败: {}", e))
+}
+
+#[tauri::command]
+fn preserve_file_times(source: String, dest: String) -> Result<(), String> {
+    use std::fs;
+    let src_meta = fs::metadata(&source).map_err(|e| format!("读取源文件失败: {}", e))?;
+    let modified = src_meta.modified().map_err(|e| format!("读取修改时间失败: {}", e))?;
+    filetime::set_file_mtime(&dest, filetime::FileTime::from_system_time(modified))
+        .map_err(|e| format!("设置修改时间失败: {}", e))?;
+    Ok(())
+}
+
+
 /// 新的命令执行接口：接收完整的 FFmpeg 命令字符串并执行
 #[tauri::command]
 fn execute_ffmpeg_command(
@@ -432,6 +458,13 @@ fn parse_startup_args() -> serde_json::Value {
     serde_json::json!(result)
 }
 
+#[tauri::command]
+fn set_tray_settings(minimize_to_tray: bool, close_to_tray: bool) {
+    let mut settings = TRAY_SETTINGS.lock().unwrap();
+    settings.minimize_to_tray = minimize_to_tray;
+    settings.close_to_tray = close_to_tray;
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -439,15 +472,24 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_pinia::init())
         .setup(|app| {
-            // #[cfg(debug_assertions)] // 仅在调试构建时包含此代码
-            // {
-            //     let window = app.get_webview_window("main").unwrap();
-            //     window.open_devtools();
-            //     window.close_devtools();
-            // }
-            // 临时禁用托盘图标，避免文件系统权限问题
-            // modules::tray::setup_tray(app.handle())?;
-            // modules::menus::setup_menus(app.handle())?;
+            modules::tray::setup_tray(app.handle())?;
+
+            let window = app.get_webview_window("main").unwrap();
+            let window_clone = window.clone();
+            window.on_window_event(move |event| {
+                use tauri::WindowEvent;
+                match event {
+                    WindowEvent::CloseRequested { api, .. } => {
+                        let settings = TRAY_SETTINGS.lock().unwrap();
+                        if settings.close_to_tray {
+                            api.prevent_close();
+                            let _ = window_clone.hide();
+                        }
+                    }
+                    _ => {}
+                }
+            });
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -471,15 +513,19 @@ pub fn run() {
             get_system_metrics,
             get_ffmpeg_processes,
             kill_process_by_pid,
+            delete_file,
+            preserve_file_times,
             task_manager::start_ffmpeg,
             task_manager::pause_process,
             task_manager::resume_process,
             task_manager::stop_process,
+            task_manager::send_ffmpeg_stdin,
             preset_manager::load_presets,
             preset_manager::save_preset,
             preset_manager::delete_preset,
             preset_manager::export_preset,
-            preset_manager::import_preset
+            preset_manager::import_preset,
+            set_tray_settings
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

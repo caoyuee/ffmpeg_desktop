@@ -23,6 +23,7 @@ export interface PresetData {
   decode: {
     decoder: string;
     cpuThreads: string;
+    cpuAffinity: string;
     outputFormat: string;
     hwAccelParamName: string;
     hwAccelParam: string;
@@ -235,6 +236,7 @@ export const DEFAULT_PRESET: PresetData = {
   decode: {
     decoder: "",
     cpuThreads: "",
+    cpuAffinity: "",
     outputFormat: "",
     hwAccelParamName: "",
     hwAccelParam: "",

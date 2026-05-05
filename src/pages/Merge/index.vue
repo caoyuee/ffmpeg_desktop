@@ -63,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
@@ -227,7 +227,13 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-document.addEventListener('keydown', handleKeyDown);
+onMounted(() => {
+  document.addEventListener('keydown', handleKeyDown);
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown);
+})
 </script>
 
 <style scoped>

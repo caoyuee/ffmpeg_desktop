@@ -141,6 +141,10 @@ export class FFmpegCommandBuilder {
       gif: "gif",
       bmp: "bmp",
       tiff: "tiff",
+      dpx: "dpx",
+      exr: "exr",
+      libopenjpeg: "libopenjpeg",
+      jpegls: "jpegls",
     };
 
     const ffmpegEncoder = encoderMap[image.encoder] || image.encoder;

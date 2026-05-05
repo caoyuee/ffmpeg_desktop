@@ -43,6 +43,11 @@
         <label>CPU 线程数</label>
         <input type="text" v-model="localPreset.decode.cpuThreads" @input="onChange" placeholder="留空自动" />
       </div>
+
+      <div class="form-group">
+        <label>CPU 核心绑定</label>
+        <input type="text" v-model="localPreset.decode.cpuAffinity" @input="onChange" placeholder="如: 0,1,2,3（留空自动）" />
+      </div>
     </div>
 
     <div class="form-section">
@@ -133,6 +138,10 @@
           <option value="gif">GIF</option>
           <option value="bmp">BMP</option>
           <option value="tiff">TIFF</option>
+          <option value="dpx">DPX</option>
+          <option value="exr">EXR</option>
+          <option value="libopenjpeg">JPEG 2000</option>
+          <option value="jpegls">JPEG LS</option>
         </select>
       </div>
       <div v-if="localPreset.image.encoder && localPreset.image.encoder !== 'bmp'" class="form-group">

@@ -148,6 +148,7 @@ function addToQueue() {
       outputFile: '',
       commandLine: '',
       presetId: presetStore.currentPreset?.id,
+      cpuAffinity: presetStore.currentPreset?.decode.cpuAffinity || undefined,
     });
   });
 

@@ -41,6 +41,17 @@
         </div>
       </div>
     </div>
+
+    <div class="panel-section">
+      <button class="tool-btn" @click="showCropDialog = true">画面裁剪工具</button>
+    </div>
+
+    <CropDialog
+      :visible="showCropDialog"
+      :modelValue="false"
+      @update:visible="showCropDialog = $event"
+      @crop-updated="onCropUpdated"
+    />
   </div>
 </template>
 
@@ -48,6 +59,7 @@
 import { ref, computed, watch } from 'vue';
 import type { PresetData } from '@/types/preset';
 import TimeInput from './TimeInput.vue';
+import CropDialog from '@/components/Dialogs/CropDialog.vue';
 
 const props = defineProps<{
   preset: PresetData;
@@ -58,6 +70,7 @@ const emit = defineEmits<{
 }>();
 
 const localPreset = ref<PresetData>({ ...props.preset });
+const showCropDialog = ref(false);
 
 watch(() => props.preset, (newVal) => {
   localPreset.value = { ...newVal };
@@ -131,6 +144,11 @@ function onTrimMethodChange() {
 }
 
 function onTimeChange() {
+  emit('update:preset', localPreset.value);
+}
+
+function onCropUpdated(cropFilter: string) {
+  localPreset.value.video.resolution.cropFilter = cropFilter;
   emit('update:preset', localPreset.value);
 }
 </script>
@@ -216,5 +234,21 @@ function onTimeChange() {
   font-size: 0.9rem;
   color: var(--text-color1, #e0e0e0);
   font-weight: 500;
+}
+
+.tool-btn {
+  width: 100%;
+  padding: 8px 16px;
+  background: var(--active-bg, #404040);
+  border: 1px solid var(--border-color1, #444);
+  border-radius: 4px;
+  color: var(--active-color, #9acd32);
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.tool-btn:hover {
+  background: var(--hover-bg, #505050);
 }
 </style>

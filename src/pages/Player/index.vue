@@ -101,7 +101,6 @@ function closeVideo() {
 }
 
 function onVideoEnded() {
-  // VideoPlayer handles internal state, no action needed here
 }
 
 function onVideoError(event: Event) {

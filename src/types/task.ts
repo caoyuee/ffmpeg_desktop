@@ -39,6 +39,7 @@ export interface Task {
   pid?: number;
   error?: string;
   errorType?: "network" | "permission" | "not_found" | "invalid_input" | "process" | "unknown";
+  cpuAffinity?: string;
 }
 
 export interface TaskQueueState {

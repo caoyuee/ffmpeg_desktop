@@ -114,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { useTaskStore } from '@/store/taskStore';
@@ -323,7 +323,13 @@ function handleKeyDown(event: KeyboardEvent) {
   }
 }
 
-document.addEventListener('keydown', handleKeyDown);
+onMounted(() => {
+  document.addEventListener('keydown', handleKeyDown);
+})
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown);
+})
 </script>
 
 <style scoped>

@@ -122,11 +122,47 @@
         </div>
       </div>
     </div>
+
+    <div class="panel-section">
+      <div class="section-header">
+        <h4>高级滤镜工具</h4>
+      </div>
+      <div class="section-content">
+        <div class="tool-buttons">
+          <button class="tool-btn" @click="showInterpolation = true">插帧 / 补帧</button>
+          <button class="tool-btn" @click="showFrameBlend = true">帧混合 / 动态模糊</button>
+          <button class="tool-btn" @click="showSuperResolution = true">超分辨率</button>
+        </div>
+      </div>
+    </div>
+
+    <InterpolationDialog 
+      :visible="showInterpolation" 
+      :modelValue="localPreset.video.filters.interpolation" 
+      @update:visible="showInterpolation = $event"
+      @update:modelValue="onInterpolationUpdate" 
+    />
+    <FrameBlendDialog 
+      :visible="showFrameBlend" 
+      :modelValue="localPreset.video.filters.interpolation"
+      @update:visible="showFrameBlend = $event"
+      @update:modelValue="onInterpolationUpdate" 
+    />
+    <SuperResolutionDialog 
+      :visible="showSuperResolution" 
+      :modelValue="localPreset.video.filters.superResolution"
+      @update:visible="showSuperResolution = $event"
+      @update:modelValue="onSuperResolutionUpdate" 
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue';
+import type { PresetData } from '@/types/preset';
+import InterpolationDialog from '@/components/Dialogs/InterpolationDialog.vue';
+import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue';
+import SuperResolutionDialog from '@/components/Dialogs/SuperResolutionDialog.vue';
 import type { PresetData } from '@/types/preset';
 
 const props = defineProps<{
@@ -146,6 +182,10 @@ const expandedSections = reactive({
   transform: false,
 });
 
+const showInterpolation = ref(false);
+const showFrameBlend = ref(false);
+const showSuperResolution = ref(false);
+
 watch(() => props.preset, (newVal) => {
   localPreset.value = { ...newVal };
 }, { deep: true });
@@ -159,6 +199,16 @@ function toggleSection(section: keyof typeof expandedSections) {
 }
 
 function onFilterChange() {
+  emit('update:preset', localPreset.value);
+}
+
+function onInterpolationUpdate(settings: PresetData['video']['filters']['interpolation']) {
+  localPreset.value.video.filters.interpolation = settings;
+  emit('update:preset', localPreset.value);
+}
+
+function onSuperResolutionUpdate(settings: PresetData['video']['filters']['superResolution']) {
+  localPreset.value.video.filters.superResolution = settings;
   emit('update:preset', localPreset.value);
 }
 
@@ -273,5 +323,26 @@ function onDenoiseMethodChange() {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
   border-top: 1px solid var(--border-color1, #333);
+}
+
+.tool-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tool-btn {
+  padding: 8px 16px;
+  background: var(--active-bg, #404040);
+  border: 1px solid var(--border-color1, #444);
+  border-radius: 4px;
+  color: var(--active-color, #9acd32);
+  cursor: pointer;
+  font-size: 12px;
+  transition: background 0.2s;
+}
+
+.tool-btn:hover {
+  background: var(--hover-bg, #505050);
 }
 </style>

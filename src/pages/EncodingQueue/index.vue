@@ -31,6 +31,17 @@
       <button class="toolbar-btn" @click="invertSelection" title="Alt+A">
         {{ t('stream.deselectAll') }}
       </button>
+      <div class="toolbar-divider"></div>
+      <input
+        type="text"
+        v-model="stdinInput"
+        placeholder="发送指令到 ffmpeg (如: q)"
+        class="stdin-input"
+        @keyup.enter="sendStdin"
+      />
+      <button class="toolbar-btn" @click="sendStdin" :disabled="!stdinInput">
+        {{ t('common.send') }}
+      </button>
     </div>
 
     <div class="status-bar">
@@ -96,6 +107,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { invoke } from '@tauri-apps/api/core';
 import TaskQueue from '@/components/TaskQueue/TaskQueue.vue';
 import { useTaskStore } from '@/store/taskStore';
 import { TaskStatus } from '@/types/task';
@@ -107,6 +119,7 @@ const tasks = computed(() => taskStore.tasks);
 const showOutputPanel = ref(false);
 const outputType = ref('all');
 const autoScroll = ref(true);
+const stdinInput = ref('');
 const outputRef = ref<HTMLElement | null>(null);
 const selectedTaskIds = ref<Set<string>>(new Set());
 
@@ -154,7 +167,7 @@ const estimatedTime = computed(() => {
 });
 
 function startAll() {
-  taskStore.processingTasks.forEach(t => taskStore.startTask(t.id));
+  taskStore.pendingTasks.forEach(t => taskStore.startTask(t.id));
 }
 
 function pauseAll() {
@@ -198,6 +211,7 @@ function moveUp() {
       taskIds[index - 1] = temp;
     }
   }
+  taskStore.reorderTasks(taskIds);
 }
 
 function moveDown() {
@@ -215,6 +229,7 @@ function moveDown() {
       taskIds[index + 1] = temp;
     }
   }
+  taskStore.reorderTasks(taskIds);
 }
 
 function selectAll() {
@@ -229,6 +244,19 @@ function invertSelection() {
       selectedTaskIds.value.add(t.id);
     }
   });
+}
+
+async function sendStdin() {
+  const input = stdinInput.value;
+  if (!input) return;
+  const processingTask = tasks.value.find(t => t.status === 1);
+  if (!processingTask) return;
+  try {
+    await invoke('send_ffmpeg_stdin', { taskId: processingTask.id, input: input + '\n' });
+  } catch (error) {
+    console.error('发送指令失败:', error);
+  }
+  stdinInput.value = '';
 }
 
 function startTask(id: string) {
@@ -434,5 +462,15 @@ function copyOutput() {
 
 .toggle-output-btn:hover {
   background: var(--hover-bg, #505050);
+}
+
+.stdin-input {
+  width: 180px;
+  padding: 4px 8px;
+  background: var(--bg-color1, #181818);
+  border: 1px solid var(--border-color1, #444);
+  border-radius: 4px;
+  color: var(--text-color1, #c0c0c0);
+  font-size: 12px;
 }
 </style>

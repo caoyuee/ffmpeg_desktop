@@ -246,11 +246,27 @@ async function startAssessment() {
     
     await invoke('execute_ffmpeg_command', { command });
     
-    listen('progress', (event: any) => {
+    const unlistenProgress = await listen('progress', (event: any) => {
       const payload = event.payload;
       if (payload && payload.line) {
         const line = payload.line as string;
         addLog(line);
+
+        const vmafMatch = line.match(/VMAF score:\s*([\d\.]+)/i);
+        if (vmafMatch) {
+          results.value = { vmaf: { mean: parseFloat(vmafMatch[1]!), min: 0, max: 0 } };
+        }
+
+        const psnrMatch = line.match(/average:\s*([\d\.]+)/);
+        if (psnrMatch) {
+          results.value = { ...results.value, psnr: { mean: parseFloat(psnrMatch[1]!) } };
+        }
+
+        const ssimAllMatch = line.match(/SSIM\s+All:\s*([\d\.]+)/i);
+        if (ssimAllMatch) {
+          results.value = { ...results.value, ssim: { mean: parseFloat(ssimAllMatch[1]!) } };
+        }
+
         const pctMatch = line.match(/time=(\d+):(\d+):(\d+)/);
         if (pctMatch && duration.value > 0) {
           const h = parseInt(pctMatch[1] || '0');
@@ -262,17 +278,21 @@ async function startAssessment() {
       }
     });
     
-    listen('finish', (event: any) => {
-      results.value = { vmaf: { mean: 90, min: 80, max: 95 } };
+    const unlistenFinish = await listen('finish', () => {
       isRunning.value = false;
       progress.value = 100;
       addLog('评测完成！');
+      unlistenProgress();
+      unlistenFinish();
     });
     
-    listen('error', (event: any) => {
+    const unlistenError = await listen('error', (event: any) => {
       const payload = event.payload;
       addLog(`错误: ${typeof payload === 'string' ? payload : JSON.stringify(payload)}`);
       isRunning.value = false;
+      unlistenProgress();
+      unlistenFinish();
+      unlistenError();
     });
     
   } catch (error) {

@@ -30,6 +30,7 @@ const tabs = computed(() => [
   { id: 'params', label: t('nav.params'), icon: '⚙️', route: '/params' },
   { id: 'merge', label: t('nav.merge'), icon: '🔗', route: '/merge' },
   { id: 'mux', label: t('nav.mux'), icon: '🔀', route: '/mux' },
+  { id: 'quality', label: t('nav.quality'), icon: '🔬', route: '/quality' },
   { id: 'player', label: t('nav.player'), icon: '▶️', route: '/player' },
   { id: 'performance', label: t('nav.performance'), icon: '📊', route: '/performance' },
   { id: 'mediainfo', label: t('nav.mediainfo'), icon: 'ℹ️', route: '/mediainfo' },

@@ -18,6 +18,22 @@ function formatError(error: unknown): string {
 }
 
 function classifyError(error: unknown): ErrorType {
+
+let audioCtx: AudioContext | null = null;
+function playNotification(frequency: number, duration: number) {
+  try {
+    if (!audioCtx) audioCtx = new AudioContext();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.frequency.value = frequency;
+    gain.gain.value = 0.15;
+    gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+    osc.start(audioCtx.currentTime);
+    osc.stop(audioCtx.currentTime + duration);
+  } catch { /* AudioContext may be blocked by browser */ }
+}
   const message = formatError(error).toLowerCase();
   
   if (message.includes("network") || message.includes("connection") || message.includes("timeout")) {
@@ -111,6 +127,7 @@ export const useTaskStore = defineStore("tasks", () => {
       const pid = await invoke<number>("start_ffmpeg", {
         command: task.commandLine,
         taskId: task.id,
+        cpuAffinity: task.cpuAffinity || null,
       });
 
       task.pid = pid;
@@ -171,6 +188,11 @@ export const useTaskStore = defineStore("tasks", () => {
     }
   }
 
+  function reorderTasks(orderedIds: string[]) {
+    const taskMap = new Map(tasks.value.map(t => [t.id, t]));
+    tasks.value = orderedIds.map(id => taskMap.get(id)!).filter(Boolean);
+  }
+
   function clearCompletedTasks() {
     tasks.value = tasks.value.filter(
       (t) =>
@@ -220,26 +242,39 @@ export const useTaskStore = defineStore("tasks", () => {
     );
 
     unlisteners.push(
-      await listen("ffmpeg-finish", (event: any) => {
+      await listen("ffmpeg-finish", async (event: any) => {
         const { taskId, exitCode } = event.payload;
         const task = tasks.value.find((t) => t.id === taskId);
         if (task) {
           task.status = exitCode === 0 ? TaskStatus.Completed : TaskStatus.Error;
           task.completedAt = new Date();
           runningCount.value--;
+
+          if (exitCode === 0 && task.outputFile && task.inputFile) {
+            try { await invoke("preserve_file_times", { source: task.inputFile, dest: task.outputFile }); } catch { /* ignore */ }
+          }
+          playNotification(800, 0.15);
+
           tryStartNext();
         }
       })
     );
 
     unlisteners.push(
-      await listen("ffmpeg-error", (event: any) => {
-        const { taskId, error } = event.payload;
+      await listen("ffmpeg-error", async (event: any) => {
+        const { taskId, message, exitCode } = event.payload;
         const task = tasks.value.find((t) => t.id === taskId);
         if (task) {
           task.status = TaskStatus.Error;
-          task.error = error;
+          task.error = message || `退出码: ${exitCode}`;
+          addTaskLog(taskId, task.error, true);
           runningCount.value--;
+
+          if (task.outputFile) {
+            try { await invoke("delete_file", { path: task.outputFile }); } catch { /* ignore */ }
+          }
+          playNotification(300, 0.3);
+
           tryStartNext();
         }
       })
@@ -264,6 +299,7 @@ export const useTaskStore = defineStore("tasks", () => {
     resumeTask,
     stopTask,
     removeTask,
+    reorderTasks,
     clearCompletedTasks,
     updateTaskProgress,
     addTaskLog,

@@ -11,57 +11,40 @@
           <option value="vp8">VP8</option>
           <option value="mpeg4">MPEG-4</option>
           <option value="prores">ProRes</option>
+          <option value="theora">Theora</option>
         </select>
       </div>
 
       <div class="form-group">
         <label>具体编码</label>
-        <select v-model="localPreset.video.encoder.codec" @change="onChange">
+        <select v-model="localPreset.video.encoder.codec" @change="onCodecChange">
           <option v-for="enc in availableEncoders" :key="enc.value" :value="enc.value">
             {{ enc.label }}
           </option>
         </select>
       </div>
 
-      <div class="form-group">
+      <div v-if="codecPresets.length" class="form-group">
         <label>编码预设</label>
         <select v-model="localPreset.video.encoder.preset" @change="onChange">
           <option value="">默认</option>
-          <option value="ultrafast">超快</option>
-          <option value="superfast">极快</option>
-          <option value="veryfast">很快</option>
-          <option value="faster">较快</option>
-          <option value="fast">快</option>
-          <option value="medium">中等</option>
-          <option value="slow">慢</option>
-          <option value="slower">较慢</option>
-          <option value="veryslow">很慢</option>
+          <option v-for="p in codecPresets" :key="p" :value="p">{{ p }}</option>
         </select>
       </div>
 
-      <div class="form-group">
+      <div v-if="codecProfiles.length" class="form-group">
         <label>配置文件</label>
         <select v-model="localPreset.video.encoder.profile" @change="onChange">
           <option value="">自动</option>
-          <option value="baseline">Baseline</option>
-          <option value="main">Main</option>
-          <option value="high">High</option>
-          <option value="high10">High 10</option>
-          <option value="high422">High 4:2:2</option>
-          <option value="high444">High 4:4:4</option>
+          <option v-for="p in codecProfiles" :key="p" :value="p">{{ p }}</option>
         </select>
       </div>
 
-      <div class="form-group">
+      <div v-if="codecTunes.length" class="form-group">
         <label>场景优化</label>
         <select v-model="localPreset.video.encoder.tune" @change="onChange">
           <option value="">无</option>
-          <option value="film">电影</option>
-          <option value="animation">动画</option>
-          <option value="grain">胶片颗粒</option>
-          <option value="stillimage">静态图像</option>
-          <option value="fastdecode">快速解码</option>
-          <option value="zerolatency">零延迟</option>
+          <option v-for="t in codecTunes" :key="t" :value="t">{{ t }}</option>
         </select>
       </div>
 
@@ -82,6 +65,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import type { PresetData } from '@/types/preset';
+import { getCodecMeta } from '@/config/codecDatabase';
 
 const props = defineProps<{
   preset: PresetData;
@@ -115,6 +99,7 @@ const encoderOptions: Record<string, { value: string; label: string }[]> = {
   av1: [
     { value: 'libaom-av1', label: 'libaom-av1 (CPU)' },
     { value: 'libsvtav1', label: 'libsvtav1 (SVT-AV1)' },
+    { value: 'librav1e', label: 'librav1e (rav1e)' },
     { value: 'av1_nvenc', label: 'av1_nvenc (NVIDIA)' },
     { value: 'av1_qsv', label: 'av1_qsv (Intel QSV)' },
     { value: 'av1_amf', label: 'av1_amf (AMD)' },
@@ -122,6 +107,7 @@ const encoderOptions: Record<string, { value: string; label: string }[]> = {
   ],
   vp9: [
     { value: 'libvpx-vp9', label: 'libvpx-vp9 (CPU)' },
+    { value: 'vp9_qsv', label: 'vp9_qsv (Intel QSV)' },
   ],
   vp8: [
     { value: 'libvpx', label: 'libvpx (CPU)' },
@@ -131,12 +117,24 @@ const encoderOptions: Record<string, { value: string; label: string }[]> = {
   ],
   prores: [
     { value: 'prores_ks', label: 'ProRes (CPU)' },
+    { value: 'prores_aw', label: 'ProRes AW (Apple)' },
+  ],
+  theora: [
+    { value: 'libtheora', label: 'libtheora (CPU)' },
   ],
 };
 
 const availableEncoders = computed(() => {
   return encoderOptions[localPreset.value.video.encoder.category] || [];
 });
+
+const codecMeta = computed(() => {
+  return getCodecMeta(localPreset.value.video.encoder.codec);
+});
+
+const codecPresets = computed(() => codecMeta.value.presets);
+const codecProfiles = computed(() => codecMeta.value.profiles);
+const codecTunes = computed(() => codecMeta.value.tunes);
 
 watch(() => props.preset, (newVal) => {
   if (newVal) {
@@ -149,6 +147,16 @@ function onCategoryChange() {
   if (encoders && encoders.length > 0) {
     localPreset.value.video.encoder.codec = encoders[0]?.value || '';
   }
+  localPreset.value.video.encoder.preset = '';
+  localPreset.value.video.encoder.profile = '';
+  localPreset.value.video.encoder.tune = '';
+  onChange();
+}
+
+function onCodecChange() {
+  localPreset.value.video.encoder.preset = '';
+  localPreset.value.video.encoder.profile = '';
+  localPreset.value.video.encoder.tune = '';
   onChange();
 }
 
