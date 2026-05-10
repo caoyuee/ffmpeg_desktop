@@ -68,6 +68,7 @@ import { useI18n } from 'vue-i18n';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { useTaskStore } from '@/store/taskStore';
+import { getFFmpegPath } from '@/utils/ffmpegPath';
 
 const { t } = useI18n();
 const taskStore = useTaskStore();
@@ -198,7 +199,7 @@ async function startMerge() {
       content: concatContent,
     });
 
-    const command = `-hide_banner -nostdin -f concat -safe 0 -i "${concatFilePath}" -c copy "${outputPath.value}" -y`;
+    const command = `${getFFmpegPath()} -hide_banner -nostdin -f concat -safe 0 -i "${concatFilePath}" -c copy "${outputPath.value}" -y`;
 
     await taskStore.addTask({
       inputFile: fileList.value[0] || '',

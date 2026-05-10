@@ -118,6 +118,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { useTaskStore } from '@/store/taskStore';
+import { getFFmpegPath } from '@/utils/ffmpegPath';
 
 const { t } = useI18n();
 
@@ -262,7 +263,7 @@ function onDrop(event: DragEvent) {
 async function startMux() {
   if (fileList.value.length < 1 || !outputPath.value) return;
 
-  let command = '-hide_banner -nostdin ';
+  let command = getFFmpegPath() + ' -hide_banner -nostdin ';
   
   for (const file of fileList.value) {
     command += `-i "${file.path}" `;

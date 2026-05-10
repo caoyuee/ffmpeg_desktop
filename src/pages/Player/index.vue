@@ -1,22 +1,17 @@
 <template>
   <div class="player-page">
-    <div class="toolbar">
-      <button class="btn btn-open" @click="openFile">
-        <span class="icon">📁</span> {{ t('page.player.open') }}
-      </button>
-      <button class="btn btn-stop" @click="closeVideo" :disabled="!currentFile">
-        <span class="icon">⏹️</span> {{ t('page.player.close') }}
-      </button>
-      <div class="file-name" v-if="currentFile">
-        {{ currentFile }}
-      </div>
+    <div class="info-panel">
+      <p class="info-line">{{ t('page.player.infoLine1') }}</p>
+      <p class="info-line">{{ t('page.player.infoLine2') }}</p>
+      <p class="info-line">{{ t('page.player.infoLine3') }}</p>
     </div>
 
     <div
       class="player-container"
+      @dragenter.prevent="onDragEnter"
       @dragover.prevent
-      @dragleave="isDragOver = false"
-      @drop.prevent
+      @dragleave="onDragLeave"
+      @drop.prevent="onDrop"
       :class="{ 'drag-over': isDragOver }"
     >
       <VideoPlayer
@@ -30,6 +25,12 @@
       <div v-else class="player-hint">
         <span>{{ t('page.player.dragHint') }}</span>
       </div>
+    </div>
+
+    <div class="control-bar">
+      <button class="btn" @click="openFile">{{ t('page.player.open') }}</button>
+      <span class="btn-spacer"></span>
+      <button class="btn" @click="closeVideo" :disabled="!currentFile">{{ t('page.player.close') }}</button>
     </div>
   </div>
 </template>
@@ -107,6 +108,25 @@ function onVideoError(event: Event) {
   console.error('视频播放错误:', event)
 }
 
+function onDragEnter() {
+  isDragOver.value = true
+}
+
+function onDragLeave() {
+  isDragOver.value = false
+}
+
+function onDrop(e: DragEvent) {
+  isDragOver.value = false
+  const files = e.dataTransfer?.files
+  if (files && files.length > 0) {
+    const firstFile = files[0]
+    if (firstFile) {
+      playFile(firstFile.path || firstFile.name)
+    }
+  }
+}
+
 onMounted(async () => {
   dragDropUnlisten = await getCurrentWebviewWindow().onDragDropEvent((event) => {
     if (event.payload.type === 'over') {
@@ -137,48 +157,18 @@ onUnmounted(() => {
   background: var(--bg-color2, #181818);
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
+.info-panel {
   background: var(--bg-color3, #242424);
+  padding: 10px 16px 16px;
+  flex-shrink: 0;
 }
 
-.btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 16px;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
+.info-line {
+  margin: 0;
+  padding-top: 5px;
   font-size: 13px;
-  transition: all 0.2s;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-open {
-  background: var(--bg-color4, #383838);
-  color: #9acd32;
-}
-
-.btn-stop {
-  background: var(--bg-color4, #383838);
-  color: #cd5c5c;
-}
-
-.file-name {
-  flex: 1;
-  color: #888;
-  font-size: 13px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  color: var(--text-color2, #808080);
+  line-height: 1.6;
 }
 
 .player-container {
@@ -190,6 +180,7 @@ onUnmounted(() => {
   border: 2px dashed transparent;
   transition: border-color 0.2s;
   overflow: hidden;
+  min-height: 0;
 }
 
 .player-container.drag-over {
@@ -197,7 +188,42 @@ onUnmounted(() => {
 }
 
 .player-hint {
-  color: #555;
+  color: var(--text-color3, #555);
   font-size: 14px;
+}
+
+.control-bar {
+  display: flex;
+  align-items: center;
+  height: 50px;
+  padding: 0 16px;
+  background: var(--bg-color3, #242424);
+  flex-shrink: 0;
+}
+
+.btn {
+  padding: 6px 24px;
+  background: var(--bg-color4, #383838);
+  border: 1px solid var(--bg-color4, #383838);
+  border-radius: 15px;
+  color: var(--text-color1, #c0c0c0);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.btn:hover:not(:disabled) {
+  border-color: var(--text-color1, #c0c0c0);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-spacer {
+  width: 10px;
+  flex-shrink: 0;
 }
 </style>

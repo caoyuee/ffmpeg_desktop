@@ -1,5 +1,9 @@
 <template>
-  <div class="encoding-queue-page">
+  <div
+    class="encoding-queue-page"
+    :class="{ 'drag-over': isDragOver }"
+    @dragover.prevent="onHtmlDragOver"
+  >
     <div class="toolbar">
       <button class="toolbar-btn" @click="startAll" :title="t('page.queue.startAll')">
         <span class="icon">▶</span> {{ t('common.start') }}
@@ -101,15 +105,25 @@
     <div class="toggle-output-btn" @click="showOutputPanel = !showOutputPanel">
       {{ showOutputPanel ? t('page.queue.hideOutput') : t('page.queue.showOutput') }}
     </div>
+
+    <div v-if="isDragOver" class="drag-hint">
+      <span v-if="isModifierHeld">按住修饰键拖拽 → 独立参数面板</span>
+      <span v-else>直接拖拽 → 加入编码队列（按住 Ctrl/Shift/Alt 可使用独立参数面板）</span>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
+import type { UnlistenFn } from '@tauri-apps/api/event';
 import TaskQueue from '@/components/TaskQueue/TaskQueue.vue';
 import { useTaskStore } from '@/store/taskStore';
+import { usePresetStore } from '@/store/presetStore';
+import { FFmpegCommandBuilder } from '@/utils/commandBuilder';
+import { generateOutputPath } from '@/hooks/useFormatters';
 import { TaskStatus } from '@/types/task';
 
 const { t } = useI18n();
@@ -122,6 +136,10 @@ const autoScroll = ref(true);
 const stdinInput = ref('');
 const outputRef = ref<HTMLElement | null>(null);
 const selectedTaskIds = ref<Set<string>>(new Set());
+const isDragOver = ref(false);
+const isModifierHeld = ref(false);
+
+let dragDropUnlisten: UnlistenFn | null = null;
 
 const outputLog = computed(() => {
   const currentTask = tasks.value.find(t => t.status === TaskStatus.Processing);
@@ -179,6 +197,7 @@ function stopAll() {
 }
 
 function removeSelected() {
+  if (selectedTaskIds.value.size === 0) return;
   selectedTaskIds.value.forEach(id => {
     const task = tasks.value.find(t => t.id === id);
     if (task && task.status !== TaskStatus.Processing) {
@@ -287,6 +306,106 @@ function selectTask(id: string) {
 function copyOutput() {
   navigator.clipboard.writeText(outputLog.value);
 }
+
+function handleKeyDown(event: KeyboardEvent) {
+  const target = event.target as HTMLElement;
+  if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') return;
+
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    const selectedIds = Array.from(selectedTaskIds.value);
+    selectedIds.forEach(id => {
+      const task = tasks.value.find(t => t.id === id);
+      if (task && (task.status === TaskStatus.Pending || task.status === TaskStatus.Paused || task.status === TaskStatus.Error || task.status === TaskStatus.Stopped)) {
+        taskStore.startTask(id);
+      }
+    });
+  } else if (event.key === ' ') {
+    event.preventDefault();
+    const selectedIds = Array.from(selectedTaskIds.value);
+    selectedIds.forEach(id => {
+      const task = tasks.value.find(t => t.id === id);
+      if (task) {
+        if (task.status === TaskStatus.Processing) {
+          taskStore.pauseTask(id);
+        } else if (task.status === TaskStatus.Paused) {
+          taskStore.startTask(id);
+        }
+      }
+    });
+  } else if (event.key === 'a' && event.ctrlKey) {
+    event.preventDefault();
+    selectAll();
+  } else if (event.key === 'a' && event.altKey) {
+    event.preventDefault();
+    invertSelection();
+  } else if (event.key === 'Delete') {
+    event.preventDefault();
+    removeSelected();
+  } else if (event.key === 'Escape') {
+    event.preventDefault();
+    resetSelected();
+  } else if (event.key === 'End') {
+    event.preventDefault();
+    const selectedIds = Array.from(selectedTaskIds.value);
+    selectedIds.forEach(id => {
+      const task = tasks.value.find(t => t.id === id);
+      if (task && task.status === TaskStatus.Processing) {
+        taskStore.stopTask(id);
+      }
+    });
+  } else if (event.key === 'F3') {
+    event.preventDefault();
+    moveUp();
+  } else if (event.key === 'F4') {
+    event.preventDefault();
+    moveDown();
+  }
+}
+
+function onHtmlDragOver(event: DragEvent) {
+  isModifierHeld.value = event.ctrlKey || event.shiftKey || event.altKey || event.metaKey;
+}
+
+onMounted(async () => {
+  document.addEventListener('keydown', handleKeyDown);
+
+  const presetStore = usePresetStore();
+
+  dragDropUnlisten = await getCurrentWebviewWindow().onDragDropEvent((event) => {
+    if (event.payload.type === 'over') {
+      isDragOver.value = true;
+    } else if (event.payload.type === 'leave') {
+      isDragOver.value = false;
+    } else if (event.payload.type === 'drop') {
+      isDragOver.value = false;
+      const files = event.payload.paths;
+      if (files.length > 0) {
+        if (isModifierHeld.value) {
+          invoke('open_independent_panel', { files });
+        } else {
+          const preset = presetStore.currentPreset;
+          files.forEach((path: string) => {
+            const outputFile = generateOutputPath(path, preset.output.container || 'mp4');
+            const commandLine = FFmpegCommandBuilder.build({ ...preset }, path, outputFile);
+            taskStore.addTask({
+              inputFile: path,
+              outputFile,
+              commandLine,
+              presetId: preset.id || '',
+              cpuAffinity: preset.decode.cpuAffinity || undefined,
+            }, false);
+          });
+        }
+      }
+    }
+  });
+});
+
+onUnmounted(() => {
+  document.removeEventListener('keydown', handleKeyDown);
+  dragDropUnlisten?.();
+});
 </script>
 
 <style scoped>
@@ -295,6 +414,13 @@ function copyOutput() {
   flex-direction: column;
   height: 100%;
   background: var(--bg-color1, #181818);
+  outline: 2px dashed transparent;
+  outline-offset: -2px;
+  transition: outline-color 0.2s;
+}
+
+.encoding-queue-page.drag-over {
+  outline-color: var(--active-color, #9acd32);
 }
 
 .toolbar {
@@ -472,5 +598,20 @@ function copyOutput() {
   border-radius: 4px;
   color: var(--text-color1, #c0c0c0);
   font-size: 12px;
+}
+
+.drag-hint {
+  position: absolute;
+  bottom: 40px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.85);
+  color: var(--text-color1, #c0c0c0);
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-size: 13px;
+  z-index: 100;
+  border: 1px solid var(--active-color, #9acd32);
+  pointer-events: none;
 }
 </style>

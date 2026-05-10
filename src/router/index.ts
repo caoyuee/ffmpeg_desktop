@@ -66,6 +66,11 @@ const routes = [
       },
     ],
   },
+  {
+    path: '/independent-panel',
+    name: 'IndependentPanel',
+    component: () => import('@/pages/IndependentPanel/index.vue'),
+  },
 ];
 
 const router = createRouter({

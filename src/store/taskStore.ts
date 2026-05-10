@@ -84,6 +84,7 @@ export const useTaskStore = defineStore("tasks", () => {
       Task,
       "id" | "status" | "progress" | "logs" | "createdAt" | "elapsedTime"
     >,
+    autoStart: boolean = true,
   ) {
     const task: Task = {
       ...taskData,
@@ -110,7 +111,9 @@ export const useTaskStore = defineStore("tasks", () => {
     };
 
     tasks.value.push(task);
-    await tryStartNext();
+    if (autoStart) {
+      await tryStartNext();
+    }
 
     return task.id;
   }
@@ -276,6 +279,17 @@ export const useTaskStore = defineStore("tasks", () => {
           playNotification(300, 0.3);
 
           tryStartNext();
+        }
+      })
+    );
+
+    unlisteners.push(
+      await listen("add-independent-tasks", (event: any) => {
+        const { tasks: newTasks } = event.payload;
+        if (Array.isArray(newTasks)) {
+          newTasks.forEach((t: { inputFile: string; outputFile: string; commandLine: string; presetId: string; cpuAffinity?: string }) => {
+            addTask(t);
+          });
         }
       })
     );

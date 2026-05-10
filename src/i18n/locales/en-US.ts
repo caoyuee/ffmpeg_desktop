@@ -184,9 +184,12 @@ export default {
     player: {
       title: "Player",
       open: "Open",
-      close: "Close Process",
+      close: "Close",
       dragHint: "Drag video file here or click \"Open\" button",
       videoFiles: "Video Files",
+      infoLine1: "Directly calls ffplay and redirects it for playback. Make sure ffplay is in PATH.",
+      infoLine2: "ffplay is a debugging-oriented player that consumes significant PCIe bandwidth.",
+      infoLine3: "Recommended only for temporary needs such as playing new or niche codecs. For daily viewing, use a mature media player.",
     },
     performance: {
       title: "Performance Monitor",

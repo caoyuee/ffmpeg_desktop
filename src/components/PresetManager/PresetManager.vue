@@ -147,8 +147,9 @@ presetStore.loadPresets();
 
 function createNewPreset() {
   editorMode.value = "create";
-  editingPreset.value = { ...DEFAULT_PRESET };
+  editingPreset.value = { ...presetStore.currentPreset };
   editingPreset.value.name = "新预设";
+  editingPreset.value.id = "";
   showEditor.value = true;
 }
 

@@ -18,6 +18,9 @@ app.use(i18n)
 const settingStore = useSettingStore()
 settingStore.initTheme()
 
+const taskStore = useTaskStore()
+taskStore.setupEventListeners()
+
 app.mount("#app");
 
 window.addEventListener('beforeunload', () => {

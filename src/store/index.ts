@@ -4,6 +4,7 @@ import { useSoftwareInfoStore } from "./softInfoStore";
 import { useFFmpegSettingsStore } from "./ffmpegSettingsStore";
 import { useTaskStore } from "./taskStore";
 import { usePresetStore } from "./presetStore";
+import { useFileListStore } from "./fileListStore";
 
 export {
   useSettingStore,
@@ -12,4 +13,5 @@ export {
   useFFmpegSettingsStore,
   useTaskStore,
   usePresetStore,
+  useFileListStore,
 };

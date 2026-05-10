@@ -177,10 +177,6 @@ watch(() => props.preset, (newVal) => {
   updateSubtitleMode();
 }, { deep: true });
 
-watch(localPreset, (newVal) => {
-  emit('update:preset', newVal);
-}, { deep: true });
-
 function updateSubtitleMode() {
   if (localPreset.value.video.subtitleBurn.externalFile) {
     subtitleMode.value = 'external';

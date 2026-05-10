@@ -30,7 +30,7 @@
           @dblclick="previewFile(file)"
         >
           <div class="file-checkbox">
-            <input type="checkbox" :checked="selectedFiles.includes(index)" @click.stop />
+            <span class="checkbox-mark" :class="{ checked: selectedFiles.includes(index) }"></span>
           </div>
           <div class="file-icon">🎬</div>
           <div class="file-info">
@@ -57,18 +57,22 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
+import { storeToRefs } from 'pinia';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useTaskStore } from '@/store/taskStore';
 import { usePresetStore } from '@/store/presetStore';
+import { useFileListStore } from '@/store/fileListStore';
+import { FFmpegCommandBuilder } from '@/utils/commandBuilder';
+import { generateOutputPath } from '@/hooks/useFormatters';
 
 const { t } = useI18n();
 const router = useRouter();
 const taskStore = useTaskStore();
 const presetStore = usePresetStore();
+const fileListStore = useFileListStore();
 
-const files = ref<string[]>([]);
-const selectedFiles = ref<number[]>([]);
+const { files, selectedIndices: selectedFiles } = storeToRefs(fileListStore);
 
 async function addFiles() {
   const { open } = await import('@tauri-apps/plugin-dialog');
@@ -82,7 +86,7 @@ async function addFiles() {
 
   if (selected) {
     const newFiles = Array.isArray(selected) ? selected : [selected];
-    files.value = [...files.value, ...newFiles];
+    fileListStore.addFiles(newFiles);
   }
 }
 
@@ -91,18 +95,16 @@ async function addFolder() {
   const selected = await open({ directory: true });
 
   if (selected && typeof selected === 'string') {
-    files.value = [...files.value, selected];
+    fileListStore.addFiles([selected]);
   }
 }
 
 function sortFiles() {
-  files.value.sort((a, b) => a.localeCompare(b));
+  fileListStore.sortByName();
 }
 
 function removeSelected() {
-  const toRemove = new Set(selectedFiles.value);
-  files.value = files.value.filter((_, index) => !toRemove.has(index));
-  selectedFiles.value = [];
+  fileListStore.removeSelected();
 }
 
 function toggleSelect(index: number, event: MouseEvent) {
@@ -123,13 +125,16 @@ function toggleSelect(index: number, event: MouseEvent) {
       }
     }
   } else {
-    selectedFiles.value = [index];
+    if (selectedFiles.value.length === 1 && selectedFiles.value[0] === index) {
+      selectedFiles.value = [];
+    } else {
+      selectedFiles.value = [index];
+    }
   }
 }
 
 function removeFile(index: number) {
-  files.value.splice(index, 1);
-  selectedFiles.value = selectedFiles.value.filter(i => i !== index);
+  fileListStore.removeFile(index);
 }
 
 function previewFile(file: string) {
@@ -142,18 +147,26 @@ function getFileName(path: string) {
 
 function addToQueue() {
   const selectedPaths = selectedFiles.value.map(i => files.value[i]);
+  const preset = presetStore.currentPreset;
+
   selectedPaths.forEach(path => {
+    const outputFile = generateOutputPath(path!, preset?.output.container || 'mp4');
+    const commandLine = FFmpegCommandBuilder.build(
+      { ...preset },
+      path!,
+      outputFile,
+    );
+
     taskStore.addTask({
       inputFile: path!,
-      outputFile: '',
-      commandLine: '',
-      presetId: presetStore.currentPreset?.id,
-      cpuAffinity: presetStore.currentPreset?.decode.cpuAffinity || undefined,
-    });
+      outputFile,
+      commandLine,
+      presetId: preset?.id,
+      cpuAffinity: preset?.decode.cpuAffinity || undefined,
+    }, false);
   });
 
-  files.value = [];
-  selectedFiles.value = [];
+  fileListStore.clear();
   router.push('/queue');
 }
 </script>
@@ -250,12 +263,35 @@ function addToQueue() {
 
 .file-checkbox {
   margin-right: 12px;
+  display: flex;
+  align-items: center;
 }
 
-.file-checkbox input {
+.checkbox-mark {
   width: 16px;
   height: 16px;
+  border: 2px solid var(--border-color1, #555);
+  border-radius: 3px;
   cursor: pointer;
+  transition: all 0.15s;
+  position: relative;
+}
+
+.checkbox-mark.checked {
+  background: var(--active-color, #9acd32);
+  border-color: var(--active-color, #9acd32);
+}
+
+.checkbox-mark.checked::after {
+  content: '';
+  position: absolute;
+  left: 3px;
+  top: 0;
+  width: 6px;
+  height: 10px;
+  border: solid #181818;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 .file-icon {

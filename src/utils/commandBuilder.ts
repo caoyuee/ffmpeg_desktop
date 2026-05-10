@@ -1,4 +1,5 @@
 import type { PresetData } from "@/types/preset";
+import { getFFmpegPath } from "./ffmpegPath";
 
 export class FFmpegCommandBuilder {
   static build(
@@ -78,7 +79,7 @@ export class FFmpegCommandBuilder {
       parts.push(preset.custom.endParams);
     }
 
-    let command = parts.join(" ");
+    let command = getFFmpegPath() + " " + parts.join(" ");
     command = command.replace(/"\$INPUT"/g, `"${inputFile}"`);
     return command;
   }

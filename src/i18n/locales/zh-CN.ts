@@ -183,9 +183,12 @@ export default {
     player: {
       title: "播放器",
       open: "打开",
-      close: "关闭进程",
+      close: "关闭",
       dragHint: "拖拽视频文件到此处或点击「打开」按钮",
       videoFiles: "视频文件",
+      infoLine1: "直接调用 ffplay.exe 并重定向来实现播放，注意放置该程序或将其添加到环境变量",
+      infoLine2: "ffplay 是用于调试目的的播放器，会大量占据显卡 PCIE 带宽",
+      infoLine3: "仅建议用于临时场景需求，例如播放最新或小众的编码，日常观看视频请去用成熟的播放器",
     },
     performance: {
       title: "性能监控",

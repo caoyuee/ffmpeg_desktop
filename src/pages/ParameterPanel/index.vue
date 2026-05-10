@@ -146,15 +146,15 @@ const tabs = computed(() => [
   { id: 'advanced', label: t('page.params.advanced') },
 ]);
 
-watch(() => props.preset, (newVal) => {
-  if (newVal) {
-    localPreset.value = { ...newVal };
-  }
-}, { deep: true });
+let isInternalUpdate = false;
 
-watch(localPreset, (newVal) => {
-  emit('update:preset', newVal);
-}, { deep: true });
+watch(() => presetStore.currentPreset.id, (newId, oldId) => {
+  if (newId && newId !== oldId && !isInternalUpdate) {
+    isInternalUpdate = true;
+    localPreset.value = { ...presetStore.currentPreset };
+    isInternalUpdate = false;
+  }
+});
 
 const preset = computed(() => localPreset.value);
 
@@ -191,7 +191,7 @@ const qualitySummary = computed(() => {
 });
 
 function onPresetUpdate(preset: PresetData) {
-  localPreset.value = preset;
+  presetStore.currentPreset = { ...preset };
 }
 
 function copyCommand() {

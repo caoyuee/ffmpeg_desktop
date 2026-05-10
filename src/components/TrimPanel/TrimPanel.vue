@@ -76,10 +76,6 @@ watch(() => props.preset, (newVal) => {
   localPreset.value = { ...newVal };
 }, { deep: true });
 
-watch(localPreset, (newVal) => {
-  emit('update:preset', newVal);
-}, { deep: true });
-
 const duration = computed(() => {
   if (localPreset.value.trim.method === 0) return 0;
   

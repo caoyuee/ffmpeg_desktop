@@ -169,10 +169,6 @@ watch(() => props.preset, (newVal) => {
   localPreset.value = { ...newVal };
 }, { deep: true });
 
-watch(localPreset, (newVal) => {
-  emit('update:preset', newVal);
-}, { deep: true });
-
 function toggleSection(section: keyof typeof expandedSections) {
   expandedSections[section] = !expandedSections[section];
 }
