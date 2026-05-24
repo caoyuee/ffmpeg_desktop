@@ -119,6 +119,19 @@ let isDraggingRightBottom = false;
 let imageWidth = 0;
 let imageHeight = 0;
 
+function parseAspectRatio(ratioStr: string): number | null {
+  if (ratioStr === '0') return null;
+  const parts = ratioStr.split('/');
+  if (parts.length === 2) {
+    const num = parseFloat(parts[0]!);
+    const den = parseFloat(parts[1]!);
+    if (!isNaN(num) && !isNaN(den) && den !== 0) {
+      return num / den;
+    }
+  }
+  return null;
+}
+
 watch(() => props.modelValue, (val) => {
   visible.value = val;
 });
@@ -291,14 +304,14 @@ function handleLeftTopDrag(x: number, y: number) {
     let newWidth = cropRect.x + cropRect.width - newX;
     let newHeight = cropRect.y + cropRect.height - newY;
     
-    if (aspectRatio.value !== '0') {
-      const ratio = eval(aspectRatio.value);
-      newHeight = Math.floor(newWidth / ratio);
+    const ratio1 = parseAspectRatio(aspectRatio.value);
+    if (ratio1 !== null) {
+      newHeight = Math.floor(newWidth / ratio1);
     }
-    
+
     newWidth = Math.min(newWidth, imageWidth - newX);
     newHeight = Math.min(newHeight, imageHeight - newY);
-    
+
     cropRect = { x: newX, y: newY, width: newWidth, height: newHeight };
   }
 }
@@ -317,12 +330,12 @@ function handleRightBottomDrag(x: number, y: number) {
     let newWidth = Math.max(1, Math.min(x - cropRect.x, imageWidth - cropRect.x));
     let newHeight = Math.max(1, Math.min(y - cropRect.y, imageHeight - cropRect.y));
     
-    if (aspectRatio.value !== '0') {
-      const ratio = eval(aspectRatio.value);
-      newHeight = Math.floor(newWidth / ratio);
+    const ratio2 = parseAspectRatio(aspectRatio.value);
+    if (ratio2 !== null) {
+      newHeight = Math.floor(newWidth / ratio2);
       if (cropRect.y + newHeight > imageHeight) {
         newHeight = imageHeight - cropRect.y;
-        newWidth = Math.floor(newHeight * ratio);
+        newWidth = Math.floor(newHeight * ratio2);
       }
     }
     

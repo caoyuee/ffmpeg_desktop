@@ -10,7 +10,15 @@
           <option value=".avi">AVI</option>
           <option value=".mov">MOV</option>
           <option value=".flv">FLV</option>
+          <option value=".ts">TS</option>
+          <option value=".m2ts">M2TS</option>
+          <option value=".wmv">WMV</option>
+          <option value=".3gp">3GP</option>
+          <option value=".ogg">OGG</option>
         </select>
+        <div v-if="compatibilityWarning" class="compat-warning">
+          <span v-for="(w, i) in compatibilityWarning" :key="i">{{ w }}</span>
+        </div>
       </div>
 
       <div class="form-group">
@@ -88,8 +96,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import type { PresetData } from '@/types/preset';
+import { FORMAT_COMPATIBILITY } from '@/utils/ffmpegCommandBuilder';
 
 const props = defineProps<{
   preset: PresetData;
@@ -106,6 +115,31 @@ watch(() => props.preset, (newVal) => {
     localPreset.value = { ...newVal };
   }
 }, { deep: true });
+
+const compatibilityWarning = computed(() => {
+  const container = localPreset.value.output.container.replace(/^\./, '');
+  const compat = FORMAT_COMPATIBILITY[container];
+  if (!compat) return null;
+
+  const videoCodec = localPreset.value.video.encoder.codec;
+  const audioCodec = localPreset.value.audio.encoder;
+
+  const warnings: string[] = [];
+
+  if (videoCodec && videoCodec !== 'copy' && videoCodec !== 'disable' && videoCodec !== 'custom') {
+    if (compat.videoCodecs.length > 0 && !compat.videoCodecs.includes(videoCodec)) {
+      warnings.push(`视频编码器 "${videoCodec}" 与容器 ${container.toUpperCase()} 不兼容`);
+    }
+  }
+
+  if (audioCodec && audioCodec !== 'copy' && audioCodec !== 'disable') {
+    if (compat.audioCodecs.length > 0 && !compat.audioCodecs.includes(audioCodec)) {
+      warnings.push(`音频编码器 "${audioCodec}" 与容器 ${container.toUpperCase()} 不兼容`);
+    }
+  }
+
+  return warnings.length > 0 ? warnings : null;
+});
 
 function onChange() {
   emit('update:preset', localPreset.value);
@@ -209,5 +243,21 @@ async function selectDirectory() {
   gap: 12px;
   font-size: 13px;
   color: var(--text-color2, #808080);
+}
+
+.compat-warning {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.compat-warning span {
+  font-size: 12px;
+  color: #ffc107;
 }
 </style>

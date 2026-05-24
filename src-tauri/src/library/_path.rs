@@ -9,6 +9,7 @@ use crate::library::_error::io_error_maker;
 /// - `file_path`: 檔案路徑
 /// # 回傳
 /// - `true` 如果檔案存在，否則 `false`
+#[allow(dead_code)]
 pub fn file_exists(file_path: &str) -> bool {
     Path::new(file_path).exists()
 }
@@ -18,6 +19,7 @@ pub fn file_exists(file_path: &str) -> bool {
 /// - `file_path`: 檔案路徑
 /// # 回傳
 /// - `Some(&Path)` 如果有上一層資料夾則回傳其路徑，否則回傳 `None`
+#[allow(dead_code)]
 pub fn file_parent_dir(file_path: &str) -> Option<&Path> {
     Path::new(file_path).parent()
 }
@@ -27,6 +29,7 @@ pub fn file_parent_dir(file_path: &str) -> Option<&Path> {
 /// - `file_path`: 檔案路徑
 /// # 回傳
 /// - `Some(&str)` 如果有檔名則回傳其名稱，否則回傳 `None`
+#[allow(dead_code)]
 pub fn file_stem(file_path: &str) -> Option<&str> {
     Path::new(file_path).file_stem().and_then(|s| s.to_str())
 }
@@ -38,6 +41,7 @@ pub fn file_stem(file_path: &str) -> Option<&str> {
 /// # 回傳
 /// - `Ok(PathBuf)` 如果成功，回傳一個完整的檔案路徑
 /// - `Err(Error)` 如果無法取得父目錄，則回傳錯誤
+#[allow(dead_code)]
 pub fn full_path_maker(path: &str, format: &str) -> Result<PathBuf, Error>{
     
     let dir_path = match file_parent_dir(path) {

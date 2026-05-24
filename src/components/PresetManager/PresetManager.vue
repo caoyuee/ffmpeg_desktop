@@ -79,18 +79,17 @@
           <div class="form-group" v-if="editingPreset.video.encoder.codec">
             <label>质量 (CRF)</label>
             <input
-              v-model.number="editingPreset.video.encoder.crf"
+              v-model="editingPreset.video.bitrateControl.qualityValue"
               type="number"
               min="0"
               max="51"
               placeholder="23"
-              v-if="'crf' in editingPreset.video.encoder"
             />
           </div>
 
           <div class="form-group">
             <label>音频编码器</label>
-            <select>
+            <select v-model="editingPreset.audio.encoder">
               <option value="">复制流</option>
               <option value="aac">AAC</option>
               <option value="libmp3lame">MP3</option>

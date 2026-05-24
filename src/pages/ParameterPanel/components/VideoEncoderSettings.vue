@@ -9,6 +9,7 @@
           <option value="av1">AV1</option>
           <option value="vp9">VP9</option>
           <option value="vp8">VP8</option>
+          <option value="mpeg2">MPEG-2</option>
           <option value="mpeg4">MPEG-4</option>
           <option value="prores">ProRes</option>
           <option value="theora">Theora</option>
@@ -89,6 +90,7 @@ const encoderOptions: Record<string, { value: string; label: string }[]> = {
   ],
   h265: [
     { value: 'libx265', label: 'libx265 (CPU)' },
+    { value: 'libkvazaar', label: 'libkvazaar (CPU)' },
     { value: 'hevc_nvenc', label: 'hevc_nvenc (NVIDIA)' },
     { value: 'hevc_qsv', label: 'hevc_qsv (Intel QSV)' },
     { value: 'hevc_amf', label: 'hevc_amf (AMD)' },
@@ -104,13 +106,21 @@ const encoderOptions: Record<string, { value: string; label: string }[]> = {
     { value: 'av1_qsv', label: 'av1_qsv (Intel QSV)' },
     { value: 'av1_amf', label: 'av1_amf (AMD)' },
     { value: 'av1_vaapi', label: 'av1_vaapi (VAAPI/Linux)' },
+    { value: 'av1_vulkan', label: 'av1_vulkan (Vulkan)' },
+    { value: 'av1_d3d12va', label: 'av1_d3d12va (D3D12)' },
   ],
   vp9: [
     { value: 'libvpx-vp9', label: 'libvpx-vp9 (CPU)' },
+    { value: 'libsvt_vp9', label: 'libsvt_vp9 (SVT-VP9)' },
     { value: 'vp9_qsv', label: 'vp9_qsv (Intel QSV)' },
+    { value: 'vp9_vaapi', label: 'vp9_vaapi (VAAPI)' },
   ],
   vp8: [
     { value: 'libvpx', label: 'libvpx (CPU)' },
+    { value: 'vp8_vaapi', label: 'vp8_vaapi (VAAPI)' },
+  ],
+  mpeg2: [
+    { value: 'mpeg2video', label: 'mpeg2video (CPU)' },
   ],
   mpeg4: [
     { value: 'mpeg4', label: 'mpeg4' },

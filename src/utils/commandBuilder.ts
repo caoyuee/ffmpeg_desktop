@@ -1,7 +1,46 @@
 import type { PresetData } from "@/types/preset";
 import { getFFmpegPath } from "./ffmpegPath";
+import { FORMAT_COMPATIBILITY } from "./ffmpegCommandBuilder";
 
 export class FFmpegCommandBuilder {
+  static checkContainerCompatibility(
+    container: string,
+    videoCodec: string,
+    audioCodec: string,
+  ): string[] {
+    const warnings: string[] = [];
+    const format = container.replace(/^\./, "");
+    const compat = FORMAT_COMPATIBILITY[format];
+    if (!compat) return warnings;
+
+    if (
+      videoCodec &&
+      videoCodec !== "copy" &&
+      videoCodec !== "disable" &&
+      videoCodec !== "custom" &&
+      compat.videoCodecs.length > 0 &&
+      !compat.videoCodecs.includes(videoCodec)
+    ) {
+      warnings.push(
+        `Video codec "${videoCodec}" may be incompatible with ${format.toUpperCase()} container`,
+      );
+    }
+
+    if (
+      audioCodec &&
+      audioCodec !== "copy" &&
+      audioCodec !== "disable" &&
+      compat.audioCodecs.length > 0 &&
+      !compat.audioCodecs.includes(audioCodec)
+    ) {
+      warnings.push(
+        `Audio codec "${audioCodec}" may be incompatible with ${format.toUpperCase()} container`,
+      );
+    }
+
+    return warnings;
+  }
+
   static build(
     preset: PresetData,
     inputFile: string,
@@ -36,7 +75,9 @@ export class FFmpegCommandBuilder {
     const trimParams = this.buildTrimParams(preset);
     parts.push(...trimParams);
 
-    if (!trimParams.includes(`-i "$INPUT"`)) {
+    if (preset.video.frameServer.useAviSynth && preset.video.frameServer.avsScript) {
+      parts.push(`-i "${preset.video.frameServer.avsScript}"`);
+    } else if (!trimParams.includes(`-i "$INPUT"`)) {
       parts.push(`-i "${inputFile}"`);
     }
 
@@ -146,6 +187,8 @@ export class FFmpegCommandBuilder {
       exr: "exr",
       libopenjpeg: "libopenjpeg",
       jpegls: "jpegls",
+      libsvtjpegxs: "libsvtjpegxs",
+      hdr: "hdr",
     };
 
     const ffmpegEncoder = encoderMap[image.encoder] || image.encoder;
@@ -196,6 +239,10 @@ export class FFmpegCommandBuilder {
           `luma_msize_y=${video.filters.sharpen.lumaMsizeY}:` +
           `luma_amount=${video.filters.sharpen.lumaAmount}`,
       );
+    }
+
+    if (video.filters.frameBlend.blendMode) {
+      filters.push(this.buildFrameBlend(video.filters.frameBlend));
     }
 
     if (video.filters.interpolation.targetFps) {
@@ -258,9 +305,39 @@ export class FFmpegCommandBuilder {
         return `nlmeans=s=${param1 || 3}`;
       case "atadenoise":
         return `atadenoise=s=${param1 || 0.02}`;
+      case "bm3d":
+        return `bm3d=sigma=${param1 || 3}:block_size=${param2 || 8}:block_step=${param3 || 4}:group_size=${param4 || 16}`;
       default:
         return "";
     }
+  }
+
+  private static buildFrameBlend(
+    fb: PresetData["video"]["filters"]["frameBlend"],
+  ): string {
+    const modeMap: Record<string, string> = {
+      average: "average",
+      blend: "blend",
+      and: "and",
+      or: "or",
+      xor: "xor",
+      add: "add",
+      multiply: "multiply",
+    };
+
+    const parts: string[] = [];
+    if (fb.frameRate) {
+      parts.push(`fps=${fb.frameRate}`);
+    }
+
+    const tblendParams: string[] = [];
+    tblendParams.push(`all_mode=${modeMap[fb.blendMode] || fb.blendMode}`);
+    if (fb.ratio) {
+      tblendParams.push(`all_opacity=${fb.ratio}`);
+    }
+    parts.push(`tblend=${tblendParams.join(":")}`);
+
+    return parts.join(",");
   }
 
   private static buildInterpolation(
@@ -302,6 +379,12 @@ export class FFmpegCommandBuilder {
     }
     if (sr.downscaler) {
       params.push(`downscaler=${sr.downscaler}`);
+    }
+    if (sr.antiringing) {
+      params.push(`antiringing=${sr.antiringing}`);
+    }
+    if (sr.shaders.length > 0) {
+      params.push(`custom_shader_path=${sr.shaders.join(":")}`);
     }
 
     return `libplacebo=${params.join(":")}`;
@@ -501,6 +584,18 @@ export class FFmpegCommandBuilder {
       params.push("-map_chapters -1");
     }
 
+    if (streamControl.videoStreams.length > 0 && !streamControl.keepOtherVideo) {
+      params.push("-vn");
+    }
+
+    if (streamControl.audioStreams.length > 0 && !streamControl.keepOtherAudio) {
+      params.push("-an");
+    }
+
+    if (streamControl.subtitleStreams.length > 0 && !streamControl.keepOtherSubtitle) {
+      params.push("-sn");
+    }
+
     return params;
   }
 
@@ -543,19 +638,38 @@ export class FFmpegCommandBuilder {
     if (subtitle.style.italic) {
       styles.push("Italic=1");
     }
+    if (subtitle.style.underline) {
+      styles.push("Underline=1");
+    }
+    if (subtitle.style.strikeout) {
+      styles.push("StrikeOut=1");
+    }
+
     if (subtitle.primaryColor) {
-      const assColor = this.hexToAssColor(subtitle.primaryColor);
-      styles.push(`PrimaryColour=${assColor}`);
+      const alpha = subtitle.primaryAlpha || "00";
+      styles.push(`PrimaryColour=${this.hexToAssColor(subtitle.primaryColor, alpha)}`);
+    }
+    if (subtitle.secondaryColor) {
+      const alpha = subtitle.secondaryAlpha || "00";
+      styles.push(`SecondaryColour=${this.hexToAssColor(subtitle.secondaryColor, alpha)}`);
     }
     if (subtitle.outlineColor) {
-      const assColor = this.hexToAssColor(subtitle.outlineColor);
-      styles.push(`OutlineColour=${assColor}`);
+      const alpha = subtitle.outlineAlpha || "00";
+      styles.push(`OutlineColour=${this.hexToAssColor(subtitle.outlineColor, alpha)}`);
     }
+    if (subtitle.backColor) {
+      const alpha = subtitle.backAlpha || "00";
+      styles.push(`BackColour=${this.hexToAssColor(subtitle.backColor, alpha)}`);
+    }
+
     if (subtitle.outlineWidth) {
       styles.push(`Outline=${subtitle.outlineWidth}`);
     }
     if (subtitle.shadowDistance) {
       styles.push(`Shadow=${subtitle.shadowDistance}`);
+    }
+    if (subtitle.borderStyle >= 0) {
+      styles.push(`BorderStyle=${subtitle.borderStyle}`);
     }
     if (subtitle.alignment > 0) {
       styles.push(`Alignment=${subtitle.alignment}`);
@@ -569,15 +683,26 @@ export class FFmpegCommandBuilder {
     if (subtitle.marginV) {
       styles.push(`MarginV=${subtitle.marginV}`);
     }
+    if (subtitle.spacing) {
+      styles.push(`Spacing=${subtitle.spacing}`);
+    }
+    if (subtitle.lineSpacing) {
+      styles.push(`LineSpacing=${subtitle.lineSpacing}`);
+    }
+    if (subtitle.customStyle) {
+      styles.push(subtitle.customStyle);
+    }
 
     return styles.join(",");
   }
 
-  private static hexToAssColor(hex: string): string {
+  private static hexToAssColor(hex: string, alpha?: string): string {
     const color = hex.replace("#", "");
     const r = color.substring(0, 2);
     const g = color.substring(2, 4);
     const b = color.substring(4, 6);
-    return `&H${b}${g}${r}&`;
+    const a = alpha ? alpha.replace("#", "") : "00";
+    return `&H${a}${b}${g}${r}&`;
   }
+
 }

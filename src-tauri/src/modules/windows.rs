@@ -14,7 +14,7 @@ pub fn open_or_focus_window(
             .set_focus()
             .expect("Failed to focus window");
     } else {
-        let new_window =
+        let _new_window =
             tauri::WebviewWindowBuilder::new(app, window_label, WebviewUrl::App(route.into()))
                 .title(title)
                 .inner_size(size.0, size.1)

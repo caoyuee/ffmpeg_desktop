@@ -142,6 +142,8 @@
           <option value="exr">EXR</option>
           <option value="libopenjpeg">JPEG 2000</option>
           <option value="jpegls">JPEG LS</option>
+          <option value="libsvtjpegxs">SVT JPEG XS</option>
+          <option value="hdr">HDR (Radiance RGBE)</option>
         </select>
       </div>
       <div v-if="localPreset.image.encoder && localPreset.image.encoder !== 'bmp'" class="form-group">

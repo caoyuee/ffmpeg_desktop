@@ -17,8 +17,6 @@ function formatError(error: unknown): string {
   return String(error);
 }
 
-function classifyError(error: unknown): ErrorType {
-
 let audioCtx: AudioContext | null = null;
 function playNotification(frequency: number, duration: number) {
   try {
@@ -34,6 +32,8 @@ function playNotification(frequency: number, duration: number) {
     osc.stop(audioCtx.currentTime + duration);
   } catch { /* AudioContext may be blocked by browser */ }
 }
+
+function classifyError(error: unknown): ErrorType {
   const message = formatError(error).toLowerCase();
   
   if (message.includes("network") || message.includes("connection") || message.includes("timeout")) {

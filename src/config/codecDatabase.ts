@@ -58,6 +58,12 @@ export const CODEC_DATABASE: Record<string, CodecMeta> = {
   },
 
   // H.265/HEVC
+  "libkvazaar": {
+    presets: ["veryslow", "slower", "slow", "medium", "fast", "faster", "veryfast", "superfast", "ultrafast"],
+    profiles: ["main", "main10", "mainstillpicture"],
+    tunes: ["psnr", "ssim", "grain", "fastdecode", "zerolatency"],
+    pixFmts: ["yuv420p", "yuv422p", "yuv444p", "yuv420p10le", "yuv422p10le", "yuv444p10le", "yuv420p12le", "yuv422p12le", "yuv444p12le"],
+  },
   "libx265": {
     presets: ["veryslow", "slower", "slow", "medium", "fast", "faster", "veryfast", "superfast", "ultrafast"],
     profiles: ["main", "mainstillpicture"],
@@ -144,6 +150,18 @@ export const CODEC_DATABASE: Record<string, CodecMeta> = {
     tunes: [],
     pixFmts: ["vaapi"],
   },
+  "av1_vulkan": {
+    presets: [],
+    profiles: ["main"],
+    tunes: ["hq", "ll", "ull", "lossless"],
+    pixFmts: ["vulkan"],
+  },
+  "av1_d3d12va": {
+    presets: [],
+    profiles: ["main"],
+    tunes: [],
+    pixFmts: ["d3d12"],
+  },
 
   // VP9
   "libvpx-vp9": {
@@ -152,11 +170,23 @@ export const CODEC_DATABASE: Record<string, CodecMeta> = {
     tunes: ["psnr", "ssim"],
     pixFmts: ["yuv420p", "yuva420p", "yuv422p", "yuv440p", "yuv444p", "yuv420p10le", "yuv422p10le", "yuv440p10le", "yuv444p10le", "yuv420p12le", "yuv422p12le", "yuv440p12le", "yuv444p12le", "gbrp", "gbrp10le", "gbrp12le"],
   },
+  "libsvt_vp9": {
+    presets: [],
+    profiles: [],
+    tunes: [],
+    pixFmts: ["yuv420p", "yuv420p10le"],
+  },
   "vp9_qsv": {
     presets: ["veryslow", "slower", "slow", "medium", "fast", "faster", "veryfast"],
     profiles: ["profile0", "profile1", "profile2", "profile3"],
     tunes: [],
     pixFmts: ["nv12", "p010le", "vuyx", "qsv", "xv30le"],
+  },
+  "vp9_vaapi": {
+    presets: [],
+    profiles: [],
+    tunes: [],
+    pixFmts: ["vaapi"],
   },
 
   // VP8
@@ -165,6 +195,12 @@ export const CODEC_DATABASE: Record<string, CodecMeta> = {
     profiles: [],
     tunes: [],
     pixFmts: ["yuv420p", "yuva420p"],
+  },
+  "vp8_vaapi": {
+    presets: [],
+    profiles: [],
+    tunes: [],
+    pixFmts: ["vaapi"],
   },
 
   // ProRes

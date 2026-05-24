@@ -47,7 +47,6 @@ export default {
     performance: "性能监控",
     mediainfo: "媒体信息",
     settings: "设置",
-    quality: "画质评测",
   },
   page: {
     main: {
@@ -549,6 +548,12 @@ export default {
     github: "GitHub",
     issues: "问题反馈",
     releases: "更新日志",
+    checkUpdate: "检查更新",
+    checking: "正在检查...",
+    updateAvailable: "发现新版本 {version}",
+    upToDate: "已是最新版本",
+    updateError: "检查更新失败",
+    viewRelease: "查看发布页",
   },
   languages: {
     "zh-CN": "简体中文",

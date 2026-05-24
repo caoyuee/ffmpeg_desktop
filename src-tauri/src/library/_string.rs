@@ -6,6 +6,7 @@ use chrono;
 /// - `format`: 檔案格式，例如 "mp4", "mkv"
 /// # 回傳
 /// - `String` - 回傳格式為 "output_YYYYMMDD_HHMMSS.format"
+#[allow(dead_code)]
 pub fn timestamp_filename(prefix: &str, format: &str) -> String {
 
     let now = chrono::Local::now();

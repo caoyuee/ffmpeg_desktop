@@ -31,7 +31,7 @@
         <label>裁剪滤镜</label>
         <div class="input-row">
           <input type="text" v-model="localPreset.video.resolution.cropFilter" @input="onChange" placeholder="如: 1920:1080:0:0" />
-          <button @click="openCropDialog">裁剪窗口</button>
+          <button @click="showCrop = true">裁剪窗口</button>
         </div>
       </div>
     </div>
@@ -58,20 +58,45 @@
     <div class="form-section">
       <h4>高级功能</h4>
       <div class="form-row">
-        <button class="advanced-btn" @click="openInterpolation">插帧参数</button>
-        <button class="advanced-btn" @click="openDenoise">降噪参数</button>
-        <button class="advanced-btn" @click="openSuperResolution">超分参数</button>
+        <button class="advanced-btn" @click="showInterpolation = true">插帧参数</button>
+        <button class="advanced-btn" @click="showSuperResolution = true">超分参数</button>
+        <button class="advanced-btn" @click="showFrameBlend = true">动态模糊</button>
       </div>
     </div>
 
-    <Toast v-model="showToast" :message="toastMessage" type="info" />
+    <CropDialog
+      v-model="showCrop"
+      :initialCrop="localPreset.video.resolution.cropFilter"
+      @confirm="onCropConfirm"
+    />
+    <InterpolationDialog
+      :visible="showInterpolation"
+      :modelValue="localPreset.video.filters.interpolation"
+      @update:visible="showInterpolation = $event"
+      @update:modelValue="onInterpolationUpdate"
+    />
+    <SuperResolutionDialog
+      :visible="showSuperResolution"
+      :modelValue="localPreset.video.filters.superResolution"
+      @update:visible="showSuperResolution = $event"
+      @update:modelValue="onSuperResolutionUpdate"
+    />
+    <FrameBlendDialog
+      :visible="showFrameBlend"
+      :modelValue="localPreset.video.filters.frameBlend"
+      @update:visible="showFrameBlend = $event"
+      @update:modelValue="onFrameBlendUpdate"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { PresetData } from '@/types/preset';
-import Toast from '@/components/Dialogs/Toast.vue';
+import CropDialog from '@/components/Dialogs/CropDialog.vue';
+import InterpolationDialog from '@/components/Dialogs/InterpolationDialog.vue';
+import SuperResolutionDialog from '@/components/Dialogs/SuperResolutionDialog.vue';
+import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue';
 
 const props = defineProps<{
   preset: PresetData;
@@ -82,8 +107,10 @@ const emit = defineEmits<{
 }>();
 
 const localPreset = ref<PresetData>({ ...props.preset });
-const showToast = ref(false);
-const toastMessage = ref('');
+const showCrop = ref(false);
+const showInterpolation = ref(false);
+const showSuperResolution = ref(false);
+const showFrameBlend = ref(false);
 
 watch(() => props.preset, (newVal) => {
   if (newVal) {
@@ -95,24 +122,24 @@ function onChange() {
   emit('update:preset', localPreset.value);
 }
 
-function openCropDialog() {
-  toastMessage.value = '裁剪窗口功能开发中...';
-  showToast.value = true;
+function onCropConfirm(cropValue: string) {
+  localPreset.value.video.resolution.cropFilter = cropValue;
+  emit('update:preset', localPreset.value);
 }
 
-function openInterpolation() {
-  toastMessage.value = '插帧参数功能开发中...';
-  showToast.value = true;
+function onInterpolationUpdate(settings: PresetData['video']['filters']['interpolation']) {
+  localPreset.value.video.filters.interpolation = settings;
+  emit('update:preset', localPreset.value);
 }
 
-function openDenoise() {
-  toastMessage.value = '降噪参数功能开发中...';
-  showToast.value = true;
+function onSuperResolutionUpdate(settings: PresetData['video']['filters']['superResolution']) {
+  localPreset.value.video.filters.superResolution = settings;
+  emit('update:preset', localPreset.value);
 }
 
-function openSuperResolution() {
-  toastMessage.value = '超分参数功能开发中...';
-  showToast.value = true;
+function onFrameBlendUpdate(settings: PresetData['video']['filters']['frameBlend']) {
+  localPreset.value.video.filters.frameBlend = settings;
+  emit('update:preset', localPreset.value);
 }
 </script>
 

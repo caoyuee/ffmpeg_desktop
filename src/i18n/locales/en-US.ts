@@ -47,7 +47,6 @@ export default {
     performance: "Performance",
     mediainfo: "Media Info",
     settings: "Settings",
-    quality: "Quality Assess",
   },
   page: {
     main: {
@@ -551,6 +550,12 @@ export default {
     github: "GitHub",
     issues: "Issues",
     releases: "Releases",
+    checkUpdate: "Check for Updates",
+    checking: "Checking...",
+    updateAvailable: "New version {version} available",
+    upToDate: "You're up to date",
+    updateError: "Update check failed",
+    viewRelease: "View Release",
   },
   languages: {
     "zh-CN": "简体中文",

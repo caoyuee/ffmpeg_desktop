@@ -222,20 +222,41 @@ async function startAssessment() {
   addLog(`待测视频: ${distortedFile.value}`);
   
   try {
-    const filterParts: string[] = [];
-    
+    // Probe reference video duration for progress calculation
+    try {
+      const probeResult = await invoke('probe_media_info', { path: referenceFile.value });
+      if (probeResult && typeof probeResult === 'object' && 'format' in probeResult) {
+        const fmt = probeResult.format as Record<string, unknown>;
+        if (typeof fmt.duration === 'string') {
+          duration.value = parseFloat(fmt.duration);
+        }
+      }
+    } catch {
+      // Duration probe is best-effort
+    }
+
+    const filterParts: { label: string; filter: string }[] = [];
+
     if (metrics.value.vmaf) {
-      filterParts.push(`libvmaf=model_path=${vmafModel.value}.json`);
+      filterParts.push({ label: 'vmaf', filter: `libvmaf=model_path=${vmafModel.value}.json` });
     }
     if (metrics.value.ssim) {
-      filterParts.push('ssim');
+      filterParts.push({ label: 'ssim', filter: 'ssim' });
     }
     if (metrics.value.psnr) {
-      filterParts.push('psnr');
+      filterParts.push({ label: 'psnr', filter: 'psnr' });
     }
-    
-    const filterComplex = `[0:v][1:v]${filterParts.join(',')}`;
-    
+
+    let filterComplex: string;
+    if (filterParts.length === 1) {
+      filterComplex = `[0:v][1:v]${filterParts[0]!.filter}`;
+    } else {
+      const refLabels = filterParts.map((_, i) => `[ref${i}]`).join('');
+      const distLabels = filterParts.map((_, i) => `[dist${i}]`).join('');
+      const branches = filterParts.map((fp, i) => `[ref${i}][dist${i}]${fp.filter}`).join(';');
+      filterComplex = `[0:v]split=${filterParts.length}${refLabels};[1:v]split=${filterParts.length}${distLabels};${branches}`;
+    }
+
     let command = `-hide_banner -i "${referenceFile.value}" -i "${distortedFile.value}" -lavfi "${filterComplex}" -f null -`;
     
     if (outputPath.value) {

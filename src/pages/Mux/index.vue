@@ -59,6 +59,17 @@
       </div>
     </div>
     
+    <StreamSelectorDialog
+      :visible="showStreamSelector"
+      :filePath="streamSelectorFile?.path ?? ''"
+      :fileIndex="streamSelectorFile ? fileList.indexOf(streamSelectorFile) : 0"
+      :initialVideo="streamSelectorFile ? parseStreamIndices(streamSelectorFile.videoStreams) : []"
+      :initialAudio="streamSelectorFile ? parseStreamIndices(streamSelectorFile.audioStreams) : []"
+      :initialSubtitle="streamSelectorFile ? parseStreamIndices(streamSelectorFile.subtitleStreams) : []"
+      @update:visible="showStreamSelector = $event"
+      @confirm="onStreamConfirm"
+    />
+
     <div class="stream-editor" v-if="selectedFile">
       <div class="stream-row">
         <label class="stream-label">{{ t('page.mux.videoStreamIndex') }}</label>
@@ -119,6 +130,7 @@ import { useI18n } from 'vue-i18n';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { useTaskStore } from '@/store/taskStore';
 import { getFFmpegPath } from '@/utils/ffmpegPath';
+import StreamSelectorDialog from '@/components/Dialogs/StreamSelectorDialog.vue';
 
 const { t } = useI18n();
 
@@ -137,6 +149,8 @@ const fileList = ref<MuxFile[]>([]);
 const selectedIndex = ref<number | null>(null);
 const outputPath = ref('');
 const isDragOver = ref(false);
+const showStreamSelector = ref(false);
+const streamSelectorFile = ref<MuxFile | null>(null);
 
 const selectedFile = computed(() => {
   if (selectedIndex.value !== null) {
@@ -144,6 +158,10 @@ const selectedFile = computed(() => {
   }
   return null;
 });
+
+function parseStreamIndices(streams: string): number[] {
+  return streams.split(',').filter(s => s.trim()).map(Number).filter(n => !isNaN(n));
+}
 
 async function addFiles() {
   try {
@@ -174,7 +192,16 @@ function selectFile(index: number) {
 }
 
 function openStreamSelector(file: MuxFile) {
-  console.log('打开流选择器:', file.path);
+  streamSelectorFile.value = file;
+  showStreamSelector.value = true;
+}
+
+function onStreamConfirm(result: { video: number[]; audio: number[]; subtitle: number[] }) {
+  if (streamSelectorFile.value) {
+    streamSelectorFile.value.videoStreams = result.video.join(',');
+    streamSelectorFile.value.audioStreams = result.audio.join(',');
+    streamSelectorFile.value.subtitleStreams = result.subtitle.join(',');
+  }
 }
 
 function moveUp() {

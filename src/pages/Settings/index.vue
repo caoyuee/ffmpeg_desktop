@@ -167,8 +167,24 @@
         <div class="about-content">
           <div class="app-logo">🎬</div>
           <h3>{{ t('about.softwareName') }}</h3>
-          <p class="version">{{ t('about.version') }} 0.1.0</p>
+          <p class="version">{{ t('about.version') }} 0.1.1</p>
           <p class="description">{{ t('about.description') }}</p>
+
+          <div class="update-section">
+            <button class="update-btn" :disabled="updateState.checking" @click="checkUpdate">
+              {{ updateState.checking ? t('about.checking') : t('about.checkUpdate') }}
+            </button>
+            <p v-if="updateState.hasUpdate" class="update-info success">
+              {{ t('about.updateAvailable', { version: updateState.latestRelease?.version }) }}
+              <a :href="updateState.latestRelease?.url" target="_blank">{{ t('about.viewRelease') }}</a>
+            </p>
+            <p v-else-if="updateState.latestRelease && !updateState.hasUpdate" class="update-info">
+              {{ t('about.upToDate') }}
+            </p>
+            <p v-if="updateState.error" class="update-info error">
+              {{ t('about.updateError') }}: {{ updateState.error }}
+            </p>
+          </div>
 
           <div class="tech-stack">
             <span>Tauri 2.x</span>
@@ -217,6 +233,7 @@ import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
 import { setLocale, availableLanguages, type LanguageCode } from '@/i18n';
 import { useSettingStore, type ThemeMode } from '@/store/settingStore';
+import { useUpdateChecker } from '@/hooks/useUpdateChecker';
 import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue';
 import Toast from '@/components/Dialogs/Toast.vue';
 
@@ -277,6 +294,8 @@ const showClearLogsDialog = ref(false);
 const showToast = ref(false);
 const toastMessage = ref('');
 const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success');
+
+const { state: updateState, checkForUpdates } = useUpdateChecker();
 
 onMounted(() => {
   loadSettings();
@@ -386,15 +405,19 @@ function clearLogs() {
 }
 
 function openGitHub() {
-  window.open('https://github.com', '_blank');
+  window.open('https://gitee.com/caoyuee/video-editor', '_blank');
 }
 
 function openIssues() {
-  window.open('https://github.com/issues', '_blank');
+  window.open('https://gitee.com/caoyuee/video-editor/issues', '_blank');
 }
 
 function openReleases() {
-  window.open('https://github.com/releases', '_blank');
+  window.open('https://gitee.com/caoyuee/video-editor/releases', '_blank');
+}
+
+async function checkUpdate() {
+  await checkForUpdates();
 }
 </script>
 
@@ -598,6 +621,48 @@ function openReleases() {
   border-radius: 4px;
   font-size: 12px;
   color: var(--text-color2, #909090);
+}
+
+.update-section {
+  margin: 16px 0;
+}
+
+.update-btn {
+  padding: 8px 20px;
+  background: var(--info-color, #3498db);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.update-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.update-btn:hover:not(:disabled) {
+  background: #2980b9;
+}
+
+.update-info {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-color2, #808080);
+}
+
+.update-info.success {
+  color: var(--success-color, #27ae60);
+}
+
+.update-info.success a {
+  color: var(--info-color, #3498db);
+  margin-left: 8px;
+}
+
+.update-info.error {
+  color: var(--error-color, #e74c3c);
 }
 
 .links {

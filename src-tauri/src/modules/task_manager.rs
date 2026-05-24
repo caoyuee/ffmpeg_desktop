@@ -9,7 +9,7 @@ use regex::Regex;
 const EXIT_CODE_ERROR: i32 = -1;
 
 struct TaskProcess {
-    pid: u32,
+    _pid: u32,
 }
 
 static TASK_PROCESSES: Lazy<Mutex<HashMap<String, TaskProcess>>> = Lazy::new(|| Mutex::new(HashMap::new()));
@@ -83,7 +83,7 @@ pub fn start_ffmpeg(
         TASK_STDINS.lock().unwrap().insert(task_id.clone(), stdin);
     }
 
-    TASK_PROCESSES.lock().unwrap().insert(task_id.clone(), TaskProcess { pid });
+    TASK_PROCESSES.lock().unwrap().insert(task_id.clone(), TaskProcess { _pid: pid });
 
     if let Some(ref affinity_str) = cpu_affinity {
         #[cfg(unix)]
@@ -156,16 +156,16 @@ pub fn pause_process(pid: u32) -> Result<(), String> {
     {
         use nix::sys::signal::{kill, Signal};
         use nix::unistd::Pid;
-        
+
         kill(Pid::from_raw(pid as i32), Signal::SIGSTOP)
             .map_err(|e| format!("Failed to pause process: {}", e))?;
     }
-    
+
     #[cfg(windows)]
     {
-        return Err("Windows pause not implemented".to_string());
+        suspend_windows_process(pid)?;
     }
-    
+
     Ok(())
 }
 
@@ -175,16 +175,74 @@ pub fn resume_process(pid: u32) -> Result<(), String> {
     {
         use nix::sys::signal::{kill, Signal};
         use nix::unistd::Pid;
-        
+
         kill(Pid::from_raw(pid as i32), Signal::SIGCONT)
             .map_err(|e| format!("Failed to resume process: {}", e))?;
     }
-    
+
     #[cfg(windows)]
     {
-        return Err("Windows resume not implemented".to_string());
+        resume_windows_process(pid)?;
     }
-    
+
+    Ok(())
+}
+
+#[cfg(windows)]
+fn suspend_windows_process(pid: u32) -> Result<(), String> {
+    #[link(name = "ntdll")]
+    extern "system" {
+        fn NtSuspendProcess(process_handle: *mut std::ffi::c_void) -> i32;
+    }
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn OpenProcess(dwDesiredAccess: u32, bInheritHandle: i32, dwProcessId: u32) -> *mut std::ffi::c_void;
+        fn CloseHandle(hObject: *mut std::ffi::c_void) -> i32;
+    }
+
+    const PROCESS_SUSPEND_RESUME: u32 = 0x0800;
+
+    let handle = unsafe { OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid) };
+    if handle.is_null() {
+        return Err(format!("Failed to open process {}: access denied or not found", pid));
+    }
+
+    let status = unsafe { NtSuspendProcess(handle) };
+    unsafe { CloseHandle(handle); }
+
+    if status != 0 {
+        return Err(format!("NtSuspendProcess failed with status 0x{:X}", status));
+    }
+
+    Ok(())
+}
+
+#[cfg(windows)]
+fn resume_windows_process(pid: u32) -> Result<(), String> {
+    #[link(name = "ntdll")]
+    extern "system" {
+        fn NtResumeProcess(process_handle: *mut std::ffi::c_void) -> i32;
+    }
+    #[link(name = "kernel32")]
+    extern "system" {
+        fn OpenProcess(dwDesiredAccess: u32, bInheritHandle: i32, dwProcessId: u32) -> *mut std::ffi::c_void;
+        fn CloseHandle(hObject: *mut std::ffi::c_void) -> i32;
+    }
+
+    const PROCESS_SUSPEND_RESUME: u32 = 0x0800;
+
+    let handle = unsafe { OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid) };
+    if handle.is_null() {
+        return Err(format!("Failed to open process {}: access denied or not found", pid));
+    }
+
+    let status = unsafe { NtResumeProcess(handle) };
+    unsafe { CloseHandle(handle); }
+
+    if status != 0 {
+        return Err(format!("NtResumeProcess failed with status 0x{:X}", status));
+    }
+
     Ok(())
 }
 

@@ -87,6 +87,11 @@ export interface PresetData {
         lumaMsizeY: string;
         lumaAmount: string;
       };
+      frameBlend: {
+        frameRate: string;
+        blendMode: string;
+        ratio: string;
+      };
       interpolation: {
         targetFps: string;
         mode: string;
@@ -299,6 +304,11 @@ export const DEFAULT_PRESET: PresetData = {
         lumaMsizeX: "",
         lumaMsizeY: "",
         lumaAmount: "",
+      },
+      frameBlend: {
+        frameRate: "",
+        blendMode: "",
+        ratio: "",
       },
       interpolation: {
         targetFps: "",

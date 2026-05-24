@@ -286,7 +286,7 @@ static FFPLAY_PROCESS: Lazy<Mutex<Option<std::process::Child>>> = Lazy::new(|| M
 fn start_ffplay(file_path: String, width: u32, height: u32, volume: u32) -> Result<(), String> {
     use std::process::{Command, Stdio};
     
-    let mut ffplay = Command::new("ffplay")
+    let ffplay = Command::new("ffplay")
         .args(&[
             "-x", &width.to_string(),
             "-y", &height.to_string(),
@@ -315,7 +315,7 @@ fn stop_ffplay() {
 }
 
 #[tauri::command]
-fn toggle_ffplay_pause(pause: bool) {
+fn toggle_ffplay_pause() {
     use std::io::Write;
     let mut process = FFPLAY_PROCESS.lock().unwrap();
     if let Some(ref mut child) = *process {
@@ -324,7 +324,6 @@ fn toggle_ffplay_pause(pause: bool) {
             let _ = stdin.flush();
         }
     }
-    let _ = pause;
 }
 
 #[tauri::command]
@@ -351,16 +350,85 @@ fn seek_ffplay(time: f64) {
     }
 }
 
+
+
+#[derive(Default)]
+struct DiskIoSnapshot {
+    read_sectors: u64,
+    write_sectors: u64,
+    timestamp: Option<std::time::Instant>,
+}
+
+static DISK_IO_SNAPSHOT: Lazy<Mutex<DiskIoSnapshot>> = Lazy::new(|| Mutex::new(DiskIoSnapshot::default()));
+
+fn get_disk_io() -> (f64, f64) {
+    #[cfg(target_os = "linux")]
+    {
+        let mut current_read: u64 = 0;
+        let mut current_write: u64 = 0;
+
+        if let Ok(content) = std::fs::read_to_string("/proc/diskstats") {
+            for line in content.lines() {
+                let fields: Vec<&str> = line.split_whitespace().collect();
+                if fields.len() >= 14 {
+                    // field 2: device name, field 5: sectors read, field 9: sectors written
+                    if let (Ok(read), Ok(write)) = (fields[5].parse::<u64>(), fields[9].parse::<u64>()) {
+                        current_read += read;
+                        current_write += write;
+                    }
+                }
+            }
+        }
+
+        let mut snapshot = DISK_IO_SNAPSHOT.lock().unwrap();
+        let now = std::time::Instant::now();
+
+        // sector = 512 bytes
+        let read_speed = if let Some(prev_time) = snapshot.timestamp {
+            let elapsed = now.duration_since(prev_time).as_secs_f64();
+            if elapsed > 0.0 && current_read >= snapshot.read_sectors {
+                ((current_read - snapshot.read_sectors) as f64 * 512.0) / (elapsed * 1_048_576.0)
+            } else {
+                0.0
+            }
+        } else {
+            0.0
+        };
+
+        let write_speed = if let Some(prev_time) = snapshot.timestamp {
+            let elapsed = now.duration_since(prev_time).as_secs_f64();
+            if elapsed > 0.0 && current_write >= snapshot.write_sectors {
+                ((current_write - snapshot.write_sectors) as f64 * 512.0) / (elapsed * 1_048_576.0)
+            } else {
+                0.0
+            }
+        } else {
+            0.0
+        };
+
+        snapshot.read_sectors = current_read;
+        snapshot.write_sectors = current_write;
+        snapshot.timestamp = Some(now);
+
+        ((read_speed * 10.0).round() / 10.0, (write_speed * 10.0).round() / 10.0)
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        (0.0, 0.0)
+    }
+}
+
 #[tauri::command]
 fn get_system_metrics() -> serde_json::Value {
     use sysinfo::System;
-    
+
     let mut sys = System::new_all();
     sys.refresh_all();
-    
+
     let cpu_usage = sys.global_cpu_usage();
     let cpu_cores = sys.cpus().len();
-    
+
     let total_memory = sys.total_memory();
     let used_memory = sys.used_memory();
     let memory_percent = if total_memory > 0 {
@@ -368,7 +436,9 @@ fn get_system_metrics() -> serde_json::Value {
     } else {
         0.0
     };
-    
+
+    let (read_speed, write_speed) = get_disk_io();
+
     serde_json::json!({
         "cpu": {
             "usage": cpu_usage,
@@ -387,8 +457,8 @@ fn get_system_metrics() -> serde_json::Value {
             "temperature": null
         },
         "disk": {
-            "readSpeed": 0.0,
-            "writeSpeed": 0.0
+            "readSpeed": read_speed,
+            "writeSpeed": write_speed
         }
     })
 }
@@ -445,11 +515,13 @@ fn kill_process_by_pid(pid: u32) -> Result<(), String> {
     }
 }
 
+#[allow(dead_code)]
 #[tauri::command]
 fn get_startup_args() -> Vec<String> {
     env::args().collect()
 }
 
+#[allow(dead_code)]
 #[tauri::command]
 fn parse_startup_args() -> serde_json::Value {
     let args: Vec<String> = env::args().collect();
@@ -497,6 +569,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_pinia::init())
         .setup(|app| {
+            modules::menus::setup_menus(app.handle())?;
             modules::tray::setup_tray(app.handle())?;
 
             let window = app.get_webview_window("main").unwrap();

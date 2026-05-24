@@ -177,14 +177,22 @@ export const useFFmpegSettingsStore = defineStore("ffmpeg_settings", () => {
       nvenc: {
         libx264: "h264_nvenc",
         libx265: "hevc_nvenc",
+        libaom_av1: "av1_nvenc",
+        libsvtav1: "av1_nvenc",
       },
       qsv: {
         libx264: "h264_qsv",
         libx265: "hevc_qsv",
+        libvpx_vp9: "vp9_qsv",
+        libaom_av1: "av1_qsv",
+        libsvtav1: "av1_qsv",
       },
       vaapi: {
         libx264: "h264_vaapi",
         libx265: "hevc_vaapi",
+        libvpx_vp9: "vp9_vaapi",
+        libaom_av1: "av1_vaapi",
+        libsvtav1: "av1_vaapi",
       },
       videotoolbox: {
         libx264: "h264_videotoolbox",
@@ -193,6 +201,8 @@ export const useFFmpegSettingsStore = defineStore("ffmpeg_settings", () => {
       amf: {
         libx264: "h264_amf",
         libx265: "hevc_amf",
+        libaom_av1: "av1_amf",
+        libsvtav1: "av1_amf",
       },
     };
 
