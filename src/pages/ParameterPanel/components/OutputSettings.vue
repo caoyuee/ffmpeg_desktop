@@ -40,11 +40,7 @@
     <div class="form-section">
       <h4>自动命名</h4>
       <div class="form-group">
-        <label class="switch-label">
-          <span>关闭</span>
-          <input type="checkbox" v-model="localPreset.output.naming.useAutoNaming" @change="onChange" />
-          <span>开启</span>
-        </label>
+        <SwitchToggle v-model="localPreset.output.naming.useAutoNaming" @update:model-value="onChange" />
       </div>
 
       <template v-if="localPreset.output.naming.useAutoNaming">
@@ -99,6 +95,7 @@
 import { ref, watch, computed } from 'vue';
 import type { PresetData } from '@/types/preset';
 import { FORMAT_COMPATIBILITY } from '@/utils/ffmpegCommandBuilder';
+import SwitchToggle from '@/components/SwitchToggle/SwitchToggle.vue';
 
 const props = defineProps<{
   preset: PresetData;
@@ -237,13 +234,6 @@ async function selectDirectory() {
   color: var(--text-color1, #c0c0c0);
 }
 
-.switch-label {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 13px;
-  color: var(--text-color2, #808080);
-}
 
 .compat-warning {
   margin-top: 8px;
