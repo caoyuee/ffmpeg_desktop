@@ -163,6 +163,11 @@ function addToQueue() {
       commandLine,
       presetId: preset?.id,
       cpuAffinity: preset?.decode.cpuAffinity || undefined,
+      preserveFileTimes: {
+        creation: preset.output.naming.preserveCreationTime,
+        modification: preset.output.naming.preserveModifyTime,
+        access: preset.output.naming.preserveAccessTime,
+      },
     }, false);
   });
 

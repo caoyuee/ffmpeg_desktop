@@ -3,57 +3,57 @@
     <div v-if="visible" class="dialog-overlay" @click.self="close">
       <div class="dialog-container">
         <div class="dialog-header">
-          <span class="dialog-title">libplacebo 超分</span>
+          <span class="dialog-title">{{ t('dialog.superResolution.title') }}</span>
         </div>
         
         <div class="dialog-content">
           <div class="info-text">
-            <p>libplacebo 需要受支持的 GPU，过早的显卡型号可能无法运行</p>
-            <p>直接在这里指定分辨率，不要在主参数面板上指定，可以用 iw*2 和 ih*2 表示倍数</p>
+            <p>{{ t('dialog.superResolution.description1') }}</p>
+            <p>{{ t('dialog.superResolution.description2') }}</p>
           </div>
           
           <div class="form-row">
-            <label class="row-label">目标分辨率</label>
+            <label class="row-label">{{ t('dialog.superResolution.targetResolution') }}</label>
             <div class="row-content">
               <input 
                 type="text" 
                 class="text-input small" 
                 v-model="settings.width"
-                placeholder="宽度"
+                :placeholder="t('dialog.superResolution.widthPlaceholder')"
               />
               <input 
                 type="text" 
                 class="text-input small" 
                 v-model="settings.height"
-                placeholder="高度"
+                :placeholder="t('dialog.superResolution.heightPlaceholder')"
               />
-              <span class="hint">任一或两者留空以取消使用此滤镜</span>
+              <span class="hint">{{ t('dialog.superResolution.cancelFilterHint') }}</span>
             </div>
           </div>
           
           <div class="form-row">
-            <label class="row-label">采样算法</label>
+            <label class="row-label">{{ t('dialog.superResolution.samplingAlgorithm') }}</label>
             <div class="row-content">
               <select class="select-input" v-model="settings.upscaler">
-                <option value="">上采样算法 (放大用)</option>
+                <option value="">{{ t('dialog.superResolution.upscalerPlaceholder') }}</option>
                 <option value="ewa_lanczos">ewa_lanczos</option>
                 <option value="spline36">spline36</option>
                 <option value="mitchell">mitchell</option>
                 <option value="hermite">hermite</option>
               </select>
               <select class="select-input" v-model="settings.downscaler">
-                <option value="">下采样算法 (缩小用)</option>
+                <option value="">{{ t('dialog.superResolution.downscalerPlaceholder') }}</option>
                 <option value="ewa_lanczos">ewa_lanczos</option>
                 <option value="spline36">spline36</option>
                 <option value="mitchell">mitchell</option>
                 <option value="hermite">hermite</option>
               </select>
-              <span class="hint">建议用自定义着色器</span>
+              <span class="hint">{{ t('dialog.superResolution.customShaderHint') }}</span>
             </div>
           </div>
           
           <div class="form-row">
-            <label class="row-label">抗振铃强度</label>
+            <label class="row-label">{{ t('dialog.superResolution.antiRinging') }}</label>
             <div class="row-content">
               <input 
                 type="text" 
@@ -61,20 +61,20 @@
                 v-model="settings.antiRinging"
                 placeholder=""
               />
-              <span class="hint">[可选] 范围 0.0 ~ 1.0</span>
+              <span class="hint">{{ t('dialog.superResolution.antiRingingHint') }}</span>
             </div>
           </div>
           
           <div class="form-row shader-row">
-            <label class="row-label">自定义<br/>Shader<br/>着色器</label>
+            <label class="row-label multiline-label">{{ t('dialog.superResolution.customShaderLabel') }}</label>
             <div class="row-content column">
               <div class="shader-toolbar">
-                <button class="btn btn-shader" @click="addShader">添加</button>
-                <button class="btn btn-shader" @click="removeShader" :disabled="selectedShaderIndex < 0">移除</button>
-                <button class="btn btn-shader" @click="moveShaderUp" :disabled="selectedShaderIndex <= 0">上移</button>
-                <button class="btn btn-shader" @click="moveShaderDown" :disabled="selectedShaderIndex >= shaders.length - 1">下移</button>
-                <span class="shader-hint">支持 .glsl 和 .hook 格式</span>
-                <button class="btn btn-shader download-btn" @click="downloadShaders">下载</button>
+                <button class="btn btn-shader" @click="addShader">{{ t('dialog.superResolution.add') }}</button>
+                <button class="btn btn-shader" @click="removeShader" :disabled="selectedShaderIndex < 0">{{ t('dialog.superResolution.remove') }}</button>
+                <button class="btn btn-shader" @click="moveShaderUp" :disabled="selectedShaderIndex <= 0">{{ t('dialog.superResolution.moveUp') }}</button>
+                <button class="btn btn-shader" @click="moveShaderDown" :disabled="selectedShaderIndex >= shaders.length - 1">{{ t('dialog.superResolution.moveDown') }}</button>
+                <span class="shader-hint">{{ t('dialog.superResolution.supportedShaderFormats') }}</span>
+                <button class="btn btn-shader download-btn" @click="downloadShaders">{{ t('dialog.superResolution.download') }}</button>
               </div>
               <div class="shader-list">
                 <div 
@@ -87,7 +87,7 @@
                   {{ shader }}
                 </div>
                 <div v-if="shaders.length === 0" class="empty-shader">
-                  拖拽着色器文件到此处或点击"添加"按钮
+                  {{ t('dialog.superResolution.emptyShaderHint') }}
                 </div>
               </div>
             </div>
@@ -95,8 +95,8 @@
         </div>
         
         <div class="dialog-footer">
-          <button class="btn btn-cancel" @click="close">取消</button>
-          <button class="btn btn-confirm" @click="confirm">确定</button>
+          <button class="btn btn-cancel" @click="close">{{ t('common.cancel') }}</button>
+          <button class="btn btn-confirm" @click="confirm">{{ t('common.ok') }}</button>
         </div>
       </div>
     </div>
@@ -105,6 +105,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { open } from '@tauri-apps/plugin-dialog';
 
 interface SuperResolutionSettings {
@@ -125,6 +126,8 @@ const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void;
   (e: 'update:modelValue', value: SuperResolutionSettings): void;
 }>();
+
+const { t } = useI18n();
 
 const settings = ref<SuperResolutionSettings>({
   width: '',
@@ -158,7 +161,7 @@ async function addShader() {
     const files = await open({
       multiple: true,
       filters: [
-        { name: '着色器文件', extensions: ['glsl', 'hook'] },
+        { name: t('dialog.superResolution.shaderFiles'), extensions: ['glsl', 'hook'] },
       ],
     });
     if (files) {
@@ -166,7 +169,7 @@ async function addShader() {
       shaders.value.push(...paths);
     }
   } catch (error) {
-    console.error('添加着色器失败:', error);
+    console.error(t('dialog.superResolution.addShaderFailed'), error);
   }
 }
 
@@ -245,7 +248,7 @@ defineExpose({
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay-bg, rgba(0, 0, 0, 0.7));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -256,7 +259,7 @@ defineExpose({
   background: var(--bg-color2, #181818);
   border-radius: 8px;
   min-width: 684px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 20px var(--shadow-color, rgba(0, 0, 0, 0.5));
 }
 
 .dialog-header {
@@ -265,7 +268,7 @@ defineExpose({
 }
 
 .dialog-title {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 15px;
   font-weight: 500;
 }
@@ -275,7 +278,7 @@ defineExpose({
 }
 
 .info-text {
-  color: #888;
+  color: var(--text-color2, #888);
   font-size: 13px;
   margin-bottom: 10px;
   line-height: 1.6;
@@ -299,7 +302,7 @@ defineExpose({
 .row-label {
   width: 100px;
   background: var(--bg-color4, #303030);
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 14px;
   font-weight: 500;
   padding: 10px;
@@ -309,6 +312,10 @@ defineExpose({
   align-items: center;
   justify-content: center;
   line-height: 1.4;
+}
+
+.multiline-label {
+  white-space: pre-line;
 }
 
 .row-content {
@@ -332,7 +339,7 @@ defineExpose({
   background: var(--bg-color1, #181818);
   border: none;
   border-radius: 15px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   outline: none;
   max-width: 175px;
@@ -343,7 +350,7 @@ defineExpose({
 }
 
 .text-input::placeholder {
-  color: #555;
+  color: var(--text-color3, #555);
 }
 
 .select-input {
@@ -352,7 +359,7 @@ defineExpose({
   background: var(--bg-color4, #303030);
   border: none;
   border-radius: 4px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   outline: none;
   max-width: 175px;
@@ -360,7 +367,7 @@ defineExpose({
 }
 
 .hint {
-  color: #666;
+  color: var(--text-color3, #666);
   font-size: 12px;
 }
 
@@ -375,7 +382,7 @@ defineExpose({
   padding: 6px 12px;
   background: var(--bg-color4, #383838);
   border: none;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   cursor: pointer;
   border-radius: 0;
@@ -391,7 +398,7 @@ defineExpose({
 }
 
 .shader-hint {
-  color: #666;
+  color: var(--text-color3, #666);
   font-size: 12px;
   margin-left: 10px;
 }
@@ -405,7 +412,7 @@ defineExpose({
 
 .shader-item {
   padding: 8px 12px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   cursor: pointer;
   transition: background 0.2s;
@@ -421,7 +428,7 @@ defineExpose({
 
 .empty-shader {
   padding: 30px;
-  color: #555;
+  color: var(--text-color3, #555);
   font-size: 13px;
   text-align: center;
 }
@@ -445,12 +452,12 @@ defineExpose({
 
 .btn-cancel {
   background: var(--bg-color4, #383838);
-  color: #888;
+  color: var(--text-color2, #888);
 }
 
 .btn-confirm {
   background: var(--bg-color4, #383838);
-  color: #9acd32;
+  color: var(--active-color, #9acd32);
 }
 
 .btn:hover {

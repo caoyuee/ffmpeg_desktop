@@ -30,6 +30,23 @@ describe('FFmpegCommandBuilder', () => {
       expect(cmd).toContain('-c copy')
       expect(cmd).toContain('"output".mp4')
     })
+
+    it('should replace FFmpegFreeUI placeholders in full custom mode', () => {
+      const cmd = FFmpegCommandBuilder.build(
+        makePreset({
+          custom: {
+            ...DEFAULT_PRESET.custom,
+            fullCustom: 'ffmpeg -i "<InputFile>" -metadata title="<InputFileNameWithOutExtension>" "<OutputFile>"',
+          },
+        }),
+        '/media/source clip.mkv',
+        '/exports/result.mp4',
+      )
+
+      expect(cmd).toContain('-i "/media/source clip.mkv"')
+      expect(cmd).toContain('-metadata title="source clip"')
+      expect(cmd).toContain('"/exports/result.mp4"')
+    })
   })
 
   describe('video encoder params', () => {
@@ -192,6 +209,37 @@ describe('FFmpegCommandBuilder', () => {
       expect(cmd).toContain('-filter_complex "[0:v]scale=1280:720[v]"')
     })
 
+    it('should include custom audio filter params', () => {
+      const preset = makePreset({
+        custom: {
+          ...DEFAULT_PRESET.custom,
+          audioFilter: 'volume=2',
+        },
+      })
+
+      const cmd = FFmpegCommandBuilder.build(preset, 'in.mp4', 'out.mp4')
+
+      expect(cmd).toContain('-af "volume=2"')
+    })
+
+    it('should replace FFmpegFreeUI placeholders in custom params', () => {
+      const preset = makePreset({
+        custom: {
+          ...DEFAULT_PRESET.custom,
+          beforeOutputParams: '-metadata title="<InputFileNameWithOutExtension>" -metadata source="<InputFilePath>"',
+        },
+      })
+
+      const cmd = FFmpegCommandBuilder.build(
+        preset,
+        'C:\\Videos\\source clip.mkv',
+        'C:\\Exports\\result.mp4',
+      )
+
+      expect(cmd).toContain('-metadata title="source clip"')
+      expect(cmd).toContain('-metadata source="C:\\Videos"')
+    })
+
     it('should skip automatic output file params when disabled', () => {
       const preset = makePreset({
         output: {
@@ -211,6 +259,22 @@ describe('FFmpegCommandBuilder', () => {
 
       expect(cmd).toContain('-f null -')
       expect(cmd).not.toContain('"out.mp4" -y')
+    })
+  })
+
+  describe('decode params', () => {
+    it('should include hardware decode device params', () => {
+      const preset = makePreset({
+        decode: {
+          ...DEFAULT_PRESET.decode,
+          hwAccelParamName: '-hwaccel_device',
+          hwAccelParam: '0',
+        },
+      })
+
+      const cmd = FFmpegCommandBuilder.build(preset, 'in.mp4', 'out.mp4')
+
+      expect(cmd).toContain('-hwaccel_device 0')
     })
   })
 })

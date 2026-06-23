@@ -1,53 +1,53 @@
 <template>
   <div class="quality-settings">
     <div class="form-section">
-      <h4>质量控制方式</h4>
+      <h4>{{ t('page.params.qualityControlMode') }}</h4>
       <div class="form-group">
-        <label>质量模式</label>
+        <label>{{ t('page.params.qualityMode') }}</label>
         <select v-model="localPreset.video.bitrateControl.mode" @change="onModeChange">
-          <option value="CRF">CRF (恒定质量)</option>
-          <option value="VBR">VBR (可变比特率)</option>
-          <option value="VBR_HQ">VBR HQ (高质量可变比特率)</option>
-          <option value="CBR">CBR (恒定比特率)</option>
-          <option value="CQP">CQP (恒定量化参数)</option>
+          <option value="CRF">{{ t('page.params.crfMode') }}</option>
+          <option value="VBR">{{ t('page.params.vbrMode') }}</option>
+          <option value="VBR_HQ">{{ t('page.params.vbrHqMode') }}</option>
+          <option value="CBR">{{ t('page.params.cbrMode') }}</option>
+          <option value="CQP">{{ t('page.params.cqpMode') }}</option>
         </select>
       </div>
 
       <div v-if="localPreset.video.bitrateControl.mode === 'CRF' || localPreset.video.bitrateControl.mode === 'CQP'" class="form-group">
-        <label>{{ localPreset.video.bitrateControl.mode === 'CRF' ? 'CRF 值 (0-51, 越小质量越好)' : 'QP 值' }}</label>
+        <label>{{ localPreset.video.bitrateControl.mode === 'CRF' ? t('page.params.crfValueLabel') : t('page.params.qpValueLabel') }}</label>
         <div class="slider-group">
           <input type="range" min="0" max="51" v-model.number="qualityValueNum" @input="onQualityValueChange" />
           <span class="value">{{ localPreset.video.bitrateControl.qualityValue || 23 }}</span>
         </div>
         <div class="quality-hint">
-          <span>0: 无损</span>
-          <span>23: 默认</span>
-          <span>51: 最差</span>
+          <span>{{ t('page.params.losslessHint') }}</span>
+          <span>{{ t('page.params.defaultHint') }}</span>
+          <span>{{ t('page.params.worstHint') }}</span>
         </div>
       </div>
 
       <div v-if="localPreset.video.bitrateControl.mode !== 'CRF' && localPreset.video.bitrateControl.mode !== 'CQP'" class="form-group">
-        <label>基础比特率 (kbps)</label>
-        <input type="text" v-model="localPreset.video.bitrateControl.baseBitrate" @input="onChange" placeholder="如: 5000" />
+        <label>{{ t('page.params.baseBitrateKbps') }}</label>
+        <input type="text" v-model="localPreset.video.bitrateControl.baseBitrate" @input="onChange" :placeholder="t('page.params.baseBitratePlaceholder')" />
       </div>
     </div>
 
     <div v-if="localPreset.video.bitrateControl.mode !== 'CRF' && localPreset.video.bitrateControl.mode !== 'CQP'" class="form-section">
-      <h4>比特率控制</h4>
+      <h4>{{ t('page.params.bitrateControl') }}</h4>
       <div class="form-row">
         <div class="form-group half">
-          <label>最低比特率 (kbps)</label>
-          <input type="text" v-model="localPreset.video.bitrateControl.minBitrate" @input="onChange" placeholder="可选" />
+          <label>{{ t('page.params.minBitrateKbps') }}</label>
+          <input type="text" v-model="localPreset.video.bitrateControl.minBitrate" @input="onChange" :placeholder="t('page.params.optionalPlaceholder')" />
         </div>
         <div class="form-group half">
-          <label>最高比特率 (kbps)</label>
-          <input type="text" v-model="localPreset.video.bitrateControl.maxBitrate" @input="onChange" placeholder="可选" />
+          <label>{{ t('page.params.maxBitrateKbps') }}</label>
+          <input type="text" v-model="localPreset.video.bitrateControl.maxBitrate" @input="onChange" :placeholder="t('page.params.optionalPlaceholder')" />
         </div>
       </div>
       <div class="form-row">
         <div class="form-group half">
-          <label>缓冲区大小 (kbps)</label>
-          <input type="text" v-model="localPreset.video.bitrateControl.bufferSize" @input="onChange" placeholder="可选" />
+          <label>{{ t('page.params.bufferSizeKbps') }}</label>
+          <input type="text" v-model="localPreset.video.bitrateControl.bufferSize" @input="onChange" :placeholder="t('page.params.optionalPlaceholder')" />
         </div>
       </div>
     </div>
@@ -56,6 +56,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 
 const props = defineProps<{
@@ -66,6 +67,7 @@ const emit = defineEmits<{
   'update:preset': [preset: PresetData];
 }>();
 
+const { t } = useI18n();
 const localPreset = ref<PresetData>({ ...props.preset });
 
 const qualityValueNum = computed({

@@ -253,8 +253,23 @@ export const useTaskStore = defineStore("tasks", () => {
           task.completedAt = new Date();
           runningCount.value--;
 
-          if (exitCode === 0 && task.outputFile && task.inputFile) {
-            try { await invoke("preserve_file_times", { source: task.inputFile, dest: task.outputFile }); } catch { /* ignore */ }
+          const preserveFileTimes = task.preserveFileTimes;
+          if (
+            exitCode === 0 &&
+            task.outputFile &&
+            task.inputFile &&
+            preserveFileTimes &&
+            (preserveFileTimes.creation || preserveFileTimes.modification || preserveFileTimes.access)
+          ) {
+            try {
+              await invoke("preserve_file_times", {
+                source: task.inputFile,
+                dest: task.outputFile,
+                preserveCreation: preserveFileTimes.creation,
+                preserveModification: preserveFileTimes.modification,
+                preserveAccess: preserveFileTimes.access,
+              });
+            } catch { /* ignore */ }
           }
           playNotification(800, 0.15);
 
@@ -296,7 +311,14 @@ export const useTaskStore = defineStore("tasks", () => {
       await listen("add-independent-tasks", (event: any) => {
         const { tasks: newTasks } = event.payload;
         if (Array.isArray(newTasks)) {
-          newTasks.forEach((t: { inputFile: string; outputFile: string; commandLine: string; presetId: string; cpuAffinity?: string }) => {
+          newTasks.forEach((t: {
+            inputFile: string;
+            outputFile: string;
+            commandLine: string;
+            presetId: string;
+            cpuAffinity?: string;
+            preserveFileTimes?: { creation: boolean; modification: boolean; access: boolean };
+          }) => {
             addTask(t);
           });
         }

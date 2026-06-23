@@ -39,7 +39,7 @@
       <input
         type="text"
         v-model="stdinInput"
-        placeholder="发送指令到 ffmpeg (如: q)"
+        :placeholder="t('page.queue.stdinPlaceholder')"
         class="stdin-input"
         @keyup.enter="sendStdin"
       />
@@ -107,8 +107,8 @@
     </div>
 
     <div v-if="isDragOver" class="drag-hint">
-      <span v-if="isModifierHeld">按住修饰键拖拽 → 独立参数面板</span>
-      <span v-else>直接拖拽 → 加入编码队列（按住 Ctrl/Shift/Alt 可使用独立参数面板）</span>
+      <span v-if="isModifierHeld">{{ t('page.queue.dragToIndependentPanel') }}</span>
+      <span v-else>{{ t('page.queue.dragToQueueHint') }}</span>
     </div>
   </div>
 </template>
@@ -273,7 +273,7 @@ async function sendStdin() {
   try {
     await invoke('send_ffmpeg_stdin', { taskId: processingTask.id, input: input + '\n' });
   } catch (error) {
-    console.error('发送指令失败:', error);
+    console.error(t('page.queue.sendStdinFailed'), error);
   }
   stdinInput.value = '';
 }
@@ -394,6 +394,11 @@ onMounted(async () => {
               commandLine,
               presetId: preset.id || '',
               cpuAffinity: preset.decode.cpuAffinity || undefined,
+              preserveFileTimes: {
+                creation: preset.output.naming.preserveCreationTime,
+                modification: preset.output.naming.preserveModifyTime,
+                access: preset.output.naming.preserveAccessTime,
+              },
             }, false);
           });
         }
@@ -605,7 +610,7 @@ onUnmounted(() => {
   bottom: 40px;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.85);
+  background: var(--bg-color2, #242424);
   color: var(--text-color1, #c0c0c0);
   padding: 10px 24px;
   border-radius: 8px;

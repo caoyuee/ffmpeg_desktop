@@ -3,62 +3,62 @@
     <div v-if="visible" class="dialog-overlay" @click.self="close">
       <div class="dialog-container">
         <div class="dialog-header">
-          <span class="dialog-title">tblend 动态模糊</span>
+          <span class="dialog-title">{{ t('dialog.frameBlend.title') }}</span>
         </div>
         
         <div class="dialog-content">
           <div class="info-text">
-            <p>Time Blend 将相邻帧进行混合以模拟相机的效果</p>
-            <p>但注意算法算出来的动态模糊不可能比得过真实录制的效果</p>
+            <p>{{ t('dialog.frameBlend.description1') }}</p>
+            <p>{{ t('dialog.frameBlend.description2') }}</p>
           </div>
           
           <div class="form-row">
-            <label class="row-label">降低帧率</label>
+            <label class="row-label">{{ t('dialog.frameBlend.reduceFrameRate') }}</label>
             <div class="row-content">
               <input 
                 type="text" 
                 class="text-input" 
                 v-model="settings.frameRate"
-                placeholder="在滤镜中指定帧率"
+                :placeholder="t('dialog.frameBlend.frameRatePlaceholder')"
               />
-              <span class="hint">可选</span>
+              <span class="hint">{{ t('dialog.frameBlend.optional') }}</span>
             </div>
           </div>
           
           <div class="form-row">
-            <label class="row-label">混合模式</label>
+            <label class="row-label">{{ t('dialog.frameBlend.blendMode') }}</label>
             <div class="row-content">
               <select class="select-input" v-model="settings.blendMode">
-                <option value="">不使用</option>
-                <option value="average">与前一帧的平均值</option>
-                <option value="blend">插值混合</option>
-                <option value="and">位运算 AND</option>
-                <option value="or">位运算 OR</option>
-                <option value="xor">位运算 XOR</option>
-                <option value="add">像素值相加</option>
-                <option value="multiply">像素值相乘</option>
+                <option value="">{{ t('dialog.frameBlend.doNotUse') }}</option>
+                <option value="average">{{ t('dialog.frameBlend.averagePreviousFrame') }}</option>
+                <option value="blend">{{ t('dialog.frameBlend.blend') }}</option>
+                <option value="and">{{ t('dialog.frameBlend.bitwiseAnd') }}</option>
+                <option value="or">{{ t('dialog.frameBlend.bitwiseOr') }}</option>
+                <option value="xor">{{ t('dialog.frameBlend.bitwiseXor') }}</option>
+                <option value="add">{{ t('dialog.frameBlend.addPixels') }}</option>
+                <option value="multiply">{{ t('dialog.frameBlend.multiplyPixels') }}</option>
               </select>
-              <span class="hint">留空以取消使用此滤镜</span>
+              <span class="hint">{{ t('dialog.frameBlend.cancelFilterHint') }}</span>
             </div>
           </div>
           
           <div class="form-row">
-            <label class="row-label">混合比例</label>
+            <label class="row-label">{{ t('dialog.frameBlend.blendRatio') }}</label>
             <div class="row-content">
               <input 
                 type="text" 
                 class="text-input" 
                 v-model="settings.ratio"
-                placeholder="0.0~1.0"
+                :placeholder="t('dialog.frameBlend.ratioPlaceholder')"
               />
-              <span class="hint">不一定有效</span>
+              <span class="hint">{{ t('dialog.frameBlend.mayNotWork') }}</span>
             </div>
           </div>
         </div>
         
         <div class="dialog-footer">
-          <button class="btn btn-cancel" @click="close">取消</button>
-          <button class="btn btn-confirm" @click="confirm">确定</button>
+          <button class="btn btn-cancel" @click="close">{{ t('common.cancel') }}</button>
+          <button class="btn btn-confirm" @click="confirm">{{ t('common.ok') }}</button>
         </div>
       </div>
     </div>
@@ -67,6 +67,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 interface FrameBlendSettings {
   frameRate: string;
@@ -83,6 +84,8 @@ const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void;
   (e: 'update:modelValue', value: FrameBlendSettings): void;
 }>();
+
+const { t } = useI18n();
 
 const settings = ref<FrameBlendSettings>({
   frameRate: '',
@@ -145,7 +148,7 @@ defineExpose({
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay-bg, rgba(0, 0, 0, 0.7));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -157,7 +160,7 @@ defineExpose({
   border-radius: 8px;
   min-width: 500px;
   max-width: 600px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 20px var(--shadow-color, rgba(0, 0, 0, 0.5));
 }
 
 .dialog-header {
@@ -166,7 +169,7 @@ defineExpose({
 }
 
 .dialog-title {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 15px;
   font-weight: 500;
 }
@@ -176,7 +179,7 @@ defineExpose({
 }
 
 .info-text {
-  color: #888;
+  color: var(--text-color2, #888);
   font-size: 13px;
   margin-bottom: 20px;
   line-height: 1.6;
@@ -195,7 +198,7 @@ defineExpose({
 .row-label {
   width: 100px;
   background: var(--bg-color4, #303030);
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 14px;
   font-weight: 500;
   padding: 10px;
@@ -219,14 +222,14 @@ defineExpose({
   background: var(--bg-color1, #181818);
   border: none;
   border-radius: 15px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   outline: none;
   max-width: 175px;
 }
 
 .text-input::placeholder {
-  color: #555;
+  color: var(--text-color3, #555);
 }
 
 .select-input {
@@ -235,7 +238,7 @@ defineExpose({
   background: var(--bg-color4, #303030);
   border: none;
   border-radius: 4px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   outline: none;
   max-width: 175px;
@@ -243,7 +246,7 @@ defineExpose({
 }
 
 .hint {
-  color: #666;
+  color: var(--text-color3, #666);
   font-size: 12px;
 }
 
@@ -266,12 +269,12 @@ defineExpose({
 
 .btn-cancel {
   background: var(--bg-color4, #383838);
-  color: #888;
+  color: var(--text-color2, #888);
 }
 
 .btn-confirm {
   background: var(--bg-color4, #383838);
-  color: #9acd32;
+  color: var(--active-color, #9acd32);
 }
 
 .btn:hover {

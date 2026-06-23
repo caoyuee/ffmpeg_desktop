@@ -2,7 +2,7 @@
   <div class="output-settings">
     <div class="form-section">
       <div class="form-group">
-        <label>输出容器</label>
+        <label>{{ t('page.params.outputContainer') }}</label>
         <select v-model="localPreset.output.container" @change="onChange">
           <option value=".mp4">MP4</option>
           <option value=".mkv">MKV</option>
@@ -24,67 +24,67 @@
       <div class="form-group">
         <label class="checkbox-label">
           <input type="checkbox" v-model="localPreset.output.naming.noOutputFileParam" @change="onChange" />
-          <span>不使用输出文件参数</span>
+          <span>{{ t('page.params.noOutputFileParam') }}</span>
         </label>
       </div>
 
       <div class="form-group">
-        <label>输出目录</label>
+        <label>{{ t('page.params.outputDirectory') }}</label>
         <div class="input-row">
-          <input type="text" v-model="localPreset.output.location" @input="onChange" placeholder="留空则与源文件相同" />
-          <button @click="selectDirectory">选择</button>
+          <input type="text" v-model="localPreset.output.location" @input="onChange" :placeholder="t('page.params.outputDirectoryPlaceholder')" />
+          <button @click="selectDirectory">{{ t('page.params.selectDirectory') }}</button>
         </div>
       </div>
     </div>
 
     <div class="form-section">
-      <h4>自动命名</h4>
+      <h4>{{ t('page.params.autoNaming') }}</h4>
       <div class="form-group">
         <SwitchToggle v-model="localPreset.output.naming.useAutoNaming" @update:model-value="onChange" />
       </div>
 
       <template v-if="localPreset.output.naming.useAutoNaming">
         <div class="form-group">
-          <label>自动命名选项</label>
+          <label>{{ t('page.params.autoNamingOption') }}</label>
           <select v-model.number="localPreset.output.naming.autoNamingOption" @change="onChange">
-            <option :value="0">仅添加后缀</option>
-            <option :value="1">仅添加前缀</option>
-            <option :value="2">替换文件名</option>
-            <option :value="3">完全自定义</option>
+            <option :value="0">{{ t('page.params.suffixOnly') }}</option>
+            <option :value="1">{{ t('page.params.prefixOnly') }}</option>
+            <option :value="2">{{ t('page.params.replaceFileName') }}</option>
+            <option :value="3">{{ t('page.params.fullyCustom') }}</option>
           </select>
         </div>
 
         <div class="form-group">
-          <label>开头文本</label>
+          <label>{{ t('page.params.prefixText') }}</label>
           <input type="text" v-model="localPreset.output.naming.prefixText" @input="onChange" />
         </div>
 
         <div class="form-group">
-          <label>替代文本</label>
+          <label>{{ t('page.params.replaceText') }}</label>
           <input type="text" v-model="localPreset.output.naming.replaceText" @input="onChange" />
         </div>
 
         <div class="form-group">
-          <label>结尾文本</label>
+          <label>{{ t('page.params.suffixText') }}</label>
           <input type="text" v-model="localPreset.output.naming.suffixText" @input="onChange" />
         </div>
       </template>
     </div>
 
     <div class="form-section">
-      <h4>时间戳保留</h4>
+      <h4>{{ t('page.params.preserveTimestamps') }}</h4>
       <div class="form-row">
         <label class="checkbox-label">
           <input type="checkbox" v-model="localPreset.output.naming.preserveCreationTime" @change="onChange" />
-          <span>保留创建时间</span>
+          <span>{{ t('page.params.preserveCreationTime') }}</span>
         </label>
         <label class="checkbox-label">
           <input type="checkbox" v-model="localPreset.output.naming.preserveModifyTime" @change="onChange" />
-          <span>保留修改时间</span>
+          <span>{{ t('page.params.preserveModifyTime') }}</span>
         </label>
         <label class="checkbox-label">
           <input type="checkbox" v-model="localPreset.output.naming.preserveAccessTime" @change="onChange" />
-          <span>保留访问时间</span>
+          <span>{{ t('page.params.preserveAccessTime') }}</span>
         </label>
       </div>
     </div>
@@ -93,6 +93,7 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 import { FORMAT_COMPATIBILITY } from '@/utils/ffmpegCommandBuilder';
 import SwitchToggle from '@/components/SwitchToggle/SwitchToggle.vue';
@@ -105,6 +106,7 @@ const emit = defineEmits<{
   'update:preset': [preset: PresetData];
 }>();
 
+const { t } = useI18n();
 const localPreset = ref<PresetData>({ ...props.preset });
 
 watch(() => props.preset, (newVal) => {
@@ -125,13 +127,19 @@ const compatibilityWarning = computed(() => {
 
   if (videoCodec && videoCodec !== 'copy' && videoCodec !== 'disable' && videoCodec !== 'custom') {
     if (compat.videoCodecs.length > 0 && !compat.videoCodecs.includes(videoCodec)) {
-      warnings.push(`视频编码器 "${videoCodec}" 与容器 ${container.toUpperCase()} 不兼容`);
+      warnings.push(t('page.params.videoCodecIncompatible', {
+        codec: videoCodec,
+        container: container.toUpperCase(),
+      }));
     }
   }
 
   if (audioCodec && audioCodec !== 'copy' && audioCodec !== 'disable') {
     if (compat.audioCodecs.length > 0 && !compat.audioCodecs.includes(audioCodec)) {
-      warnings.push(`音频编码器 "${audioCodec}" 与容器 ${container.toUpperCase()} 不兼容`);
+      warnings.push(t('page.params.audioCodecIncompatible', {
+        codec: audioCodec,
+        container: container.toUpperCase(),
+      }));
     }
   }
 

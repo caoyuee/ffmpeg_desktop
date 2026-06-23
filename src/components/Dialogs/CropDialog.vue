@@ -2,14 +2,14 @@
   <div class="crop-dialog-overlay" v-if="visible" @click.self="close">
     <div class="crop-dialog">
       <div class="dialog-header">
-        <h3>画面裁剪交互窗口</h3>
+        <h3>{{ t('dialog.crop.title') }}</h3>
       </div>
       
       <div class="info-section">
         <div class="info-text">
-          <p>红框是截取目标，其自己占用的像素也包含在截取中；绿框在图片外围，用作明显边界</p>
-          <p>鼠标左键拖动来调整左上角坐标，右键拖动来调整右下角坐标；越界了会互换</p>
-          <p>可以自己改坐标文本框，然后按 Enter 键刷新红框，这样反过来操作</p>
+          <p>{{ t('dialog.crop.instruction1') }}</p>
+          <p>{{ t('dialog.crop.instruction2') }}</p>
+          <p>{{ t('dialog.crop.instruction3') }}</p>
         </div>
         <div class="magnifiers">
           <div class="magnifier">
@@ -23,26 +23,26 @@
       
       <div class="toolbar">
         <button class="btn btn-open" @click="openVideo">
-          <span class="icon">📁</span> 打开
+          <span class="icon">📁</span> {{ t('dialog.crop.open') }}
         </button>
         <input 
           type="text" 
           class="crop-input" 
           v-model="cropParams"
-          placeholder="宽:高:左上X:左上Y"
+          :placeholder="t('dialog.crop.cropPlaceholder')"
           @keydown.enter="applyCropParams"
         />
         <button class="btn btn-confirm" @click="confirm">
-          <span class="icon">✓</span> 完成
+          <span class="icon">✓</span> {{ t('dialog.crop.complete') }}
         </button>
         <input 
           type="text" 
           class="timestamp-input" 
           v-model="timestamp"
-          placeholder="指定帧时间戳"
+          :placeholder="t('dialog.crop.timestamp')"
         />
         <select class="ratio-select" v-model="aspectRatio">
-          <option value="0">自由</option>
+          <option value="0">{{ t('dialog.crop.free') }}</option>
           <option value="21/9">21:9</option>
           <option value="16/9">16:9</option>
           <option value="3/2">3:2</option>
@@ -52,7 +52,7 @@
         </select>
         <label class="center-checkbox">
           <input type="checkbox" v-model="centerCrop" />
-          居中
+          {{ t('dialog.crop.center') }}
         </label>
       </div>
       
@@ -72,7 +72,7 @@
           ></canvas>
         </div>
         <div class="drop-hint" v-else>
-          <span>拖拽视频文件到此处或点击"打开"按钮</span>
+          <span>{{ t('dialog.crop.dropHint') }}</span>
         </div>
       </div>
     </div>
@@ -81,6 +81,7 @@
 
 <script setup lang="ts">
 import { ref, watch, onUnmounted, nextTick } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 
@@ -99,6 +100,8 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<Emits>();
+
+const { t } = useI18n();
 
 const visible = ref(props.modelValue);
 const previewImage = ref<HTMLImageElement | null>(null);
@@ -148,13 +151,13 @@ async function openVideo() {
   try {
     const file = await open({
       multiple: false,
-      filters: [{ name: '视频文件', extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm', '*'] }],
+      filters: [{ name: t('dialog.crop.videoFiles'), extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm', '*'] }],
     });
     if (file) {
       await loadVideoFrame(file as string);
     }
   } catch (error) {
-    console.error('打开视频失败:', error);
+    console.error(t('dialog.crop.openVideoFailed'), error);
   }
 }
 
@@ -187,7 +190,7 @@ async function loadVideoFrame(videoPath: string) {
     };
     img.src = `data:image/png;base64,${imageData}`;
   } catch (error) {
-    console.error('提取视频帧失败:', error);
+    console.error(t('dialog.crop.extractFrameFailed'), error);
   }
 }
 
@@ -392,7 +395,7 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+  background: var(--overlay-bg, rgba(0, 0, 0, 0.8));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -416,7 +419,7 @@ onUnmounted(() => {
 
 .dialog-header h3 {
   margin: 0;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 16px;
   font-weight: normal;
 }
@@ -433,7 +436,7 @@ onUnmounted(() => {
 
 .info-text p {
   margin: 0 0 8px 0;
-  color: #888;
+  color: var(--text-color2, #888);
   font-size: 12px;
   line-height: 1.6;
 }
@@ -477,12 +480,12 @@ onUnmounted(() => {
 
 .btn-open {
   background: var(--bg-color4, #383838);
-  color: #9acd32;
+  color: var(--active-color, #9acd32);
 }
 
 .btn-confirm {
   background: var(--bg-color4, #383838);
-  color: #daa520;
+  color: var(--warning-color, #daa520);
 }
 
 .crop-input {
@@ -492,13 +495,13 @@ onUnmounted(() => {
   background: var(--bg-color1, #181818);
   border: none;
   border-radius: 15px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   outline: none;
 }
 
 .crop-input::placeholder {
-  color: #555;
+  color: var(--text-color3, #555);
 }
 
 .timestamp-input {
@@ -507,13 +510,13 @@ onUnmounted(() => {
   background: var(--bg-color1, #181818);
   border: none;
   border-radius: 15px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   outline: none;
 }
 
 .timestamp-input::placeholder {
-  color: #555;
+  color: var(--text-color3, #555);
 }
 
 .ratio-select {
@@ -522,7 +525,7 @@ onUnmounted(() => {
   background: var(--bg-color4, #303030);
   border: none;
   border-radius: 4px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   outline: none;
   cursor: pointer;
@@ -532,7 +535,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   cursor: pointer;
 }
@@ -554,7 +557,7 @@ onUnmounted(() => {
 
 .preview-wrapper {
   padding: 1px;
-  background: #9acd32;
+  background: var(--active-color, #9acd32);
 }
 
 .preview-wrapper canvas {
@@ -568,7 +571,7 @@ onUnmounted(() => {
   justify-content: center;
   width: 100%;
   height: 100%;
-  color: #555;
+  color: var(--text-color3, #555);
   font-size: 14px;
 }
 </style>

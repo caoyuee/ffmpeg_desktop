@@ -40,6 +40,11 @@ export interface Task {
   error?: string;
   errorType?: "network" | "permission" | "not_found" | "invalid_input" | "process" | "unknown";
   cpuAffinity?: string;
+  preserveFileTimes?: {
+    creation: boolean;
+    modification: boolean;
+    access: boolean;
+  };
 }
 
 export interface TaskQueueState {

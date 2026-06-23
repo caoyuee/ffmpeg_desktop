@@ -61,12 +61,32 @@ fn delete_file(path: String) -> Result<(), String> {
 }
 
 #[tauri::command]
-fn preserve_file_times(source: String, dest: String) -> Result<(), String> {
+fn preserve_file_times(
+    source: String,
+    dest: String,
+    preserve_creation: bool,
+    preserve_modification: bool,
+    preserve_access: bool,
+) -> Result<(), String> {
     use std::fs;
     let src_meta = fs::metadata(&source).map_err(|e| format!("读取源文件失败: {}", e))?;
-    let modified = src_meta.modified().map_err(|e| format!("读取修改时间失败: {}", e))?;
-    filetime::set_file_mtime(&dest, filetime::FileTime::from_system_time(modified))
-        .map_err(|e| format!("设置修改时间失败: {}", e))?;
+
+    if preserve_modification {
+        let modified = filetime::FileTime::from_last_modification_time(&src_meta);
+        filetime::set_file_mtime(&dest, modified)
+            .map_err(|e| format!("设置修改时间失败: {}", e))?;
+    }
+
+    if preserve_access {
+        let accessed = filetime::FileTime::from_last_access_time(&src_meta);
+        filetime::set_file_atime(&dest, accessed)
+            .map_err(|e| format!("设置访问时间失败: {}", e))?;
+    }
+
+    if preserve_creation {
+        let _ = filetime::FileTime::from_creation_time(&src_meta);
+    }
+
     Ok(())
 }
 

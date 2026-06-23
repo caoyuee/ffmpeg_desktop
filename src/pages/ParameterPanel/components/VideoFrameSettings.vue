@@ -1,47 +1,62 @@
 <template>
   <div class="video-frame-settings">
     <div class="form-section">
-      <h4>分辨率</h4>
+      <h4>{{ t('page.params.resolution') }}</h4>
       <div class="form-group">
-        <label>分辨率预设</label>
+        <label>{{ t('page.params.resolutionPreset') }}</label>
         <select v-model="localPreset.video.resolution.size" @change="onChange">
-          <option value="">保持原样</option>
+          <option value="">{{ t('page.params.keepOriginal') }}</option>
           <option value="1920x1080">1920x1080 (Full HD)</option>
           <option value="1280x720">1280x720 (HD)</option>
           <option value="3840x2160">3840x2160 (4K)</option>
           <option value="2560x1440">2560x1440 (2K)</option>
           <option value="854x480">854x480 (480p)</option>
           <option value="640x360">640x360 (360p)</option>
-          <option value="custom">自定义</option>
+          <option value="custom">{{ t('page.params.custom') }}</option>
         </select>
       </div>
 
       <div v-if="localPreset.video.resolution.size === 'custom'" class="form-row">
         <div class="form-group half">
-          <label>宽度</label>
-          <input type="text" v-model="localPreset.video.resolution.autoWidth" @input="onChange" placeholder="如: 1920" />
+          <label>{{ t('page.params.width') }}</label>
+          <input
+            type="text"
+            v-model="localPreset.video.resolution.autoWidth"
+            @input="onChange"
+            :placeholder="t('page.params.widthPlaceholder')"
+          />
         </div>
         <div class="form-group half">
-          <label>高度</label>
-          <input type="text" v-model="localPreset.video.resolution.autoHeight" @input="onChange" placeholder="如: 1080 或 -2" />
+          <label>{{ t('page.params.height') }}</label>
+          <input
+            type="text"
+            v-model="localPreset.video.resolution.autoHeight"
+            @input="onChange"
+            :placeholder="t('page.params.heightPlaceholder')"
+          />
         </div>
       </div>
 
       <div class="form-group">
-        <label>裁剪滤镜</label>
+        <label>{{ t('page.params.cropFilter') }}</label>
         <div class="input-row">
-          <input type="text" v-model="localPreset.video.resolution.cropFilter" @input="onChange" placeholder="如: 1920:1080:0:0" />
-          <button @click="showCrop = true">裁剪窗口</button>
+          <input
+            type="text"
+            v-model="localPreset.video.resolution.cropFilter"
+            @input="onChange"
+            :placeholder="t('page.params.cropFilterPlaceholder')"
+          />
+          <button @click="showCrop = true">{{ t('page.params.cropWindow') }}</button>
         </div>
       </div>
     </div>
 
     <div class="form-section">
-      <h4>帧速率</h4>
+      <h4>{{ t('page.params.frameRate') }}</h4>
       <div class="form-group">
-        <label>帧率</label>
+        <label>{{ t('page.params.fps') }}</label>
         <select v-model="localPreset.video.frameRate.fps" @change="onChange">
-          <option value="">保持原样</option>
+          <option value="">{{ t('page.params.keepOriginal') }}</option>
           <option value="23.976">23.976 fps</option>
           <option value="24">24 fps</option>
           <option value="25">25 fps</option>
@@ -56,11 +71,11 @@
     </div>
 
     <div class="form-section">
-      <h4>高级功能</h4>
+      <h4>{{ t('page.params.advancedFeatures') }}</h4>
       <div class="form-row">
-        <button class="advanced-btn" @click="showInterpolation = true">插帧参数</button>
-        <button class="advanced-btn" @click="showSuperResolution = true">超分参数</button>
-        <button class="advanced-btn" @click="showFrameBlend = true">动态模糊</button>
+        <button class="advanced-btn" @click="showInterpolation = true">{{ t('page.params.interpolationParams') }}</button>
+        <button class="advanced-btn" @click="showSuperResolution = true">{{ t('page.params.superResolutionParams') }}</button>
+        <button class="advanced-btn" @click="showFrameBlend = true">{{ t('page.params.frameBlend') }}</button>
       </div>
     </div>
 
@@ -92,11 +107,14 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 import CropDialog from '@/components/Dialogs/CropDialog.vue';
 import InterpolationDialog from '@/components/Dialogs/InterpolationDialog.vue';
 import SuperResolutionDialog from '@/components/Dialogs/SuperResolutionDialog.vue';
 import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   preset: PresetData;

@@ -1,25 +1,25 @@
 <template>
   <div class="audio-settings">
     <div class="form-section">
-      <h4>音频编码器</h4>
+      <h4>{{ t('page.params.audioEncoder') }}</h4>
       <div class="form-group">
-        <label>编码器</label>
+        <label>{{ t('page.params.encoder') }}</label>
         <select v-model="localPreset.audio.encoder" @change="onChange">
-          <option value="">不处理音频</option>
-          <option value="copy">直接复制</option>
+          <option value="">{{ t('page.params.noAudioProcessing') }}</option>
+          <option value="copy">{{ t('page.params.copyStream') }}</option>
           <option value="aac">AAC</option>
           <option value="libfdk_aac">AAC (FDK)</option>
           <option value="libmp3lame">MP3</option>
           <option value="libopus">Opus</option>
           <option value="libvorbis">Vorbis</option>
-          <option value="flac">FLAC (无损)</option>
-          <option value="alac">ALAC (Apple 无损)</option>
+          <option value="flac">FLAC ({{ t('page.params.lossless') }})</option>
+          <option value="alac">ALAC ({{ t('page.params.appleLossless') }})</option>
           <option value="ac3">AC3</option>
           <option value="eac3">E-AC3</option>
           <option value="dca">DTS</option>
           <option value="truehd">TrueHD</option>
           <option value="libtwolame">MP2 (TwoLAME)</option>
-          <option value="tta">TTA (无损)</option>
+          <option value="tta">TTA ({{ t('page.params.lossless') }})</option>
           <option value="pcm_s16le">PCM 16-bit</option>
           <option value="pcm_s24le">PCM 24-bit</option>
           <option value="pcm_s32le">PCM 32-bit</option>
@@ -29,18 +29,18 @@
     </div>
 
     <div v-if="localPreset.audio.encoder && localPreset.audio.encoder !== 'copy'" class="form-section">
-      <h4>音频质量</h4>
+      <h4>{{ t('page.params.audioQuality') }}</h4>
       <div class="form-group">
-        <label>质量控制</label>
+        <label>{{ t('page.params.qualityControl') }}</label>
         <select v-model="localPreset.audio.qualityParam" @change="onChange">
-          <option value="">默认</option>
-          <option value="bitrate">比特率</option>
-          <option value="quality">质量等级</option>
+          <option value="">{{ t('page.params.defaultOption') }}</option>
+          <option value="bitrate">{{ t('page.params.bitrate') }}</option>
+          <option value="quality">{{ t('page.params.qualityLevel') }}</option>
         </select>
       </div>
 
       <div v-if="localPreset.audio.qualityParam === 'bitrate'" class="form-group">
-        <label>比特率 (kbps)</label>
+        <label>{{ t('page.params.bitrateKbps') }}</label>
         <select v-model="localPreset.audio.bitrate" @change="onChange">
           <option value="64">64</option>
           <option value="96">96</option>
@@ -52,7 +52,7 @@
       </div>
 
       <div v-if="localPreset.audio.qualityParam === 'quality'" class="form-group">
-        <label>质量等级</label>
+        <label>{{ t('page.params.qualityLevel') }}</label>
         <div class="slider-group">
           <input type="range" min="0" max="9" v-model.number="qualityValueNum" @input="onQualityValueChange" />
           <span class="value">{{ localPreset.audio.qualityValue || 2 }}</span>
@@ -61,12 +61,12 @@
     </div>
 
     <div class="form-section">
-      <h4>音频参数</h4>
+      <h4>{{ t('page.params.audioParameters') }}</h4>
       <div class="form-row">
         <div class="form-group half">
-          <label>采样率</label>
+          <label>{{ t('page.params.sampleRate') }}</label>
           <select v-model="localPreset.audio.sampleRate" @change="onChange">
-            <option value="">保持原样</option>
+            <option value="">{{ t('page.params.keepOriginal') }}</option>
             <option value="8000">8000 Hz</option>
             <option value="16000">16000 Hz</option>
             <option value="22050">22050 Hz</option>
@@ -76,31 +76,31 @@
           </select>
         </div>
         <div class="form-group half">
-          <label>声道布局</label>
+          <label>{{ t('page.params.channelLayout') }}</label>
           <select v-model="localPreset.audio.channelLayout" @change="onChange">
-            <option value="">保持原样</option>
-            <option value="mono">单声道</option>
-            <option value="stereo">立体声</option>
-            <option value="5.1">5.1 声道</option>
-            <option value="7.1">7.1 声道</option>
+            <option value="">{{ t('page.params.keepOriginal') }}</option>
+            <option value="mono">{{ t('page.params.mono') }}</option>
+            <option value="stereo">{{ t('page.params.stereo') }}</option>
+            <option value="5.1">{{ t('page.params.channel51') }}</option>
+            <option value="7.1">{{ t('page.params.channel71') }}</option>
           </select>
         </div>
       </div>
     </div>
 
     <div class="form-section">
-      <h4>响度标准化</h4>
+      <h4>{{ t('page.params.loudnessNormalization') }}</h4>
       <div class="form-row">
         <div class="form-group third">
-          <label>目标响度 (LUFS)</label>
+          <label>{{ t('page.params.targetLoudness') }}</label>
           <input type="text" v-model="localPreset.audio.loudnorm.targetLoudness" @input="onChange" placeholder="-16" />
         </div>
         <div class="form-group third">
-          <label>动态范围 (dB)</label>
+          <label>{{ t('page.params.dynamicRange') }}</label>
           <input type="text" v-model="localPreset.audio.loudnorm.dynamicRange" @input="onChange" placeholder="11" />
         </div>
         <div class="form-group third">
-          <label>峰值电平 (dB)</label>
+          <label>{{ t('page.params.peakLevel') }}</label>
           <input type="text" v-model="localPreset.audio.loudnorm.peakLevel" @input="onChange" placeholder="-1.5" />
         </div>
       </div>
@@ -110,6 +110,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 
 const props = defineProps<{
@@ -120,6 +121,7 @@ const emit = defineEmits<{
   'update:preset': [preset: PresetData];
 }>();
 
+const { t } = useI18n();
 const localPreset = ref<PresetData>({ ...props.preset });
 
 const qualityValueNum = computed({

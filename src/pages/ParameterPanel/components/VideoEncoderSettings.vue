@@ -2,7 +2,7 @@
   <div class="video-encoder-settings">
     <div class="form-section">
       <div class="form-group">
-        <label>编码类别</label>
+        <label>{{ t('page.params.encoderCategory') }}</label>
         <select v-model="localPreset.video.encoder.category" @change="onCategoryChange">
           <option value="h264">H.264/AVC</option>
           <option value="h265">H.265/HEVC</option>
@@ -17,7 +17,7 @@
       </div>
 
       <div class="form-group">
-        <label>具体编码</label>
+        <label>{{ t('page.params.specificEncoder') }}</label>
         <select v-model="localPreset.video.encoder.codec" @change="onCodecChange">
           <option v-for="enc in availableEncoders" :key="enc.value" :value="enc.value">
             {{ enc.label }}
@@ -26,37 +26,37 @@
       </div>
 
       <div v-if="codecPresets.length" class="form-group">
-        <label>编码预设</label>
+        <label>{{ t('page.params.encoderPreset') }}</label>
         <select v-model="localPreset.video.encoder.preset" @change="onChange">
-          <option value="">默认</option>
+          <option value="">{{ t('page.params.defaultOption') }}</option>
           <option v-for="p in codecPresets" :key="p" :value="p">{{ p }}</option>
         </select>
       </div>
 
       <div v-if="codecProfiles.length" class="form-group">
-        <label>配置文件</label>
+        <label>{{ t('page.params.profile') }}</label>
         <select v-model="localPreset.video.encoder.profile" @change="onChange">
-          <option value="">自动</option>
+          <option value="">{{ t('page.params.auto') }}</option>
           <option v-for="p in codecProfiles" :key="p" :value="p">{{ p }}</option>
         </select>
       </div>
 
       <div v-if="codecTunes.length" class="form-group">
-        <label>场景优化</label>
+        <label>{{ t('page.params.tune') }}</label>
         <select v-model="localPreset.video.encoder.tune" @change="onChange">
-          <option value="">无</option>
+          <option value="">{{ t('common.none') }}</option>
           <option v-for="t in codecTunes" :key="t" :value="t">{{ t }}</option>
         </select>
       </div>
 
       <div class="form-row">
         <div class="form-group half">
-          <label>GPU 加速</label>
-          <input type="text" v-model="localPreset.video.encoder.gpu" @input="onChange" placeholder="如: 0" />
+          <label>{{ t('page.params.gpuAcceleration') }}</label>
+          <input type="text" v-model="localPreset.video.encoder.gpu" @input="onChange" :placeholder="t('page.params.gpuPlaceholder')" />
         </div>
         <div class="form-group half">
-          <label>线程数</label>
-          <input type="text" v-model="localPreset.video.encoder.threads" @input="onChange" placeholder="留空自动" />
+          <label>{{ t('page.params.threads') }}</label>
+          <input type="text" v-model="localPreset.video.encoder.threads" @input="onChange" :placeholder="t('page.params.threadsPlaceholder')" />
         </div>
       </div>
     </div>
@@ -65,6 +65,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 import { getCodecMeta } from '@/config/codecDatabase';
 
@@ -76,6 +77,7 @@ const emit = defineEmits<{
   'update:preset': [preset: PresetData];
 }>();
 
+const { t } = useI18n();
 const localPreset = ref<PresetData>({ ...props.preset });
 
 const encoderOptions: Record<string, { value: string; label: string }[]> = {

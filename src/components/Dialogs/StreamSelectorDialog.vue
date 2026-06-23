@@ -3,15 +3,15 @@
     <div v-if="visible" class="dialog-overlay" @click.self="close">
       <div class="dialog-container">
         <div class="dialog-header">
-          <span class="dialog-title">媒体流选择器</span>
+          <span class="dialog-title">{{ t('dialog.streamSelector.title') }}</span>
         </div>
         
         <div class="dialog-toolbar">
           <button class="btn btn-open" @click="openFile">
-            <span class="icon">📁</span> 打开
+            <span class="icon">📁</span> {{ t('dialog.streamSelector.open') }}
           </button>
           <button class="btn btn-reset" @click="resetSelection">
-            <span class="icon">🔄</span> 重置
+            <span class="icon">🔄</span> {{ t('dialog.streamSelector.reset') }}
           </button>
           <span class="file-name" v-if="currentFile">{{ getFileName(currentFile) }}</span>
         </div>
@@ -24,18 +24,18 @@
           :class="{ 'drag-over': isDragOver }"
         >
           <div v-if="isLoading" class="loading-hint">
-            <span>正在读取媒体信息...</span>
+            <span>{{ t('dialog.streamSelector.loading') }}</span>
           </div>
           
           <div v-else-if="streams.length === 0" class="empty-hint">
-            <span>拖拽媒体文件到此处或点击"打开"按钮</span>
+            <span>{{ t('dialog.streamSelector.emptyHint') }}</span>
           </div>
           
           <div v-else class="streams-container">
             <div class="stream-section" v-if="videoStreams.length > 0">
               <div class="section-header video-header">
                 <span class="section-icon">🎬</span>
-                <span class="section-title">视频流</span>
+                <span class="section-title">{{ t('dialog.streamSelector.videoStream') }}</span>
               </div>
               <div 
                 v-for="(stream, index) in videoStreams" 
@@ -46,7 +46,7 @@
               >
                 <span class="stream-checkbox" :class="{ checked: selectedStreams.video.includes(index) }">✓</span>
                 <div class="stream-info">
-                  <span class="stream-name">视频 [{{ index }}]</span>
+                  <span class="stream-name">{{ t('dialog.streamSelector.videoStreamName', { index }) }}</span>
                   <span class="stream-details">
                     <span v-if="stream.language">[{{ stream.language }}]</span>
                     <span>{{ stream.codec }}</span>
@@ -63,7 +63,7 @@
             <div class="stream-section" v-if="audioStreams.length > 0">
               <div class="section-header audio-header">
                 <span class="section-icon">🔊</span>
-                <span class="section-title">音频流</span>
+                <span class="section-title">{{ t('dialog.streamSelector.audioStream') }}</span>
               </div>
               <div 
                 v-for="(stream, index) in audioStreams" 
@@ -74,7 +74,7 @@
               >
                 <span class="stream-checkbox audio" :class="{ checked: selectedStreams.audio.includes(index) }">✓</span>
                 <div class="stream-info">
-                  <span class="stream-name">音频 [{{ index }}]</span>
+                  <span class="stream-name">{{ t('dialog.streamSelector.audioStreamName', { index }) }}</span>
                   <span class="stream-details">
                     <span v-if="stream.language">[{{ stream.language }}]</span>
                     <span>{{ stream.codec }}</span>
@@ -90,7 +90,7 @@
             <div class="stream-section" v-if="subtitleStreams.length > 0">
               <div class="section-header subtitle-header">
                 <span class="section-icon">📝</span>
-                <span class="section-title">字幕流</span>
+                <span class="section-title">{{ t('dialog.streamSelector.subtitleStream') }}</span>
               </div>
               <div 
                 v-for="(stream, index) in subtitleStreams" 
@@ -101,7 +101,7 @@
               >
                 <span class="stream-checkbox subtitle" :class="{ checked: selectedStreams.subtitle.includes(index) }">✓</span>
                 <div class="stream-info">
-                  <span class="stream-name">字幕 [{{ index }}]</span>
+                  <span class="stream-name">{{ t('dialog.streamSelector.subtitleStreamName', { index }) }}</span>
                   <span class="stream-details">
                     <span v-if="stream.language">[{{ stream.language }}]</span>
                     <span>{{ stream.codec }}</span>
@@ -114,8 +114,8 @@
         </div>
         
         <div class="dialog-footer">
-          <button class="btn btn-cancel" @click="close">取消</button>
-          <button class="btn btn-confirm" @click="confirm">确认</button>
+          <button class="btn btn-cancel" @click="close">{{ t('common.cancel') }}</button>
+          <button class="btn btn-confirm" @click="confirm">{{ t('common.confirm') }}</button>
         </div>
       </div>
     </div>
@@ -124,6 +124,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 
@@ -154,6 +155,8 @@ const emit = defineEmits<{
   (e: 'update:visible', value: boolean): void;
   (e: 'confirm', streams: { video: number[]; audio: number[]; subtitle: number[] }): void;
 }>();
+
+const { t } = useI18n();
 
 const currentFile = ref('');
 const isLoading = ref(false);
@@ -219,13 +222,13 @@ async function openFile() {
   try {
     const file = await open({
       multiple: false,
-      filters: [{ name: '媒体文件', extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', 'wmv', '*'] }],
+      filters: [{ name: t('dialog.streamSelector.mediaFiles'), extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', 'wmv', '*'] }],
     });
     if (file) {
       await loadMediaInfo(file as string);
     }
   } catch (error) {
-    console.error('打开文件失败:', error);
+    console.error(t('dialog.streamSelector.openFileFailed'), error);
   }
 }
 
@@ -241,7 +244,7 @@ async function loadMediaInfo(filePath: string) {
     
     streams.value = info.streams || [];
   } catch (error) {
-    console.error('读取媒体信息失败:', error);
+    console.error(t('dialog.streamSelector.readMediaInfoFailed'), error);
   } finally {
     isLoading.value = false;
   }
@@ -301,7 +304,7 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay-bg, rgba(0, 0, 0, 0.7));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -316,7 +319,7 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
   max-height: 80vh;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px 20px var(--shadow-color, rgba(0, 0, 0, 0.5));
 }
 
 .dialog-header {
@@ -325,7 +328,7 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
 }
 
 .dialog-title {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 15px;
   font-weight: 500;
 }
@@ -352,27 +355,27 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
 
 .btn-open {
   background: var(--bg-color4, #383838);
-  color: #9acd32;
+  color: var(--active-color, #9acd32);
 }
 
 .btn-reset {
   background: var(--bg-color4, #383838);
-  color: #cd5c5c;
+  color: var(--error-color, #cd5c5c);
 }
 
 .btn-cancel {
   background: var(--bg-color4, #383838);
-  color: #888;
+  color: var(--text-color2, #888);
 }
 
 .btn-confirm {
   background: var(--bg-color4, #383838);
-  color: #9acd32;
+  color: var(--active-color, #9acd32);
 }
 
 .file-name {
   flex: 1;
-  color: #888;
+  color: var(--text-color2, #888);
   font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -388,7 +391,7 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
 }
 
 .stream-list.drag-over {
-  border-color: #9acd32;
+  border-color: var(--active-color, #9acd32);
 }
 
 .loading-hint,
@@ -397,7 +400,7 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
   align-items: center;
   justify-content: center;
   height: 300px;
-  color: #555;
+  color: var(--text-color3, #555);
   font-size: 14px;
 }
 
@@ -419,15 +422,15 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
 }
 
 .video-header {
-  background: rgba(100, 149, 237, 0.2);
+  background: var(--info-bg, rgba(100, 149, 237, 0.2));
 }
 
 .audio-header {
-  background: rgba(107, 142, 35, 0.2);
+  background: var(--success-bg, rgba(107, 142, 35, 0.2));
 }
 
 .subtitle-header {
-  background: rgba(147, 112, 219, 0.2);
+  background: var(--accent-bg, rgba(147, 112, 219, 0.2));
 }
 
 .section-icon {
@@ -435,7 +438,7 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
 }
 
 .section-title {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   font-weight: 500;
 }
@@ -461,7 +464,7 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
 .stream-checkbox {
   width: 20px;
   height: 20px;
-  border: 2px solid #6495ed;
+  border: 2px solid var(--info-color, #6495ed);
   border-radius: 4px;
   display: flex;
   align-items: center;
@@ -472,24 +475,24 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
 }
 
 .stream-checkbox.audio {
-  border-color: #6b8e23;
+  border-color: var(--success-color, #6b8e23);
 }
 
 .stream-checkbox.subtitle {
-  border-color: #9370db;
+  border-color: var(--accent-color, #9370db);
 }
 
 .stream-checkbox.checked {
-  background: #6495ed;
-  color: #fff;
+  background: var(--info-color, #6495ed);
+  color: var(--bg-color1, #fff);
 }
 
 .stream-checkbox.audio.checked {
-  background: #6b8e23;
+  background: var(--success-color, #6b8e23);
 }
 
 .stream-checkbox.subtitle.checked {
-  background: #9370db;
+  background: var(--accent-color, #9370db);
 }
 
 .stream-info {
@@ -500,13 +503,13 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
 }
 
 .stream-name {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   font-weight: 500;
 }
 
 .stream-details {
-  color: #888;
+  color: var(--text-color2, #888);
   font-size: 12px;
 }
 
@@ -515,7 +518,7 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
 }
 
 .stream-extra {
-  color: #666;
+  color: var(--text-color3, #666);
   font-size: 11px;
   padding-left: 20px;
 }

@@ -7,7 +7,7 @@
 
     <div class="panel-body">
       <div class="file-list-section">
-        <div class="section-title">文件列表 ({{ fileList.length }})</div>
+        <div class="section-title">{{ t('page.independentPanel.fileListTitle', { count: fileList.length }) }}</div>
         <div class="file-list">
           <div v-for="(file, index) in fileList" :key="index" class="file-item">
             <span class="file-index">{{ index + 1 }}</span>
@@ -64,9 +64,9 @@
     </div>
 
     <div class="panel-footer">
-      <span class="file-count">共 {{ fileList.length }} 个文件</span>
+      <span class="file-count">{{ t('page.independentPanel.fileCount', { count: fileList.length }) }}</span>
       <button class="btn-confirm" @click="confirmAndAdd" :disabled="fileList.length === 0">
-        确认并添加任务
+        {{ t('page.independentPanel.confirmAndAdd') }}
       </button>
     </div>
   </div>
@@ -101,7 +101,7 @@ const activeTab = ref('output')
 const localPreset = ref<PresetData>({ ...presetStore.currentPreset } as PresetData)
 const fileList = ref<string[]>([])
 
-const titleText = computed(() => `为 ${fileList.value.length} 个文件使用单独的参数方案`)
+const titleText = computed(() => t('page.independentPanel.title', { count: fileList.value.length }))
 
 const tabs = computed(() => [
   { id: 'output', label: t('page.params.output') },
@@ -134,6 +134,11 @@ async function confirmAndAdd() {
       commandLine: FFmpegCommandBuilder.build({ ...preset }, path, outputFile),
       presetId: preset.id || 'independent',
       cpuAffinity: preset.decode.cpuAffinity || undefined,
+      preserveFileTimes: {
+        creation: preset.output.naming.preserveCreationTime,
+        modification: preset.output.naming.preserveModifyTime,
+        access: preset.output.naming.preserveAccessTime,
+      },
     }
   })
 
@@ -315,7 +320,7 @@ onMounted(async () => {
 .btn-confirm {
   padding: 8px 24px;
   background: var(--active-color, #9acd32);
-  color: #181818;
+  color: var(--bg-color1, #181818);
   border: none;
   border-radius: 4px;
   font-size: 13px;

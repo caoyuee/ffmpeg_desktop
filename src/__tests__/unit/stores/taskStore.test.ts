@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { invoke } from '@tauri-apps/api/core'
 import { useTaskStore } from '@/store/taskStore'
 import { TaskStatus } from '@/types/task'
 
 const eventHandlers = vi.hoisted(() => new Map<string, (event: { payload: unknown }) => void>())
+const mockInvoke = vi.hoisted(() => vi.fn())
 
 vi.mock('@tauri-apps/api/core', () => ({
-  invoke: vi.fn(),
+  invoke: mockInvoke,
 }))
 
 vi.mock('@tauri-apps/api/event', () => ({
@@ -20,6 +22,7 @@ describe('taskStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     eventHandlers.clear()
+    mockInvoke.mockReset()
   })
 
   it('should add a task and auto-start it', async () => {
@@ -136,5 +139,56 @@ describe('taskStore', () => {
     expect(store.runningCount).toBe(1)
     expect(task.logs.all).toContain('Non-monotonous DTS in output stream')
     expect(task.logs.errors).toContain('Non-monotonous DTS in output stream')
+  })
+
+  it('should not preserve file times when timestamp options are disabled', async () => {
+    const store = useTaskStore()
+    mockInvoke.mockResolvedValueOnce(1234)
+    await store.setupEventListeners()
+
+    const id = await store.addTask({
+      inputFile: 'test.mp4',
+      outputFile: 'output.mp4',
+      commandLine: 'ffmpeg -i test.mp4 output.mp4',
+      presetId: '',
+    })
+
+    const finishHandler = eventHandlers.get('ffmpeg-finish')
+    expect(finishHandler).toBeDefined()
+
+    await finishHandler!({ payload: { taskId: id, exitCode: 0 } })
+
+    expect(invoke).not.toHaveBeenCalledWith('preserve_file_times', expect.anything())
+  })
+
+  it('should preserve selected file times after a successful task', async () => {
+    const store = useTaskStore()
+    mockInvoke.mockResolvedValue(1234)
+    await store.setupEventListeners()
+
+    const id = await store.addTask({
+      inputFile: 'test.mp4',
+      outputFile: 'output.mp4',
+      commandLine: 'ffmpeg -i test.mp4 output.mp4',
+      presetId: '',
+      preserveFileTimes: {
+        creation: true,
+        modification: true,
+        access: false,
+      },
+    })
+
+    const finishHandler = eventHandlers.get('ffmpeg-finish')
+    expect(finishHandler).toBeDefined()
+
+    await finishHandler!({ payload: { taskId: id, exitCode: 0 } })
+
+    expect(invoke).toHaveBeenCalledWith('preserve_file_times', {
+      source: 'test.mp4',
+      dest: 'output.mp4',
+      preserveCreation: true,
+      preserveModification: true,
+      preserveAccess: false,
+    })
   })
 })

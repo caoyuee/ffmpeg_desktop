@@ -71,6 +71,9 @@ export class FFmpegCommandBuilder {
     if (preset.decode.outputFormat) {
       parts.push(`-hwaccel_output_format ${preset.decode.outputFormat}`);
     }
+    if (preset.decode.hwAccelParamName && preset.decode.hwAccelParam) {
+      parts.push(`${preset.decode.hwAccelParamName} ${preset.decode.hwAccelParam}`);
+    }
 
     const trimParams = this.buildTrimParams(preset);
     parts.push(...trimParams);
@@ -93,7 +96,10 @@ export class FFmpegCommandBuilder {
       ...this.buildVideoEncodeParams(preset.video, preset.custom.videoParams),
     );
 
-    const audioFilters = this.buildAudioFilters(preset.audio);
+    const audioFilters = this.buildAudioFilters(
+      preset.audio,
+      preset.custom.audioFilter,
+    );
     if (audioFilters.length > 0) {
       parts.push(`-af "${audioFilters.join(",")}"`);
     }
@@ -126,9 +132,8 @@ export class FFmpegCommandBuilder {
       parts.push(preset.custom.endParams);
     }
 
-    let command = getFFmpegPath() + " " + parts.join(" ");
-    command = command.replace(/"\$INPUT"/g, `"${inputFile}"`);
-    return command;
+    const command = getFFmpegPath() + " " + parts.join(" ");
+    return this.replacePlaceholders(command, inputFile, outputFile);
   }
 
   private static replacePlaceholders(
@@ -136,11 +141,48 @@ export class FFmpegCommandBuilder {
     inputFile: string,
     outputFile: string,
   ): string {
+    const inputParts = this.splitPath(inputFile);
+    const outputParts = this.splitPath(outputFile);
+    const inputWithoutExtension = inputParts.extension
+      ? inputFile.slice(0, -inputParts.extension.length - 1)
+      : inputFile;
+
     return template
       .replace(/\{input\}/g, `"${inputFile}"`)
       .replace(/\{output\}/g, `"${outputFile}"`)
       .replace(/"\$INPUT"/g, `"${inputFile}"`)
-      .replace(/"\$OUTPUT"/g, `"${outputFile}"`);
+      .replace(/"\$OUTPUT"/g, `"${outputFile}"`)
+      .replace(/\$INPUT/g, inputFile)
+      .replace(/\$OUTPUT/g, outputFile)
+      .replace(/<InputFile>/g, inputFile)
+      .replace(/<OutputFile>/g, outputFile)
+      .replace(/<InputFileWithOutExtension>/g, inputWithoutExtension)
+      .replace(/<InputFilePath>/g, inputParts.directory)
+      .replace(/<InputFileName>/g, inputParts.fileName)
+      .replace(/<InputFileNameWithOutExtension>/g, inputParts.nameWithoutExtension)
+      .replace(/<OutputFilePath>/g, outputParts.directory)
+      .replace(/<OutputFileName>/g, outputParts.fileName)
+      .replace(/<OutputFileNameWithOutExtension>/g, outputParts.nameWithoutExtension);
+  }
+
+  private static splitPath(path: string): {
+    directory: string;
+    fileName: string;
+    nameWithoutExtension: string;
+    extension: string;
+  } {
+    const lastSlash = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"));
+    const directory = lastSlash >= 0 ? path.slice(0, lastSlash) : "";
+    const fileName = path.slice(lastSlash + 1);
+    const lastDot = fileName.lastIndexOf(".");
+    const hasExtension = lastDot > 0;
+
+    return {
+      directory,
+      fileName,
+      nameWithoutExtension: hasExtension ? fileName.slice(0, lastDot) : fileName,
+      extension: hasExtension ? fileName.slice(lastDot + 1) : "",
+    };
   }
 
   private static buildTrimParams(preset: PresetData): string[] {
@@ -508,7 +550,10 @@ export class FFmpegCommandBuilder {
     return params;
   }
 
-  private static buildAudioFilters(audio: PresetData["audio"]): string[] {
+  private static buildAudioFilters(
+    audio: PresetData["audio"],
+    customAudioFilter?: string,
+  ): string[] {
     const filters: string[] = [];
 
     if (audio.loudnorm.targetLoudness) {
@@ -521,6 +566,10 @@ export class FFmpegCommandBuilder {
         params.push(`TP=${audio.loudnorm.peakLevel}`);
       }
       filters.push(`loudnorm=${params.join(":")}`);
+    }
+
+    if (customAudioFilter) {
+      filters.push(customAudioFilter);
     }
 
     return filters;
