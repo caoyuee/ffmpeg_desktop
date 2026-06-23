@@ -3,17 +3,23 @@ import { setActivePinia, createPinia } from 'pinia'
 import { useTaskStore } from '@/store/taskStore'
 import { TaskStatus } from '@/types/task'
 
+const eventHandlers = vi.hoisted(() => new Map<string, (event: { payload: unknown }) => void>())
+
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: vi.fn(),
 }))
 
 vi.mock('@tauri-apps/api/event', () => ({
-  listen: vi.fn(() => Promise.resolve(vi.fn())),
+  listen: vi.fn((eventName: string, handler: (event: { payload: unknown }) => void) => {
+    eventHandlers.set(eventName, handler)
+    return Promise.resolve(vi.fn())
+  }),
 }))
 
 describe('taskStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
+    eventHandlers.clear()
   })
 
   it('should add a task and auto-start it', async () => {
@@ -98,5 +104,37 @@ describe('taskStore', () => {
     })
 
     expect(id1).not.toBe(id2)
+  })
+
+  it('should keep a running task active when receiving a non-terminal ffmpeg log error', async () => {
+    const store = useTaskStore()
+    await store.setupEventListeners()
+
+    const id = await store.addTask({
+      inputFile: 'test.mp4',
+      outputFile: 'output.mp4',
+      commandLine: 'ffmpeg -i test.mp4 output.mp4',
+      presetId: '',
+    })
+
+    const task = store.tasks[0]!
+    expect(task.status).toBe(TaskStatus.Processing)
+    expect(store.runningCount).toBe(1)
+
+    const logHandler = eventHandlers.get('ffmpeg-log')
+    expect(logHandler).toBeDefined()
+
+    logHandler!({
+      payload: {
+        taskId: id,
+        message: 'Non-monotonous DTS in output stream',
+        level: 'error',
+      },
+    })
+
+    expect(task.status).toBe(TaskStatus.Processing)
+    expect(store.runningCount).toBe(1)
+    expect(task.logs.all).toContain('Non-monotonous DTS in output stream')
+    expect(task.logs.errors).toContain('Non-monotonous DTS in output stream')
   })
 })

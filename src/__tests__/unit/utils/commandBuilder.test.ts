@@ -178,5 +178,39 @@ describe('FFmpegCommandBuilder', () => {
       const cmd = FFmpegCommandBuilder.build(preset, 'in.mp4', 'out.mp4')
       expect(cmd).toContain('-threads 4')
     })
+
+    it('should include custom filter_complex params', () => {
+      const preset = makePreset({
+        custom: {
+          ...DEFAULT_PRESET.custom,
+          filterComplex: '[0:v]scale=1280:720[v]',
+        },
+      })
+
+      const cmd = FFmpegCommandBuilder.build(preset, 'in.mp4', 'out.mp4')
+
+      expect(cmd).toContain('-filter_complex "[0:v]scale=1280:720[v]"')
+    })
+
+    it('should skip automatic output file params when disabled', () => {
+      const preset = makePreset({
+        output: {
+          ...DEFAULT_PRESET.output,
+          naming: {
+            ...DEFAULT_PRESET.output.naming,
+            noOutputFileParam: true,
+          },
+        },
+        custom: {
+          ...DEFAULT_PRESET.custom,
+          beforeOutputParams: '-f null -',
+        },
+      })
+
+      const cmd = FFmpegCommandBuilder.build(preset, 'in.mp4', 'out.mp4')
+
+      expect(cmd).toContain('-f null -')
+      expect(cmd).not.toContain('"out.mp4" -y')
+    })
   })
 })

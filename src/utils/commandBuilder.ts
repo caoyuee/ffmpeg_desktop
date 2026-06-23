@@ -106,11 +106,17 @@ export class FFmpegCommandBuilder {
 
     parts.push(...this.buildImageEncodeParams(preset.image));
 
+    if (preset.custom.filterComplex) {
+      parts.push(`-filter_complex "${preset.custom.filterComplex}"`);
+    }
+
     if (preset.custom.beforeOutputParams) {
       parts.push(preset.custom.beforeOutputParams);
     }
 
-    parts.push(`"${outputFile}" -y`);
+    if (!preset.output.naming.noOutputFileParam) {
+      parts.push(`"${outputFile}" -y`);
+    }
 
     if (preset.custom.afterOutputParams) {
       parts.push(preset.custom.afterOutputParams);

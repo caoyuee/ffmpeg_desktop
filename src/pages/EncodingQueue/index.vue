@@ -386,7 +386,7 @@ onMounted(async () => {
         } else {
           const preset = presetStore.currentPreset;
           files.forEach((path: string) => {
-            const outputFile = generateOutputPath(path, preset.output.container || 'mp4');
+            const outputFile = generateOutputPath(path, preset.output);
             const commandLine = FFmpegCommandBuilder.build({ ...preset }, path, outputFile);
             taskStore.addTask({
               inputFile: path,

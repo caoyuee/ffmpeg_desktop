@@ -4,7 +4,9 @@ import {
   formatFileSize,
   formatBitrate,
   formatResolution,
+  generateOutputPath,
 } from '@/hooks/useFormatters'
+import { DEFAULT_PRESET } from '@/types/preset'
 
 describe('formatDuration', () => {
   it('should format seconds to HH:MM:SS', () => {
@@ -57,5 +59,65 @@ describe('formatResolution', () => {
   it('should return unknown for invalid values', () => {
     expect(formatResolution(undefined, undefined)).toBe('未知')
     expect(formatResolution(0, 0)).toBe('未知')
+  })
+})
+
+describe('generateOutputPath', () => {
+  it('should keep the existing suffix naming behavior by default', () => {
+    const output = generateOutputPath('/videos/input.mkv', DEFAULT_PRESET.output)
+
+    expect(output).toBe('/videos/input_output.mp4')
+  })
+
+  it('should use the configured output directory', () => {
+    const output = generateOutputPath('/videos/input.mkv', {
+      ...DEFAULT_PRESET.output,
+      location: '/exports',
+    })
+
+    expect(output).toBe('/exports/input_output.mp4')
+  })
+
+  it('should apply prefix naming', () => {
+    const output = generateOutputPath('/videos/input.mkv', {
+      ...DEFAULT_PRESET.output,
+      container: '.mkv',
+      naming: {
+        ...DEFAULT_PRESET.output.naming,
+        autoNamingOption: 1,
+        prefixText: 'encoded_',
+      },
+    })
+
+    expect(output).toBe('/videos/encoded_input.mkv')
+  })
+
+  it('should apply replacement naming', () => {
+    const output = generateOutputPath('C:\\Videos\\input.mkv', {
+      ...DEFAULT_PRESET.output,
+      container: 'webm',
+      naming: {
+        ...DEFAULT_PRESET.output.naming,
+        autoNamingOption: 2,
+        replaceText: 'final-cut',
+      },
+    })
+
+    expect(output).toBe('C:\\Videos\\final-cut.webm')
+  })
+
+  it('should apply fully custom naming', () => {
+    const output = generateOutputPath('/videos/input.mkv', {
+      ...DEFAULT_PRESET.output,
+      naming: {
+        ...DEFAULT_PRESET.output.naming,
+        autoNamingOption: 3,
+        prefixText: 'show-',
+        replaceText: 'episode-01',
+        suffixText: '-1080p',
+      },
+    })
+
+    expect(output).toBe('/videos/show-episode-01-1080p.mp4')
   })
 })

@@ -126,13 +126,16 @@ function onPresetUpdate(preset: PresetData) {
 
 async function confirmAndAdd() {
   const preset = localPreset.value
-  const tasks = fileList.value.map(path => ({
-    inputFile: path,
-    outputFile: generateOutputPath(path, preset.output.container || 'mp4'),
-    commandLine: FFmpegCommandBuilder.build({ ...preset }, path, generateOutputPath(path, preset.output.container || 'mp4')),
-    presetId: preset.id || 'independent',
-    cpuAffinity: preset.decode.cpuAffinity || undefined,
-  }))
+  const tasks = fileList.value.map(path => {
+    const outputFile = generateOutputPath(path, preset.output)
+    return {
+      inputFile: path,
+      outputFile,
+      commandLine: FFmpegCommandBuilder.build({ ...preset }, path, outputFile),
+      presetId: preset.id || 'independent',
+      cpuAffinity: preset.decode.cpuAffinity || undefined,
+    }
+  })
 
   await emit('add-independent-tasks', { tasks })
   await closeWindow()

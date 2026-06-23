@@ -3,6 +3,8 @@
  * 封装各种格式化函数
  */
 
+import type { PresetData } from "@/types/preset";
+
 /**
  * 格式化时长（秒 -> HH:MM:SS）
  */
@@ -89,19 +91,70 @@ export function extractFileExtension(path: string): string {
 /**
  * 生成输出文件路径
  */
-export function generateOutputPath(inputPath: string, format?: string): string {
-  const ext = format || extractFileExtension(inputPath);
+export function generateOutputPath(
+  inputPath: string,
+  output?: string | PresetData["output"],
+): string {
+  const ext = normalizeExtension(
+    typeof output === "string"
+      ? output
+      : output?.container || extractFileExtension(inputPath),
+  );
   const lastDot = inputPath.lastIndexOf(".");
   const lastSlash = Math.max(
     inputPath.lastIndexOf("/"),
     inputPath.lastIndexOf("\\"),
   );
+  const separator = inputPath.lastIndexOf("\\") > inputPath.lastIndexOf("/") ? "\\" : "/";
 
   const baseName = inputPath.substring(
     lastSlash + 1,
     lastDot > lastSlash ? lastDot : inputPath.length,
   );
-  const dirName = inputPath.substring(0, lastSlash + 1);
+  const sourceDir = inputPath.substring(0, lastSlash + 1);
 
-  return `${dirName}${baseName}_output.${ext}`;
+  if (typeof output === "object" && output !== null) {
+    const dirName = normalizeOutputDirectory(output.location, sourceDir, separator);
+    const fileName = buildOutputFileName(baseName, output.naming);
+    return `${dirName}${fileName}.${ext}`;
+  }
+
+  return `${sourceDir}${baseName}_output.${ext}`;
+}
+
+function normalizeExtension(format: string): string {
+  const ext = format.trim().replace(/^\./, "");
+  return ext || "mp4";
+}
+
+function normalizeOutputDirectory(
+  configuredDir: string,
+  sourceDir: string,
+  separator: string,
+): string {
+  const dir = configuredDir.trim();
+  if (!dir) return sourceDir;
+  if (dir.endsWith("/") || dir.endsWith("\\")) return dir;
+  return `${dir}${separator}`;
+}
+
+function buildOutputFileName(
+  baseName: string,
+  naming: PresetData["output"]["naming"],
+): string {
+  if (!naming.useAutoNaming) {
+    return `${baseName}_output`;
+  }
+
+  switch (naming.autoNamingOption) {
+    case 1:
+      return `${naming.prefixText || ""}${baseName}`;
+    case 2:
+      return naming.replaceText || `${baseName}_output`;
+    case 3:
+      return `${naming.prefixText || ""}${naming.replaceText || baseName}${naming.suffixText || ""}`;
+    case 0:
+    default:
+      return `${baseName}${naming.suffixText || "_output"}`;
+  }
 }

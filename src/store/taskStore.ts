@@ -264,6 +264,15 @@ export const useTaskStore = defineStore("tasks", () => {
     );
 
     unlisteners.push(
+      await listen("ffmpeg-log", (event: any) => {
+        const { taskId, message, level } = event.payload;
+        if (typeof message === "string") {
+          addTaskLog(taskId, message, level === "error");
+        }
+      })
+    );
+
+    unlisteners.push(
       await listen("ffmpeg-error", async (event: any) => {
         const { taskId, message, exitCode } = event.payload;
         const task = tasks.value.find((t) => t.id === taskId);

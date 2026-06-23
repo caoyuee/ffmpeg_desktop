@@ -110,8 +110,9 @@ pub fn start_ffmpeg(
                 for line in reader.lines() {
                      if let Ok(line) = line {
                         if ERROR_RE.is_match(&line) {
-                            let _ = app_clone.emit("ffmpeg-error", serde_json::json!({
+                            let _ = app_clone.emit("ffmpeg-log", serde_json::json!({
                                 "taskId": task_id_clone,
+                                "level": "error",
                                 "message": line
                             }));
                         }

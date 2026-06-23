@@ -150,7 +150,7 @@ function addToQueue() {
   const preset = presetStore.currentPreset;
 
   selectedPaths.forEach(path => {
-    const outputFile = generateOutputPath(path!, preset?.output.container || 'mp4');
+    const outputFile = generateOutputPath(path!, preset.output);
     const commandLine = FFmpegCommandBuilder.build(
       { ...preset },
       path!,
