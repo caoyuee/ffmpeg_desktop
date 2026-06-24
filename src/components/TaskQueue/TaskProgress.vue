@@ -10,28 +10,31 @@
     <div class="progress-info">
       <div class="progress-stats">
         <span v-if="progress.frame > 0">
-          帧: {{ progress.frame }}
+          {{ t('task.progress') }} {{ progress.frame }}
         </span>
         <span v-if="progress.fps > 0">
           FPS: {{ progress.fps }}
         </span>
         <span v-if="progress.speed > 0">
-          速度: {{ progress.speed.toFixed(2) }}x
+          {{ t('task.speed') }}: {{ progress.speed.toFixed(2) }}x
         </span>
         <span v-if="progress.bitrate > 0">
-          码率: {{ formatBitrate(progress.bitrate) }}
+          {{ t('task.bitrate') }}: {{ formatBitrate(progress.bitrate) }}
         </span>
       </div>
       
       <div class="progress-time" v-if="progress.remainingTime > 0">
-        剩余: {{ formatTime(progress.remainingTime) }}
+        {{ t('task.eta') }}: {{ formatTime(progress.remainingTime) }}
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import type { TaskProgress } from '@/types/task';
+
+const { t } = useI18n();
 
 defineProps<{
   progress: TaskProgress;

@@ -2,12 +2,12 @@
   <div class="color-panel">
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('basic')">
-        <h4>基本调整</h4>
+        <h4>{{ t('page.params.colorPanel.basicAdjustments') }}</h4>
         <span class="toggle-icon">{{ expandedSections.basic ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.basic" class="section-content">
         <div class="form-group">
-          <label>亮度</label>
+          <label>{{ t('page.params.colorPanel.brightness') }}</label>
           <div class="slider-group">
             <input type="range" min="-1" max="1" step="0.05"
               v-model="localPreset.video.colorManagement.brightness" @input="onColorChange" />
@@ -16,7 +16,7 @@
         </div>
 
         <div class="form-group">
-          <label>对比度</label>
+          <label>{{ t('page.params.colorPanel.contrast') }}</label>
           <div class="slider-group">
             <input type="range" min="0" max="2" step="0.05"
               v-model="localPreset.video.colorManagement.contrast" @input="onColorChange" />
@@ -25,7 +25,7 @@
         </div>
 
         <div class="form-group">
-          <label>饱和度</label>
+          <label>{{ t('page.params.colorPanel.saturation') }}</label>
           <div class="slider-group">
             <input type="range" min="0" max="3" step="0.05"
               v-model="localPreset.video.colorManagement.saturation" @input="onColorChange" />
@@ -34,7 +34,7 @@
         </div>
 
         <div class="form-group">
-          <label>伽马</label>
+          <label>{{ t('page.params.colorPanel.gamma') }}</label>
           <div class="slider-group">
             <input type="range" min="0.1" max="10" step="0.1"
               v-model="localPreset.video.colorManagement.gamma" @input="onColorChange" />
@@ -42,20 +42,20 @@
           </div>
         </div>
 
-        <button class="reset-btn" @click="resetBasic">重置基本调整</button>
+        <button class="reset-btn" @click="resetBasic">{{ t('page.params.colorPanel.resetBasicAdjustments') }}</button>
       </div>
     </div>
 
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('format')">
-        <h4>像素格式</h4>
+        <h4>{{ t('page.params.colorPanel.pixelFormat') }}</h4>
         <span class="toggle-icon">{{ expandedSections.format ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.format" class="section-content">
         <div class="form-group">
-          <label>像素格式</label>
+          <label>{{ t('page.params.colorPanel.pixelFormat') }}</label>
           <select v-model="localPreset.video.colorManagement.pixelFormat" @change="onColorChange">
-            <option value="">自动</option>
+            <option value="">{{ t('page.params.colorPanel.automatic') }}</option>
             <option value="yuv420p">YUV 4:2:0 (8-bit)</option>
             <option value="yuv422p">YUV 4:2:2 (8-bit)</option>
             <option value="yuv444p">YUV 4:4:4 (8-bit)</option>
@@ -73,14 +73,14 @@
 
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('space')">
-        <h4>色彩空间</h4>
+        <h4>{{ t('page.params.colorPanel.colorSpace') }}</h4>
         <span class="toggle-icon">{{ expandedSections.space ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.space" class="section-content">
         <div class="form-group">
-          <label>色域</label>
+          <label>{{ t('page.params.colorPanel.colorPrimaries') }}</label>
           <select v-model="localPreset.video.colorManagement.colorPrimaries" @change="onColorChange">
-            <option value="">自动</option>
+            <option value="">{{ t('page.params.colorPanel.automatic') }}</option>
             <option value="bt709">BT.709 (SDR)</option>
             <option value="bt2020">BT.2020 (HDR)</option>
             <option value="smpte432">DCI-P3</option>
@@ -88,9 +88,9 @@
         </div>
 
         <div class="form-group">
-          <label>传输特性</label>
+          <label>{{ t('page.params.colorPanel.transferCharacteristics') }}</label>
           <select v-model="localPreset.video.colorManagement.colorTRC" @change="onColorChange">
-            <option value="">自动</option>
+            <option value="">{{ t('page.params.colorPanel.automatic') }}</option>
             <option value="bt709">BT.709 (SDR)</option>
             <option value="smpte2084">SMPTE ST 2084 (PQ)</option>
             <option value="arib-std-b67">HLG</option>
@@ -99,9 +99,9 @@
         </div>
 
         <div class="form-group">
-          <label>矩阵系数</label>
+          <label>{{ t('page.params.colorPanel.matrixCoefficients') }}</label>
           <select v-model="localPreset.video.colorManagement.colorSpace" @change="onColorChange">
-            <option value="">自动</option>
+            <option value="">{{ t('page.params.colorPanel.automatic') }}</option>
             <option value="bt709">BT.709</option>
             <option value="bt2020nc">BT.2020 NCL</option>
             <option value="bt2020c">BT.2020 CL</option>
@@ -110,9 +110,9 @@
         </div>
 
         <div class="form-group">
-          <label>色彩范围</label>
+          <label>{{ t('page.params.colorPanel.colorRange') }}</label>
           <select v-model="localPreset.video.colorManagement.colorRange" @change="onColorChange">
-            <option value="">自动</option>
+            <option value="">{{ t('page.params.colorPanel.automatic') }}</option>
             <option value="tv">TV (Limited 16-235)</option>
             <option value="pc">PC (Full 0-255)</option>
           </select>
@@ -122,15 +122,15 @@
 
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('tonemap')">
-        <h4>色调映射</h4>
+        <h4>{{ t('page.params.colorPanel.toneMapping') }}</h4>
         <span class="toggle-icon">{{ expandedSections.tonemap ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.tonemap" class="section-content">
         <div class="form-group">
-          <label>色调映射算法</label>
+          <label>{{ t('page.params.colorPanel.toneMappingAlgo') }}</label>
           <select v-model="localPreset.video.colorManagement.tonemapAlgo" @change="onColorChange">
-            <option value="">不使用</option>
-            <option value="hable">Hable (推荐)</option>
+            <option value="">{{ t('page.params.colorPanel.noToneMapping') }}</option>
+            <option value="hable">Hable ({{ t('page.params.colorPanel.recommended') }})</option>
             <option value="mobius">Mobius</option>
             <option value="reinhard">Reinhard</option>
             <option value="bt2390">BT.2390</option>
@@ -138,7 +138,7 @@
             <option value="clip">Clip</option>
           </select>
         </div>
-        <small class="hint">HDR 转 SDR 时使用的色调映射算法</small>
+        <small class="hint">{{ t('page.params.colorPanel.hdrToSdrHint') }}</small>
       </div>
     </div>
   </div>
@@ -146,6 +146,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 
 const props = defineProps<{
@@ -155,6 +156,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:preset': [preset: PresetData];
 }>();
+
+const { t } = useI18n();
 
 const localPreset = ref<PresetData>({ ...props.preset });
 

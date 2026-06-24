@@ -19,7 +19,7 @@
         v-if="task.status === TaskStatus.Processing"
         @click="$emit('pause', task.id)"
         class="btn-action"
-        title="暂停"
+        :title="t('page.home.pauseTask')"
       >
         ⏸
       </button>
@@ -27,7 +27,7 @@
         v-if="task.status === TaskStatus.Paused"
         @click="$emit('resume', task.id)"
         class="btn-action"
-        title="恢复"
+        :title="t('common.resume')"
       >
         ▶
       </button>
@@ -35,7 +35,7 @@
         v-if="task.status === TaskStatus.Processing || task.status === TaskStatus.Paused"
         @click="$emit('stop', task.id)"
         class="btn-action btn-stop"
-        title="停止"
+        :title="t('common.stop')"
       >
         ⏹
       </button>
@@ -43,7 +43,7 @@
         v-if="canRemove"
         @click="$emit('remove', task.id)"
         class="btn-action btn-remove"
-        title="移除"
+        :title="t('common.remove')"
       >
         ✕
       </button>
@@ -53,6 +53,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { Task } from '@/types/task';
 import { TaskStatus } from '@/types/task';
 import TaskProgress from './TaskProgress.vue';
@@ -60,6 +61,8 @@ import TaskProgress from './TaskProgress.vue';
 const props = defineProps<{
   task: Task;
 }>();
+
+const { t } = useI18n();
 
 defineEmits<{
   pause: [taskId: string];
@@ -95,19 +98,19 @@ const statusClass = computed(() => {
 const statusText = computed(() => {
   switch (props.task.status) {
     case TaskStatus.Pending:
-      return '等待中';
+      return t('page.queue.idle');
     case TaskStatus.Processing:
-      return '处理中';
+      return t('task.status.running');
     case TaskStatus.Paused:
-      return '已暂停';
+      return t('task.status.paused');
     case TaskStatus.Completed:
-      return '已完成';
+      return t('task.status.completed');
     case TaskStatus.Stopped:
-      return '已停止';
+      return t('task.status.cancelled');
     case TaskStatus.Error:
-      return `错误: ${props.task.error || '未知错误'}`;
+      return `${t('common.error')}: ${props.task.error || t('common.info')}`;
     default:
-      return '未知状态';
+      return t('common.info');
   }
 });
 

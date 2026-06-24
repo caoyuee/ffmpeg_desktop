@@ -188,6 +188,34 @@ describe('i18n locales', () => {
     ])
   })
 
+  it('should include color panel labels in both locales', () => {
+    const keys = [
+      'basicAdjustments',
+      'brightness',
+      'contrast',
+      'saturation',
+      'gamma',
+      'resetBasicAdjustments',
+      'pixelFormat',
+      'automatic',
+      'colorSpace',
+      'colorPrimaries',
+      'transferCharacteristics',
+      'matrixCoefficients',
+      'colorRange',
+      'toneMapping',
+      'toneMappingAlgo',
+      'noToneMapping',
+      'recommended',
+      'hdrToSdrHint',
+    ]
+
+    keys.forEach((key) => {
+      expect(zhCN.page.params.colorPanel).toHaveProperty(key)
+      expect(enUS.page.params.colorPanel).toHaveProperty(key)
+    })
+  })
+
   it('should include queue drag and stdin labels in both locales', () => {
     expectPageKeys('queue', [
       'stdinPlaceholder',
@@ -360,6 +388,93 @@ describe('i18n locales', () => {
     keys.forEach((key) => {
       expect(zhCN.dialog.crop).toHaveProperty(key)
       expect(enUS.dialog.crop).toHaveProperty(key)
+    })
+  })
+
+  it('should include stream panel labels in both locales', () => {
+    const keys = [
+      'videoStream',
+      'videoStreamIndex',
+      'videoStreamPlaceholder',
+      'defaultVideoStreamHint',
+      'keepOtherVideo',
+      'audioStream',
+      'audioStreamIndex',
+      'audioStreamPlaceholder',
+      'defaultAudioStreamHint',
+      'keepOtherAudio',
+      'subtitleStream',
+      'subtitleOperation',
+      'noProcessing',
+      'burnToVideo',
+      'muxToOutput',
+      'discard',
+      'subtitleStreamIndex',
+      'subtitleStreamPlaceholder',
+      'keepOtherSubtitle',
+      'autoMuxSrt',
+      'autoMuxAss',
+      'autoMuxSsa',
+      'metadataAndChapter',
+      'metadataOption',
+      'keepMetadata',
+      'removeMetadata',
+      'chapterOption',
+      'keepChapters',
+      'removeChapters',
+      'attachmentOption',
+      'keepAttachments',
+      'removeAttachments',
+    ]
+
+    keys.forEach((key) => {
+      expect(zhCN.page.params.streamPanel).toHaveProperty(key)
+      expect(enUS.page.params.streamPanel).toHaveProperty(key)
+    })
+  })
+
+  it('should include subtitle panel labels in both locales', () => {
+    const keys = [
+      'subtitleBurn',
+      'subtitleMode',
+      'noSubtitle',
+      'externalSubtitle',
+      'embeddedSubtitle',
+      'subtitleFile',
+      'subtitleFilePlaceholder',
+      'select',
+      'subtitleStreamIndex',
+      'fontStyle',
+      'fontName',
+      'fontSize',
+      'bold',
+      'italic',
+      'primaryColor',
+      'outlineColor',
+      'borderAndPosition',
+      'outlineWidth',
+      'shadowDistance',
+      'alignment',
+      'default',
+      'topLeft',
+      'topCenter',
+      'topRight',
+      'middleLeft',
+      'middleCenter',
+      'middleRight',
+      'bottomLeft',
+      'bottomCenter',
+      'bottomRight',
+      'leftMargin',
+      'rightMargin',
+      'verticalMargin',
+      'subtitleFiles',
+      'selectSubtitleFailed',
+    ]
+
+    keys.forEach((key) => {
+      expect(zhCN.page.params.subtitlePanel).toHaveProperty(key)
+      expect(enUS.page.params.subtitlePanel).toHaveProperty(key)
     })
   })
 })

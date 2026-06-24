@@ -2,33 +2,33 @@
   <div class="subtitle-panel">
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('source')">
-        <h4>字幕烧录</h4>
+        <h4>{{ t('page.params.subtitlePanel.subtitleBurn') }}</h4>
         <span class="toggle-icon">{{ expandedSections.source ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.source" class="section-content">
         <div class="form-group">
-          <label>字幕模式</label>
+          <label>{{ t('page.params.subtitlePanel.subtitleMode') }}</label>
           <select v-model="subtitleMode" @change="onModeChange">
-            <option value="none">不烧录字幕</option>
-            <option value="external">外部字幕文件</option>
-            <option value="embedded">内嵌字幕流</option>
+            <option value="none">{{ t('page.params.subtitlePanel.noSubtitle') }}</option>
+            <option value="external">{{ t('page.params.subtitlePanel.externalSubtitle') }}</option>
+            <option value="embedded">{{ t('page.params.subtitlePanel.embeddedSubtitle') }}</option>
           </select>
         </div>
 
         <div v-if="subtitleMode === 'external'" class="params-group">
           <div class="form-group">
-            <label>字幕文件</label>
+            <label>{{ t('page.params.subtitlePanel.subtitleFile') }}</label>
             <div class="file-input-group">
               <input type="text" v-model="localPreset.video.subtitleBurn.externalFileName" 
-                placeholder="选择字幕文件..." readonly />
-              <button type="button" @click="selectSubtitleFile">选择</button>
+                :placeholder="t('page.params.subtitlePanel.subtitleFilePlaceholder')" readonly />
+              <button type="button" @click="selectSubtitleFile">{{ t('page.params.subtitlePanel.select') }}</button>
             </div>
           </div>
         </div>
 
         <div v-if="subtitleMode === 'embedded'" class="params-group">
           <div class="form-group">
-            <label>字幕流索引</label>
+            <label>{{ t('page.params.subtitlePanel.subtitleStreamIndex') }}</label>
             <input type="number" min="0" v-model="localPreset.video.subtitleBurn.streamIndex" 
               @input="onSubtitleChange" />
           </div>
@@ -38,18 +38,18 @@
 
     <div v-if="subtitleMode !== 'none'" class="panel-section">
       <div class="section-header" @click="toggleSection('style')">
-        <h4>字体样式</h4>
+        <h4>{{ t('page.params.subtitlePanel.fontStyle') }}</h4>
         <span class="toggle-icon">{{ expandedSections.style ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.style" class="section-content">
         <div class="form-row">
           <div class="form-group half">
-            <label>字体名称</label>
+            <label>{{ t('page.params.subtitlePanel.fontName') }}</label>
             <input type="text" v-model="localPreset.video.subtitleBurn.style.fontName" 
-              @input="onSubtitleChange" placeholder="Sans" />
+              @input="onSubtitleChange" :placeholder="t('page.params.subtitlePanel.fontNamePlaceholder')" />
           </div>
           <div class="form-group half">
-            <label>字体大小</label>
+            <label>{{ t('page.params.subtitlePanel.fontSize') }}</label>
             <input type="number" min="8" max="72" 
               v-model.number="localPreset.video.subtitleBurn.style.fontSize" 
               @input="onSubtitleChange" />
@@ -60,18 +60,18 @@
           <label class="checkbox-label">
             <input type="checkbox" v-model="localPreset.video.subtitleBurn.style.bold" 
               @change="onSubtitleChange" />
-            <span>粗体</span>
+            <span>{{ t('page.params.subtitlePanel.bold') }}</span>
           </label>
           <label class="checkbox-label">
             <input type="checkbox" v-model="localPreset.video.subtitleBurn.style.italic" 
               @change="onSubtitleChange" />
-            <span>斜体</span>
+            <span>{{ t('page.params.subtitlePanel.italic') }}</span>
           </label>
         </div>
 
         <div class="form-row">
           <div class="form-group half">
-            <label>主颜色</label>
+            <label>{{ t('page.params.subtitlePanel.primaryColor') }}</label>
             <div class="color-input-group">
               <input type="color" v-model="primaryColorHex" @input="onColorChange('primary')" />
               <input type="text" v-model="primaryColorHex" @input="onColorChange('primary')" 
@@ -79,7 +79,7 @@
             </div>
           </div>
           <div class="form-group half">
-            <label>边框颜色</label>
+            <label>{{ t('page.params.subtitlePanel.outlineColor') }}</label>
             <div class="color-input-group">
               <input type="color" v-model="outlineColorHex" @input="onColorChange('outline')" />
               <input type="text" v-model="outlineColorHex" @input="onColorChange('outline')" 
@@ -92,19 +92,19 @@
 
     <div v-if="subtitleMode !== 'none'" class="panel-section">
       <div class="section-header" @click="toggleSection('position')">
-        <h4>边框与位置</h4>
+        <h4>{{ t('page.params.subtitlePanel.borderAndPosition') }}</h4>
         <span class="toggle-icon">{{ expandedSections.position ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.position" class="section-content">
         <div class="form-row">
           <div class="form-group half">
-            <label>边框宽度</label>
+            <label>{{ t('page.params.subtitlePanel.outlineWidth') }}</label>
             <input type="number" min="0" max="10" step="0.5"
               v-model="localPreset.video.subtitleBurn.outlineWidth" 
               @input="onSubtitleChange" />
           </div>
           <div class="form-group half">
-            <label>阴影距离</label>
+            <label>{{ t('page.params.subtitlePanel.shadowDistance') }}</label>
             <input type="number" min="0" max="10" step="0.5"
               v-model="localPreset.video.subtitleBurn.shadowDistance" 
               @input="onSubtitleChange" />
@@ -112,34 +112,34 @@
         </div>
 
         <div class="form-group">
-          <label>对齐方式</label>
+          <label>{{ t('page.params.subtitlePanel.alignment') }}</label>
           <select v-model.number="localPreset.video.subtitleBurn.alignment" @change="onSubtitleChange">
-            <option :value="0">默认</option>
-            <option :value="1">左上</option>
-            <option :value="2">中上</option>
-            <option :value="3">右上</option>
-            <option :value="4">左中</option>
-            <option :value="5">居中</option>
-            <option :value="6">右中</option>
-            <option :value="7">左下</option>
-            <option :value="8">中下</option>
-            <option :value="9">右下</option>
+            <option :value="0">{{ t('page.params.subtitlePanel.default') }}</option>
+            <option :value="1">{{ t('page.params.subtitlePanel.topLeft') }}</option>
+            <option :value="2">{{ t('page.params.subtitlePanel.topCenter') }}</option>
+            <option :value="3">{{ t('page.params.subtitlePanel.topRight') }}</option>
+            <option :value="4">{{ t('page.params.subtitlePanel.middleLeft') }}</option>
+            <option :value="5">{{ t('page.params.subtitlePanel.middleCenter') }}</option>
+            <option :value="6">{{ t('page.params.subtitlePanel.middleRight') }}</option>
+            <option :value="7">{{ t('page.params.subtitlePanel.bottomLeft') }}</option>
+            <option :value="8">{{ t('page.params.subtitlePanel.bottomCenter') }}</option>
+            <option :value="9">{{ t('page.params.subtitlePanel.bottomRight') }}</option>
           </select>
         </div>
 
         <div class="form-row">
           <div class="form-group third">
-            <label>左边距</label>
+            <label>{{ t('page.params.subtitlePanel.leftMargin') }}</label>
             <input type="number" min="0" v-model="localPreset.video.subtitleBurn.marginL" 
               @input="onSubtitleChange" />
           </div>
           <div class="form-group third">
-            <label>右边距</label>
+            <label>{{ t('page.params.subtitlePanel.rightMargin') }}</label>
             <input type="number" min="0" v-model="localPreset.video.subtitleBurn.marginR" 
               @input="onSubtitleChange" />
           </div>
           <div class="form-group third">
-            <label>垂直边距</label>
+            <label>{{ t('page.params.subtitlePanel.verticalMargin') }}</label>
             <input type="number" min="0" v-model="localPreset.video.subtitleBurn.marginV" 
               @input="onSubtitleChange" />
           </div>
@@ -151,6 +151,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, onMounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 
 const props = defineProps<{
@@ -160,6 +161,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:preset': [preset: PresetData];
 }>();
+
+const { t } = useI18n();
 
 const localPreset = ref<PresetData>({ ...props.preset });
 const subtitleMode = ref<'none' | 'external' | 'embedded'>('none');
@@ -216,7 +219,7 @@ async function selectSubtitleFile() {
     const selected = await open({
       multiple: false,
       filters: [{
-        name: '字幕文件',
+        name: t('page.params.subtitlePanel.subtitleFiles'),
         extensions: ['srt', 'ass', 'ssa', 'sub']
       }]
     });
@@ -226,7 +229,7 @@ async function selectSubtitleFile() {
       onSubtitleChange();
     }
   } catch (error) {
-    console.error('选择字幕文件失败:', error);
+    console.error(t('page.params.subtitlePanel.selectSubtitleFailed'), error);
   }
 }
 

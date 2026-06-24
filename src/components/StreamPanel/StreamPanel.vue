@@ -2,21 +2,21 @@
   <div class="stream-panel">
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('video')">
-        <h4>视频流</h4>
+        <h4>{{ t('page.params.streamPanel.videoStream') }}</h4>
         <span class="toggle-icon">{{ expandedSections.video ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.video" class="section-content">
         <div class="form-group">
-          <label>视频流索引 (逗号分隔)</label>
+          <label>{{ t('page.params.streamPanel.videoStreamIndex') }}</label>
           <input type="text" v-model="videoStreamsText" @input="onVideoStreamsChange"
-            placeholder="例如: 0,1,2" />
-          <small>留空表示使用默认视频流</small>
+            :placeholder="t('page.params.streamPanel.videoStreamPlaceholder')" />
+          <small>{{ t('page.params.streamPanel.defaultVideoStreamHint') }}</small>
         </div>
         <div class="form-group checkbox-group">
           <label class="checkbox-label">
             <input type="checkbox" v-model="localPreset.streamControl.keepOtherVideo" 
               @change="onStreamChange" />
-            <span>保留其他视频流</span>
+            <span>{{ t('page.params.streamPanel.keepOtherVideo') }}</span>
           </label>
         </div>
       </div>
@@ -24,21 +24,21 @@
 
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('audio')">
-        <h4>音频流</h4>
+        <h4>{{ t('page.params.streamPanel.audioStream') }}</h4>
         <span class="toggle-icon">{{ expandedSections.audio ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.audio" class="section-content">
         <div class="form-group">
-          <label>音频流索引 (逗号分隔)</label>
+          <label>{{ t('page.params.streamPanel.audioStreamIndex') }}</label>
           <input type="text" v-model="audioStreamsText" @input="onAudioStreamsChange"
-            placeholder="例如: 0,1,2" />
-          <small>留空表示使用默认音频流</small>
+            :placeholder="t('page.params.streamPanel.audioStreamPlaceholder')" />
+          <small>{{ t('page.params.streamPanel.defaultAudioStreamHint') }}</small>
         </div>
         <div class="form-group checkbox-group">
           <label class="checkbox-label">
             <input type="checkbox" v-model="localPreset.streamControl.keepOtherAudio" 
               @change="onStreamChange" />
-            <span>保留其他音频流</span>
+            <span>{{ t('page.params.streamPanel.keepOtherAudio') }}</span>
           </label>
         </div>
       </div>
@@ -46,46 +46,46 @@
 
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('subtitle')">
-        <h4>字幕流</h4>
+        <h4>{{ t('page.params.streamPanel.subtitleStream') }}</h4>
         <span class="toggle-icon">{{ expandedSections.subtitle ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.subtitle" class="section-content">
         <div class="form-group">
-          <label>字幕操作</label>
+          <label>{{ t('page.params.streamPanel.subtitleOperation') }}</label>
           <select v-model.number="localPreset.streamControl.subtitleOperation" @change="onStreamChange">
-            <option :value="0">不处理</option>
-            <option :value="1">烧录到视频</option>
-            <option :value="2">混流到输出</option>
-            <option :value="3">丢弃</option>
+            <option :value="0">{{ t('page.params.streamPanel.noProcessing') }}</option>
+            <option :value="1">{{ t('page.params.streamPanel.burnToVideo') }}</option>
+            <option :value="2">{{ t('page.params.streamPanel.muxToOutput') }}</option>
+            <option :value="3">{{ t('page.params.streamPanel.discard') }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label>字幕流索引 (逗号分隔)</label>
+          <label>{{ t('page.params.streamPanel.subtitleStreamIndex') }}</label>
           <input type="text" v-model="subtitleStreamsText" @input="onSubtitleStreamsChange"
-            placeholder="例如: 0,1,2" />
+            :placeholder="t('page.params.streamPanel.subtitleStreamPlaceholder')" />
         </div>
         <div class="form-group checkbox-group">
           <label class="checkbox-label">
             <input type="checkbox" v-model="localPreset.streamControl.keepOtherSubtitle" 
               @change="onStreamChange" />
-            <span>保留其他字幕流</span>
+            <span>{{ t('page.params.streamPanel.keepOtherSubtitle') }}</span>
           </label>
         </div>
         <div class="form-row">
           <label class="checkbox-label">
             <input type="checkbox" v-model="localPreset.streamControl.autoMuxSRT" 
               @change="onStreamChange" />
-            <span>自动混流 SRT</span>
+            <span>{{ t('page.params.streamPanel.autoMuxSrt') }}</span>
           </label>
           <label class="checkbox-label">
             <input type="checkbox" v-model="localPreset.streamControl.autoMuxASS" 
               @change="onStreamChange" />
-            <span>自动混流 ASS</span>
+            <span>{{ t('page.params.streamPanel.autoMuxAss') }}</span>
           </label>
           <label class="checkbox-label">
             <input type="checkbox" v-model="localPreset.streamControl.autoMuxSSA" 
               @change="onStreamChange" />
-            <span>自动混流 SSA</span>
+            <span>{{ t('page.params.streamPanel.autoMuxSsa') }}</span>
           </label>
         </div>
       </div>
@@ -93,29 +93,29 @@
 
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('metadata')">
-        <h4>元数据与章节</h4>
+        <h4>{{ t('page.params.streamPanel.metadataAndChapter') }}</h4>
         <span class="toggle-icon">{{ expandedSections.metadata ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.metadata" class="section-content">
         <div class="form-group">
-          <label>元数据处理</label>
+          <label>{{ t('page.params.streamPanel.metadataOption') }}</label>
           <select v-model.number="localPreset.streamControl.metadataOption" @change="onStreamChange">
-            <option :value="0">保留元数据</option>
-            <option :value="1">删除元数据</option>
+            <option :value="0">{{ t('page.params.streamPanel.keepMetadata') }}</option>
+            <option :value="1">{{ t('page.params.streamPanel.removeMetadata') }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label>章节处理</label>
+          <label>{{ t('page.params.streamPanel.chapterOption') }}</label>
           <select v-model.number="localPreset.streamControl.chapterOption" @change="onStreamChange">
-            <option :value="0">保留章节</option>
-            <option :value="1">删除章节</option>
+            <option :value="0">{{ t('page.params.streamPanel.keepChapters') }}</option>
+            <option :value="1">{{ t('page.params.streamPanel.removeChapters') }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label>附件处理</label>
+          <label>{{ t('page.params.streamPanel.attachmentOption') }}</label>
           <select v-model.number="localPreset.streamControl.attachmentOption" @change="onStreamChange">
-            <option :value="0">保留附件</option>
-            <option :value="1">删除附件</option>
+            <option :value="0">{{ t('page.params.streamPanel.keepAttachments') }}</option>
+            <option :value="1">{{ t('page.params.streamPanel.removeAttachments') }}</option>
           </select>
         </div>
       </div>
@@ -125,6 +125,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 
 const props = defineProps<{
@@ -134,6 +135,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:preset': [preset: PresetData];
 }>();
+
+const { t } = useI18n();
 
 const localPreset = ref<PresetData>({ ...props.preset });
 

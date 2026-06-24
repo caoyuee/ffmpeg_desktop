@@ -1,10 +1,10 @@
 <template>
   <div class="preset-manager">
     <div class="preset-header">
-      <h3>预设管理</h3>
+      <h3>{{ t('page.params.presetPanel.title') }}</h3>
       <div class="preset-actions">
-        <button @click="createNewPreset" class="btn-primary">+ 新建预设</button>
-        <button @click="importPreset" class="btn-secondary">导入</button>
+        <button @click="createNewPreset" class="btn-primary">+ {{ t('page.params.presetPanel.create') }}</button>
+        <button @click="importPreset" class="btn-secondary">{{ t('page.params.presetPanel.import') }}</button>
       </div>
     </div>
 
@@ -33,30 +33,30 @@
       </div>
 
       <div v-if="presetStore.presets.length === 0" class="empty-tip">
-        <p>暂无预设</p>
-        <small>点击"新建预设"创建您的第一个预设</small>
+        <p>{{ t('page.params.presetPanel.emptyTitle') }}</p>
+        <small>{{ t('page.params.presetPanel.emptyHint') }}</small>
       </div>
     </div>
 
     <div v-if="showEditor" class="preset-editor-overlay" @click="closeEditor">
       <div class="preset-editor" @click.stop>
         <div class="editor-header">
-          <h4>{{ editorMode === "create" ? "新建预设" : "编辑预设" }}</h4>
+          <h4>{{ editorMode === "create" ? t('page.params.presetPanel.create') : t('page.params.presetPanel.edit') }}</h4>
           <button @click="closeEditor" class="btn-close">✕</button>
         </div>
 
         <div class="editor-content">
           <div class="form-group">
-            <label>预设名称</label>
+            <label>{{ t('page.params.presetPanel.name') }}</label>
             <input
               v-model="editingPreset.name"
               type="text"
-              placeholder="输入预设名称"
+              :placeholder="t('page.params.presetPanel.namePlaceholder')"
             />
           </div>
 
           <div class="form-group">
-            <label>输出格式</label>
+            <label>{{ t('page.params.presetPanel.outputContainer') }}</label>
             <select v-model="editingPreset.output.container">
               <option value="mp4">MP4</option>
               <option value="mkv">MKV</option>
@@ -66,9 +66,9 @@
           </div>
 
           <div class="form-group">
-            <label>视频编码器</label>
+            <label>{{ t('page.params.presetPanel.videoEncoder') }}</label>
             <select v-model="editingPreset.video.encoder.codec">
-              <option value="">复制流</option>
+              <option value="">{{ t('page.params.presetPanel.copyStream') }}</option>
               <option value="libx264">H.264 (libx264)</option>
               <option value="libx265">H.265 (libx265)</option>
               <option value="libvpx-vp9">VP9 (libvpx-vp9)</option>
@@ -77,20 +77,20 @@
           </div>
 
           <div class="form-group" v-if="editingPreset.video.encoder.codec">
-            <label>质量 (CRF)</label>
+            <label>{{ t('page.params.presetPanel.quality') }}</label>
             <input
               v-model="editingPreset.video.bitrateControl.qualityValue"
               type="number"
               min="0"
               max="51"
-              placeholder="23"
+              :placeholder="t('page.params.presetPanel.defaultQualityValue')"
             />
           </div>
 
           <div class="form-group">
-            <label>音频编码器</label>
+            <label>{{ t('page.params.presetPanel.audioEncoder') }}</label>
             <select v-model="editingPreset.audio.encoder">
-              <option value="">复制流</option>
+              <option value="">{{ t('page.params.presetPanel.copyStream') }}</option>
               <option value="aac">AAC</option>
               <option value="libmp3lame">MP3</option>
               <option value="libopus">Opus</option>
@@ -100,18 +100,18 @@
         </div>
 
         <div class="editor-footer">
-          <button @click="closeEditor" class="btn-secondary">取消</button>
-          <button @click="savePreset" class="btn-primary">保存</button>
+          <button @click="closeEditor" class="btn-secondary">{{ t('common.cancel') }}</button>
+          <button @click="savePreset" class="btn-primary">{{ t('common.save') }}</button>
         </div>
       </div>
     </div>
 
     <ConfirmDialog
       v-model="showDeleteConfirm"
-      title="删除预设"
-      message="确定要删除这个预设吗？"
-      confirmText="确定"
-      cancelText="取消"
+      :title="t('page.params.presetPanel.deleteTitle')"
+      :message="t('page.params.presetPanel.deleteMessage')"
+      :confirmText="t('common.confirm')"
+      :cancelText="t('common.cancel')"
       @confirm="confirmDelete"
     />
 
@@ -147,7 +147,7 @@ presetStore.loadPresets();
 function createNewPreset() {
   editorMode.value = "create";
   editingPreset.value = { ...presetStore.currentPreset };
-  editingPreset.value.name = "新预设";
+  editingPreset.value.name = t('page.params.presetPanel.newPresetName');
   editingPreset.value.id = "";
   showEditor.value = true;
 }
@@ -174,7 +174,7 @@ async function savePreset() {
     toastType.value = "success";
     showToast.value = true;
   } catch (error) {
-    console.error("保存预设失败:", error);
+    console.error(t("page.params.presetPanel.saveFailed"), error);
     toastMessage.value = t("page.params.presetSaveFailed");
     toastType.value = "error";
     showToast.value = true;
@@ -194,7 +194,7 @@ async function confirmDelete() {
       toastType.value = "success";
       showToast.value = true;
     } catch (error) {
-      console.error("删除预设失败:", error);
+      console.error(t("page.params.presetPanel.deleteFailed"), error);
       toastMessage.value = t("page.params.presetDeleteFailed");
       toastType.value = "error";
       showToast.value = true;
@@ -223,7 +223,7 @@ async function exportPreset(presetId: string) {
       showToast.value = true;
     }
   } catch (error) {
-    console.error("导出预设失败:", error);
+    console.error(t("page.params.presetPanel.exportFailed"), error);
     toastMessage.value = t("page.params.presetExportFailed");
     toastType.value = "error";
     showToast.value = true;
@@ -248,7 +248,7 @@ async function importPreset() {
       showToast.value = true;
     }
   } catch (error) {
-    console.error("导入预设失败:", error);
+    console.error(t("page.params.presetPanel.importFailed"), error);
     toastMessage.value = t("page.params.presetImportFailed");
     toastType.value = "error";
     showToast.value = true;

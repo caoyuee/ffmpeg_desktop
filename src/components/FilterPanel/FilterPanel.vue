@@ -2,18 +2,18 @@
   <div class="filter-panel">
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('deinterlace')">
-        <h4>反交错</h4>
+        <h4>{{ t('page.params.filterPanel.deinterlace') }}</h4>
         <span class="toggle-icon">{{ expandedSections.deinterlace ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.deinterlace" class="section-content">
         <div class="form-group">
-          <label>处理方式</label>
+          <label>{{ t('page.params.filterPanel.deinterlaceMode') }}</label>
           <select v-model="localPreset.video.filters.deinterlace" @change="onFilterChange">
-            <option :value="0">不处理</option>
-            <option :value="1">YADIF - 场序自适应</option>
-            <option :value="2">YADIF - 场序强制</option>
-            <option :value="3">BWDIF - 场序自适应</option>
-            <option :value="4">BWDIF - 场序强制</option>
+            <option :value="0">{{ t('common.none') }}</option>
+            <option :value="1">YADIF - {{ t('page.params.filterPanel.fieldOrderAdaptive') }}</option>
+            <option :value="2">YADIF - {{ t('page.params.filterPanel.fieldOrderForced') }}</option>
+            <option :value="3">BWDIF - {{ t('page.params.filterPanel.fieldOrderAdaptive') }}</option>
+            <option :value="4">BWDIF - {{ t('page.params.filterPanel.fieldOrderForced') }}</option>
           </select>
         </div>
       </div>
@@ -21,14 +21,14 @@
 
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('denoise')">
-        <h4>降噪</h4>
+        <h4>{{ t('page.params.filterPanel.denoise') }}</h4>
         <span class="toggle-icon">{{ expandedSections.denoise ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.denoise" class="section-content">
         <div class="form-group">
-          <label>降噪方式</label>
+          <label>{{ t('page.params.filterPanel.denoiseMode') }}</label>
           <select v-model="localPreset.video.filters.denoise.method" @change="onDenoiseMethodChange">
-            <option value="">不处理</option>
+            <option value="">{{ t('common.none') }}</option>
             <option value="hqdn3d">HQDN3D - 快速降噪</option>
             <option value="nlmeans">NLMeans - 高质量降噪</option>
             <option value="atadenoise">ATADenoise - 时域降噪</option>
@@ -37,13 +37,13 @@
 
         <div v-if="localPreset.video.filters.denoise.method === 'hqdn3d'" class="params-group">
           <div class="form-group">
-            <label>亮度降噪强度</label>
+            <label>{{ t('page.params.filterPanel.lumaStrength') }}</label>
             <input type="range" min="0" max="20" step="0.5" 
               v-model.number="localPreset.video.filters.denoise.param1" @input="onFilterChange" />
             <span class="param-value">{{ localPreset.video.filters.denoise.param1 || 4 }}</span>
           </div>
           <div class="form-group">
-            <label>色度降噪强度</label>
+            <label>{{ t('page.params.filterPanel.chromaStrength') }}</label>
             <input type="range" min="0" max="20" step="0.5"
               v-model.number="localPreset.video.filters.denoise.param2" @input="onFilterChange" />
             <span class="param-value">{{ localPreset.video.filters.denoise.param2 || 3 }}</span>
@@ -52,7 +52,7 @@
 
         <div v-if="localPreset.video.filters.denoise.method === 'nlmeans'" class="params-group">
           <div class="form-group">
-            <label>降噪强度</label>
+            <label>{{ t('page.params.filterPanel.denoiseStrength') }}</label>
             <input type="range" min="1" max="20" step="0.5"
               v-model.number="localPreset.video.filters.denoise.param1" @input="onFilterChange" />
             <span class="param-value">{{ localPreset.video.filters.denoise.param1 || 3 }}</span>
@@ -61,7 +61,7 @@
 
         <div v-if="localPreset.video.filters.denoise.method === 'atadenoise'" class="params-group">
           <div class="form-group">
-            <label>降噪强度</label>
+            <label>{{ t('page.params.filterPanel.denoiseStrength') }}</label>
             <input type="range" min="0.001" max="0.1" step="0.001"
               v-model.number="localPreset.video.filters.denoise.param1" @input="onFilterChange" />
             <span class="param-value">{{ localPreset.video.filters.denoise.param1 || 0.02 }}</span>
@@ -72,24 +72,24 @@
 
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('sharpen')">
-        <h4>锐化</h4>
+        <h4>{{ t('page.params.filterPanel.sharpen') }}</h4>
         <span class="toggle-icon">{{ expandedSections.sharpen ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.sharpen" class="section-content">
         <div class="form-group">
-          <label>锐化强度</label>
+          <label>{{ t('page.params.filterPanel.sharpenStrength') }}</label>
           <input type="range" min="0" max="2" step="0.1"
             v-model.number="localPreset.video.filters.sharpen.lumaAmount" @input="onFilterChange" />
-          <span class="param-value">{{ localPreset.video.filters.sharpen.lumaAmount || '未设置' }}</span>
+          <span class="param-value">{{ localPreset.video.filters.sharpen.lumaAmount || t('page.params.notSet') }}</span>
         </div>
         <div v-if="localPreset.video.filters.sharpen.lumaAmount" class="params-group">
           <div class="form-group">
-            <label>水平半径</label>
+            <label>{{ t('page.params.filterPanel.horizontalRadius') }}</label>
             <input type="number" min="1" max="15"
               v-model="localPreset.video.filters.sharpen.lumaMsizeX" @input="onFilterChange" />
           </div>
           <div class="form-group">
-            <label>垂直半径</label>
+            <label>{{ t('page.params.filterPanel.verticalRadius') }}</label>
             <input type="number" min="1" max="15"
               v-model="localPreset.video.filters.sharpen.lumaMsizeY" @input="onFilterChange" />
           </div>
@@ -99,25 +99,25 @@
 
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('transform')">
-        <h4>旋转/翻转</h4>
+        <h4>{{ t('page.params.filterPanel.transform') }}</h4>
         <span class="toggle-icon">{{ expandedSections.transform ? '▼' : '▶' }}</span>
       </div>
       <div v-show="expandedSections.transform" class="section-content">
         <div class="form-group">
-          <label>旋转</label>
+          <label>{{ t('page.params.filterPanel.rotation') }}</label>
           <select v-model.number="localPreset.video.filters.rotation" @change="onFilterChange">
-            <option :value="0">不旋转</option>
-            <option :value="1">顺时针 90°</option>
+            <option :value="0">{{ t('page.params.filterPanel.noRotation') }}</option>
+            <option :value="1">{{ t('page.params.filterPanel.clockwise90') }}</option>
             <option :value="2">180°</option>
-            <option :value="3">逆时针 90°</option>
+            <option :value="3">{{ t('page.params.filterPanel.counterClockwise90') }}</option>
           </select>
         </div>
         <div class="form-group">
-          <label>翻转</label>
+          <label>{{ t('page.params.filterPanel.flip') }}</label>
           <select v-model.number="localPreset.video.filters.flip" @change="onFilterChange">
-            <option :value="0">不翻转</option>
-            <option :value="1">水平翻转</option>
-            <option :value="2">垂直翻转</option>
+            <option :value="0">{{ t('page.params.filterPanel.noFlip') }}</option>
+            <option :value="1">{{ t('page.params.filterPanel.horizontalFlip') }}</option>
+            <option :value="2">{{ t('page.params.filterPanel.verticalFlip') }}</option>
           </select>
         </div>
       </div>
@@ -125,13 +125,13 @@
 
     <div class="panel-section">
       <div class="section-header">
-        <h4>高级滤镜工具</h4>
+        <h4>{{ t('page.params.filterPanel.advancedTools') }}</h4>
       </div>
       <div class="section-content">
         <div class="tool-buttons">
-          <button class="tool-btn" @click="showInterpolation = true">插帧 / 补帧</button>
-          <button class="tool-btn" @click="showFrameBlend = true">帧混合 / 动态模糊</button>
-          <button class="tool-btn" @click="showSuperResolution = true">超分辨率</button>
+          <button class="tool-btn" @click="showInterpolation = true">{{ t('page.params.filterPanel.interpolationTool') }}</button>
+          <button class="tool-btn" @click="showFrameBlend = true">{{ t('page.params.filterPanel.frameBlendTool') }}</button>
+          <button class="tool-btn" @click="showSuperResolution = true">{{ t('page.params.filterPanel.superResolutionTool') }}</button>
         </div>
       </div>
     </div>
@@ -144,9 +144,9 @@
     />
     <FrameBlendDialog 
       :visible="showFrameBlend" 
-      :modelValue="localPreset.video.filters.interpolation"
+      :modelValue="localPreset.video.filters.frameBlend"
       @update:visible="showFrameBlend = $event"
-      @update:modelValue="onInterpolationUpdate" 
+      @update:modelValue="onFrameBlendUpdate" 
     />
     <SuperResolutionDialog 
       :visible="showSuperResolution" 
@@ -159,10 +159,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 import InterpolationDialog from '@/components/Dialogs/InterpolationDialog.vue';
 import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue';
 import SuperResolutionDialog from '@/components/Dialogs/SuperResolutionDialog.vue';
+
+const { t } = useI18n();
 
 const props = defineProps<{
   preset: PresetData;
@@ -199,6 +202,11 @@ function onFilterChange() {
 
 function onInterpolationUpdate(settings: PresetData['video']['filters']['interpolation']) {
   localPreset.value.video.filters.interpolation = settings;
+  emit('update:preset', localPreset.value);
+}
+
+function onFrameBlendUpdate(settings: PresetData['video']['filters']['frameBlend']) {
+  localPreset.value.video.filters.frameBlend = settings;
   emit('update:preset', localPreset.value);
 }
 
