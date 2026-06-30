@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -47,11 +49,43 @@ jobs:
 
       - name: Build Tauri bundle
         working-directory: ffmpeg_desktop
-        run: pnpm tauri build
+        run: pnpm tauri build --bundles deb
 
-      - name: Upload bundle artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload bundles to Gitee Release
+        working-directory: ffmpeg_desktop
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: bash scripts/upload-gitee-assets.sh
+
+  windows-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          name: ffmpeg-desktop-linux
-          path: |
-            ffmpeg_desktop/src-tauri/target/release/bundle/**
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.27.0
+
+      - name: Install frontend dependencies
+        working-directory: ffmpeg_desktop
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Tauri bundle
+        working-directory: ffmpeg_desktop
+        run: pnpm tauri build --bundles nsis
+
+      - name: Upload bundles to Gitee Release
+        working-directory: ffmpeg_desktop
+        shell: bash
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: bash scripts/upload-gitee-assets.sh

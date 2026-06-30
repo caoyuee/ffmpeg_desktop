@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "identifier": "com.william.ffmpeg_desktop",
+  "identifier": "com.william.ffmpeg-desktop",
   "bundle": {
     "active": true,
     "targets": [

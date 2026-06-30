@@ -249,6 +249,27 @@ pnpm release:major
 3. 创建 `chore: release vX.Y.Z` 提交和 `vX.Y.Z` tag。
 4. 推送当前分支和 tag 到 Gitee `origin`。
 5. 如果设置了 `GITEE_TOKEN`，调用 Gitee Release API 创建发行版记录。
+6. 如果 `src-tauri/target/release/bundle/` 下存在 `.deb`、`.rpm`、`.AppImage`、`.exe` 或 `.msi`，自动上传为 Gitee Release 附件。
+
+Gitee Release 页面默认会显示 tag 对应的源码包。Windows/Linux 安装包需要先由 Tauri 构建生成，再上传为 Release 附件：
+
+```bash
+# Linux 本机生成 deb 包
+pnpm tauri build --bundles deb
+
+# Windows 本机生成 exe 安装包
+pnpm tauri build --bundles nsis
+
+# 上传已有安装包到当前 tag 对应的 Gitee Release
+bash scripts/upload-gitee-assets.sh v0.1.3
+```
+
+`.gitee/workflows/release.yml` 会在推送 `v*` tag 后尝试自动构建并上传：
+
+- Linux runner 构建 `.deb`
+- Windows runner 构建 `.exe`
+
+如果 Gitee Go 没有可用的 Windows runner，需要配置自托管 Windows runner，或在 Windows 本机执行 `pnpm tauri build --bundles nsis` 后再运行上传脚本。
 
 常用环境变量：
 
@@ -260,6 +281,9 @@ SKIP_PREFLIGHT=1 pnpm release:patch
 
 # 创建 Gitee 发行版记录
 GITEE_TOKEN=<your-token> pnpm release:patch
+
+# 只上传当前已有的打包产物
+GITEE_TOKEN=<your-token> bash scripts/upload-gitee-assets.sh v0.1.3
 ```
 
 ## 🧪 测试

@@ -76,13 +76,25 @@ console.log(`${match[1]}/${match[2]}`);
   release_body="${RELEASE_BODY:-Automated release $tag}"
 
   echo "==> Creating Gitee release $tag"
-  curl --fail --silent --show-error \
+  release_json="$(curl --fail --silent --show-error \
     --request POST "https://gitee.com/api/v5/repos/$owner/$repo/releases" \
     --data-urlencode "access_token=$GITEE_TOKEN" \
     --data-urlencode "tag_name=$tag" \
     --data-urlencode "name=$tag" \
     --data-urlencode "body=$release_body" \
-    --data-urlencode "target_commitish=$branch" >/dev/null
+    --data-urlencode "target_commitish=$branch")"
+  release_id="$(node -e '
+const fs = require("fs");
+const data = JSON.parse(fs.readFileSync(0, "utf8"));
+if (!data.id) process.exit(1);
+console.log(data.id);
+' <<<"$release_json")"
+
+  GITEE_OWNER="$owner" \
+  GITEE_REPO="$repo" \
+  GITEE_RELEASE_ID="$release_id" \
+  GITEE_RELEASE_TAG="$tag" \
+  bash scripts/upload-gitee-assets.sh
 else
   echo "==> GITEE_TOKEN is not set; pushed commit and tag only, skipped Gitee Release API."
 fi
