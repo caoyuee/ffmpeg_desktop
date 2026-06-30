@@ -11,6 +11,10 @@ export default defineConfig(async () => ({
       '@': path.resolve(__dirname, 'src'), // 将 @ 指向 src 目录
     },
   },
+  define: {
+    __VUE_I18N_LEGACY_API__: false,
+    __INTLIFY_JIT_COMPILATION__: true,
+  },
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
   // 1. prevent Vite from obscuring rust errors

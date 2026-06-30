@@ -13,6 +13,10 @@ fi
 echo "==> Type checking"
 pnpm typecheck
 
+echo "==> Production CSP check"
+pnpm build
+node scripts/assert-csp-safe-build.mjs
+
 echo "==> Frontend unit tests"
 pnpm test:run
 

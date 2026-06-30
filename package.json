@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
+    "build:csp-check": "pnpm build && node scripts/assert-csp-safe-build.mjs",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "tauri": "tauri",

@@ -10,6 +10,7 @@ REPO="${GITEE_REPO:-}"
 RELEASE_ID="${GITEE_RELEASE_ID:-}"
 TAG="${GITEE_RELEASE_TAG:-}"
 ASSET_DIR="${GITEE_ASSET_DIR:-$ROOT_DIR/src-tauri/target/release/bundle}"
+ASSET_VERSION="${GITEE_ASSET_VERSION:-}"
 DRY_RUN="${GITEE_UPLOAD_DRY_RUN:-0}"
 
 usage() {
@@ -25,6 +26,7 @@ Environment:
   GITEE_RELEASE_ID        Optional release id. Preferred when already known.
   GITEE_RELEASE_TAG       Optional release tag. Used to resolve release id.
   GITEE_ASSET_DIR         Optional asset directory. Defaults to Tauri bundle dir.
+  GITEE_ASSET_VERSION     Optional version filter, for example 0.1.4.
   GITEE_UPLOAD_DRY_RUN    Set to 1 to print files without uploading.
 USAGE
 }
@@ -95,8 +97,22 @@ mapfile -d '' assets < <(find "$ASSET_DIR" -type f \( \
   -name '*.msi' \
 \) -print0 | sort -z)
 
+if [ -n "$ASSET_VERSION" ]; then
+  filtered_assets=()
+  for asset in "${assets[@]}"; do
+    if [[ "$(basename "$asset")" == *"$ASSET_VERSION"* ]]; then
+      filtered_assets+=("$asset")
+    fi
+  done
+  assets=("${filtered_assets[@]}")
+fi
+
 if [ "${#assets[@]}" -eq 0 ]; then
-  echo "==> No releasable assets found under $ASSET_DIR"
+  if [ -n "$ASSET_VERSION" ]; then
+    echo "==> No releasable assets for version $ASSET_VERSION found under $ASSET_DIR"
+  else
+    echo "==> No releasable assets found under $ASSET_DIR"
+  fi
   exit 0
 fi
 

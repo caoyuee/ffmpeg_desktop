@@ -41,6 +41,24 @@ if git -C "$REPO_DIR" rev-parse "$tag" >/dev/null 2>&1; then
   exit 1
 fi
 
+if [ "${SKIP_BUNDLE:-0}" != "1" ]; then
+  case "$(uname -s)" in
+    Linux)
+      echo "==> Building Linux deb bundle"
+      pnpm tauri build --bundles deb
+      ;;
+    MINGW*|MSYS*|CYGWIN*|Windows_NT)
+      echo "==> Building Windows nsis bundle"
+      pnpm tauri build --bundles nsis
+      ;;
+    *)
+      echo "==> Skipping local bundle build on unsupported platform: $(uname -s)"
+      ;;
+  esac
+else
+  echo "==> Skipping local bundle build (SKIP_BUNDLE=1)"
+fi
+
 git -C "$REPO_DIR" add -A
 
 if git -C "$REPO_DIR" diff --cached --quiet; then
@@ -94,6 +112,7 @@ console.log(data.id);
   GITEE_REPO="$repo" \
   GITEE_RELEASE_ID="$release_id" \
   GITEE_RELEASE_TAG="$tag" \
+  GITEE_ASSET_VERSION="$version" \
   bash scripts/upload-gitee-assets.sh
 else
   echo "==> GITEE_TOKEN is not set; pushed commit and tag only, skipped Gitee Release API."
