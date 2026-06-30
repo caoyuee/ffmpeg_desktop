@@ -67,7 +67,7 @@ git -C "$REPO_DIR" push "$REMOTE" "$tag"
 if [ -n "${GITEE_TOKEN:-}" ]; then
   owner_repo="$(node -e '
 const url = process.argv[1];
-let match = url.match(/gitee\\.com[:/]([^/]+)\\/([^/.]+)(?:\\.git)?$/);
+let match = url.match(/gitee\.com[:/]([^/]+)\/([^/.]+)(?:\.git)?$/);
 if (!match) process.exit(1);
 console.log(`${match[1]}/${match[2]}`);
 ' "$remote_url")"
