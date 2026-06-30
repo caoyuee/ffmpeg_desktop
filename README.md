@@ -228,6 +228,40 @@ pnpm tauri dev
 pnpm tauri build
 ```
 
+### Gitee 发布自动化
+
+项目提供 Gitee-only 发布脚本。脚本只推送 `origin`，并要求远端地址指向 `gitee.com`。
+
+```bash
+# 试跑：创建本地 release commit/tag 后自动回滚，不推送
+RELEASE_DRY_RUN=1 pnpm release:patch
+
+# 发布 patch/minor/major 版本
+pnpm release:patch
+pnpm release:minor
+pnpm release:major
+```
+
+发布流程：
+
+1. 运行 `pnpm verify`，执行类型检查、Vitest、Playwright 和 Rust 测试。
+2. 同步更新 `package.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json` 版本号。
+3. 创建 `chore: release vX.Y.Z` 提交和 `vX.Y.Z` tag。
+4. 推送当前分支和 tag 到 Gitee `origin`。
+5. 如果设置了 `GITEE_TOKEN`，调用 Gitee Release API 创建发行版记录。
+
+常用环境变量：
+
+```bash
+# 跳过较慢的检查，仅建议临时本地调试使用
+SKIP_E2E=1 pnpm verify
+SKIP_RUST_TESTS=1 pnpm verify
+SKIP_PREFLIGHT=1 pnpm release:patch
+
+# 创建 Gitee 发行版记录
+GITEE_TOKEN=<your-token> pnpm release:patch
+```
+
 ## 🧪 测试
 
 ### 测试框架
@@ -255,6 +289,9 @@ cd src-tauri && cargo tarpaulin
 
 # 运行所有测试并生成报告
 pnpm test:all
+
+# 完整发布前验证
+pnpm verify
 ```
 
 ### 测试覆盖率目标

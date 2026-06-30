@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+import { configDefaults } from 'vitest/config'
 
 export default defineConfig({
   plugins: [vue()],
@@ -8,6 +9,7 @@ export default defineConfig({
     environment: 'happy-dom',
     globals: true,
     setupFiles: ['./src/__tests__/setup.ts'],
+    exclude: [...configDefaults.exclude, 'e2e/**'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
@@ -15,6 +17,7 @@ export default defineConfig({
       exclude: [
         'node_modules/',
         'src-tauri/',
+        'e2e/',
         'src/__tests__/',
         '**/*.d.ts',
         '**/*.config.*',
