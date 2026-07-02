@@ -117,6 +117,11 @@
     <div class="process-section">
       <div class="section-header">
         <span class="section-title">{{ t('page.performance.processes') }}</span>
+        <div class="process-summary">
+          <span>{{ t('page.performance.processCount', { count: processSummary.count }) }}</span>
+          <span>{{ t('page.performance.totalCpu') }}: {{ processSummary.cpu.toFixed(1) }}%</span>
+          <span>{{ t('page.performance.totalMemory') }}: {{ formatBytes(processSummary.memory) }}</span>
+        </div>
       </div>
       <div class="process-list">
         <div v-if="ffmpegProcesses.length === 0" class="no-process">
@@ -124,7 +129,7 @@
         </div>
         <div v-for="proc in ffmpegProcesses" :key="proc.pid" class="process-item">
           <div class="process-info">
-            <span class="process-name">ffmpeg (PID: {{ proc.pid }})</span>
+            <span class="process-name">{{ proc.name }} (PID: {{ proc.pid }})</span>
             <span class="process-cpu">CPU: {{ proc.cpu.toFixed(1) }}%</span>
             <span class="process-memory">{{ t('page.performance.memory') }}: {{ formatBytes(proc.memory) }}</span>
           </div>
@@ -136,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
 
@@ -168,6 +173,7 @@ interface DiskMetrics {
 
 interface ProcessInfo {
   pid: number;
+  name: string;
   cpu: number;
   memory: number;
 }
@@ -190,13 +196,22 @@ const ffmpegProcesses = ref<ProcessInfo[]>([]);
 const refreshRate = ref(1000);
 const refreshInterval = ref(0);
 
+const processSummary = computed(() => ({
+  count: ffmpegProcesses.value.length,
+  cpu: ffmpegProcesses.value.reduce((total, proc) => total + proc.cpu, 0),
+  memory: ffmpegProcesses.value.reduce((total, proc) => total + proc.memory, 0),
+}));
+
 async function fetchMetrics() {
   try {
     const data = await invoke<SystemMetrics>('get_system_metrics');
     metrics.value = data;
     
     const processes = await invoke<ProcessInfo[]>('get_ffmpeg_processes');
-    ffmpegProcesses.value = processes;
+    ffmpegProcesses.value = processes.map(proc => ({
+      ...proc,
+      name: proc.name || 'ffmpeg',
+    }));
   } catch (error) {
     console.error('获取系统指标失败:', error);
   }
@@ -392,12 +407,24 @@ onUnmounted(() => {
 .section-header {
   padding: 10px 15px;
   border-bottom: 1px solid var(--bg-color4, #383838);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .section-title {
   color: #c0c0c0;
   font-size: 14px;
   font-weight: 500;
+}
+
+.process-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: var(--text-color2, #888);
+  font-size: 12px;
 }
 
 .process-list {

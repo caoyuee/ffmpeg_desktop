@@ -1,10 +1,10 @@
 <template>
   <label class="switch-toggle">
-    <span :class="{ active: !modelValue }">{{ offLabel }}</span>
+    <span v-if="showLabels" class="switch-label" :class="{ active: !modelValue }">{{ offLabel }}</span>
     <div class="switch-track" @click="toggle">
       <div class="switch-thumb" :class="{ on: modelValue }"></div>
     </div>
-    <span :class="{ active: modelValue }">{{ onLabel }}</span>
+    <span v-if="showLabels" class="switch-label" :class="{ active: modelValue }">{{ onLabel }}</span>
   </label>
 </template>
 
@@ -13,9 +13,11 @@ const props = withDefaults(defineProps<{
   modelValue: boolean;
   offLabel?: string;
   onLabel?: string;
+  showLabels?: boolean;
 }>(), {
-  offLabel: '关闭',
-  onLabel: '开启',
+  offLabel: '关',
+  onLabel: '开',
+  showLabels: false,
 });
 
 const emit = defineEmits<{
@@ -38,7 +40,12 @@ function toggle() {
   user-select: none;
 }
 
-.switch-toggle span.active {
+.switch-label {
+  color: var(--text-color2, #808080);
+  white-space: nowrap;
+}
+
+.switch-label.active {
   color: var(--info-color, #3498db);
 }
 

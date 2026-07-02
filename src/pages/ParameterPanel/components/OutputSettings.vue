@@ -40,7 +40,15 @@
     <div class="form-section">
       <h4>{{ t('page.params.autoNaming') }}</h4>
       <div class="form-group">
-        <SwitchToggle v-model="localPreset.output.naming.useAutoNaming" @update:model-value="onChange" />
+        <div>
+          <SwitchToggle
+            v-model="localPreset.output.naming.useAutoNaming"
+            :showLabels="true"
+            :offLabel="t('common.disabled')"
+            :onLabel="t('common.enabled')"
+            @update:model-value="onChange"
+          />
+        </div>
       </div>
 
       <template v-if="localPreset.output.naming.useAutoNaming">
@@ -74,15 +82,15 @@
     <div class="form-section">
       <h4>{{ t('page.params.preserveTimestamps') }}</h4>
       <div class="form-row">
-        <label class="checkbox-label">
+        <label class="checkbox-label timestamp-checkbox">
           <input type="checkbox" v-model="localPreset.output.naming.preserveCreationTime" @change="onChange" />
           <span>{{ t('page.params.preserveCreationTime') }}</span>
         </label>
-        <label class="checkbox-label">
+        <label class="checkbox-label timestamp-checkbox">
           <input type="checkbox" v-model="localPreset.output.naming.preserveModifyTime" @change="onChange" />
           <span>{{ t('page.params.preserveModifyTime') }}</span>
         </label>
-        <label class="checkbox-label">
+        <label class="checkbox-label timestamp-checkbox">
           <input type="checkbox" v-model="localPreset.output.naming.preserveAccessTime" @change="onChange" />
           <span>{{ t('page.params.preserveAccessTime') }}</span>
         </label>
@@ -189,7 +197,7 @@ async function selectDirectory() {
   margin-bottom: 0;
 }
 
-.form-group label {
+.form-group > label {
   display: block;
   margin-bottom: 6px;
   font-size: 12px;
@@ -240,6 +248,19 @@ async function selectDirectory() {
   cursor: pointer;
   font-size: 13px;
   color: var(--text-color1, #c0c0c0);
+}
+
+.timestamp-checkbox input[type="checkbox"] {
+  -webkit-appearance: checkbox;
+  appearance: checkbox;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  accent-color: var(--info-color, #3498db);
 }
 
 

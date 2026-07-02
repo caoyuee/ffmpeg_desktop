@@ -6,6 +6,7 @@ import { TaskStatus } from '@/types/task'
 
 const eventHandlers = vi.hoisted(() => new Map<string, (event: { payload: unknown }) => void>())
 const mockInvoke = vi.hoisted(() => vi.fn())
+const mockOpenPath = vi.hoisted(() => vi.fn())
 
 vi.mock('@tauri-apps/api/core', () => ({
   invoke: mockInvoke,
@@ -18,11 +19,17 @@ vi.mock('@tauri-apps/api/event', () => ({
   }),
 }))
 
+vi.mock('@tauri-apps/plugin-opener', () => ({
+  openPath: mockOpenPath,
+}))
+
 describe('taskStore', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
     eventHandlers.clear()
     mockInvoke.mockReset()
+    mockOpenPath.mockReset()
+    localStorage.clear()
   })
 
   it('should add a task and auto-start it', async () => {
@@ -190,5 +197,79 @@ describe('taskStore', () => {
       preserveModification: true,
       preserveAccess: false,
     })
+  })
+
+  it('should initialize max concurrent tasks from app settings', () => {
+    localStorage.setItem('appSettings', JSON.stringify({ maxConcurrentTasks: 3 }))
+
+    const store = useTaskStore()
+
+    expect(store.maxConcurrent).toBe(3)
+  })
+
+  it('should respect disabled task sound setting on finish', async () => {
+    localStorage.setItem('appSettings', JSON.stringify({ playSound: false }))
+    const audioContext = vi.fn()
+    vi.stubGlobal('AudioContext', audioContext)
+    const store = useTaskStore()
+    mockInvoke.mockResolvedValue(1234)
+    await store.setupEventListeners()
+
+    const id = await store.addTask({
+      inputFile: 'test.mp4',
+      outputFile: 'output.mp4',
+      commandLine: 'ffmpeg -i test.mp4 output.mp4',
+      presetId: '',
+    })
+
+    const finishHandler = eventHandlers.get('ffmpeg-finish')
+    expect(finishHandler).toBeDefined()
+
+    await finishHandler!({ payload: { taskId: id, exitCode: 0 } })
+
+    expect(audioContext).not.toHaveBeenCalled()
+    vi.unstubAllGlobals()
+  })
+
+  it('should skip failed output deletion when settings disable it', async () => {
+    localStorage.setItem('appSettings', JSON.stringify({ failedOutputDeleteMode: 'never' }))
+    const store = useTaskStore()
+    mockInvoke.mockResolvedValue(1234)
+    await store.setupEventListeners()
+
+    const id = await store.addTask({
+      inputFile: 'test.mp4',
+      outputFile: 'output.mp4',
+      commandLine: 'ffmpeg -i test.mp4 output.mp4',
+      presetId: '',
+    })
+
+    const errorHandler = eventHandlers.get('ffmpeg-error')
+    expect(errorHandler).toBeDefined()
+
+    await errorHandler!({ payload: { taskId: id, message: 'failed', exitCode: 1 } })
+
+    expect(invoke).not.toHaveBeenCalledWith('delete_file', expect.anything())
+  })
+
+  it('should open output folder after a successful task when enabled', async () => {
+    localStorage.setItem('appSettings', JSON.stringify({ autoOpenOutputFolder: true }))
+    const store = useTaskStore()
+    mockInvoke.mockResolvedValue(1234)
+    await store.setupEventListeners()
+
+    const id = await store.addTask({
+      inputFile: '/videos/source.mp4',
+      outputFile: '/exports/output.mp4',
+      commandLine: 'ffmpeg -i source.mp4 output.mp4',
+      presetId: '',
+    })
+
+    const finishHandler = eventHandlers.get('ffmpeg-finish')
+    expect(finishHandler).toBeDefined()
+
+    await finishHandler!({ payload: { taskId: id, exitCode: 0 } })
+
+    expect(mockOpenPath).toHaveBeenCalledWith('/exports')
   })
 })

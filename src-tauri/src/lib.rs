@@ -510,6 +510,7 @@ fn get_ffmpeg_processes() -> Vec<serde_json::Value> {
         .map(|(pid, process)| {
             serde_json::json!({
                 "pid": pid.as_u32(),
+                "name": process.name().to_string_lossy(),
                 "cpu": process.cpu_usage() as f64,
                 "memory": process.memory()
             })
@@ -589,7 +590,6 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_pinia::init())
         .setup(|app| {
-            modules::menus::setup_menus(app.handle())?;
             modules::tray::setup_tray(app.handle())?;
 
             let window = app.get_webview_window("main").unwrap();

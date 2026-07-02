@@ -62,7 +62,7 @@
         @dragover.prevent
         @drop.prevent="onDrop"
       >
-        <div class="preview-wrapper" v-if="previewImage" ref="previewWrapper">
+        <div class="preview-wrapper" v-if="previewImage" :style="previewStyle">
           <canvas 
             ref="previewCanvas"
             @mousedown="onMouseDown"
@@ -80,10 +80,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onUnmounted, nextTick } from 'vue';
+import { computed, nextTick, onUnmounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
+import { calculateContainSize } from '@/utils/cropPreview';
 
 interface Props {
   modelValue: boolean;
@@ -112,9 +113,10 @@ const centerCrop = ref(false);
 
 const previewCanvas = ref<HTMLCanvasElement | null>(null);
 const previewContainer = ref<HTMLDivElement | null>(null);
-const previewWrapper = ref<HTMLDivElement | null>(null);
 const leftTopMagnifier = ref<HTMLCanvasElement | null>(null);
 const rightBottomMagnifier = ref<HTMLCanvasElement | null>(null);
+const previewContainerSize = ref({ width: 0, height: 0 });
+let previewResizeObserver: ResizeObserver | null = null;
 
 let cropRect = { x: 0, y: 0, width: 200, height: 100 };
 let isDraggingLeftTop = false;
@@ -135,13 +137,56 @@ function parseAspectRatio(ratioStr: string): number | null {
   return null;
 }
 
+const previewDisplaySize = computed(() => {
+  if (!previewImage.value) {
+    return { width: 0, height: 0 };
+  }
+
+  return calculateContainSize(
+    previewContainerSize.value.width,
+    previewContainerSize.value.height,
+    imageWidth,
+    imageHeight,
+  );
+});
+
+const previewStyle = computed(() => {
+  if (!previewImage.value) {
+    return {};
+  }
+
+  return {
+    width: `${previewDisplaySize.value.width}px`,
+    height: `${previewDisplaySize.value.height}px`,
+  };
+});
+
 watch(() => props.modelValue, (val) => {
   visible.value = val;
-});
+  if (val) {
+    resetSessionState();
+    nextTick(() => {
+      updatePreviewContainerSize();
+      attachPreviewObserver();
+      if (previewImage.value) {
+        drawPreview();
+        updateMagnifiers();
+      }
+    });
+  } else {
+    detachPreviewObserver();
+    isDraggingLeftTop = false;
+    isDraggingRightBottom = false;
+  }
+}, { immediate: true });
 
 watch(visible, (val) => {
   emit('update:modelValue', val);
 });
+
+watch(() => props.initialCrop, (value) => {
+  cropParams.value = value;
+}, { immediate: true });
 
 function close() {
   visible.value = false;
@@ -184,6 +229,7 @@ async function loadVideoFrame(videoPath: string) {
       
       updateCropParams();
       nextTick(() => {
+        updatePreviewContainerSize();
         drawPreview();
         updateMagnifiers();
       });
@@ -200,15 +246,86 @@ function drawPreview() {
   const canvas = previewCanvas.value;
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
-  
-  canvas.width = imageWidth;
-  canvas.height = imageHeight;
-  
-  ctx.drawImage(previewImage.value, 0, 0);
+
+  const displayWidth = Math.max(1, previewDisplaySize.value.width);
+  const displayHeight = Math.max(1, previewDisplaySize.value.height);
+  const scaleX = displayWidth / imageWidth;
+  const scaleY = displayHeight / imageHeight;
+
+  canvas.width = displayWidth;
+  canvas.height = displayHeight;
+
+  ctx.clearRect(0, 0, displayWidth, displayHeight);
+  ctx.drawImage(previewImage.value, 0, 0, displayWidth, displayHeight);
   
   ctx.strokeStyle = 'red';
   ctx.lineWidth = 2;
-  ctx.strokeRect(cropRect.x, cropRect.y, cropRect.width, cropRect.height);
+  ctx.strokeRect(
+    cropRect.x * scaleX,
+    cropRect.y * scaleY,
+    cropRect.width * scaleX,
+    cropRect.height * scaleY,
+  );
+}
+
+function updatePreviewContainerSize() {
+  if (!previewContainer.value) return;
+
+  const rect = previewContainer.value.getBoundingClientRect();
+  previewContainerSize.value = {
+    width: Math.floor(rect.width),
+    height: Math.floor(rect.height),
+  };
+}
+
+function attachPreviewObserver() {
+  if (!previewContainer.value || previewResizeObserver) return;
+
+  try {
+    previewResizeObserver = new ResizeObserver(() => {
+      updatePreviewContainerSize();
+      if (previewImage.value) {
+        drawPreview();
+        updateMagnifiers();
+      }
+    });
+    previewResizeObserver.observe(previewContainer.value);
+  } catch {
+    previewResizeObserver = null;
+  }
+}
+
+function detachPreviewObserver() {
+  previewResizeObserver?.disconnect();
+  previewResizeObserver = null;
+}
+
+function resetSessionState() {
+  previewImage.value = null;
+  previewContainerSize.value = { width: 0, height: 0 };
+  cropParams.value = props.initialCrop;
+  timestamp.value = '';
+  aspectRatio.value = '0';
+  centerCrop.value = false;
+  imageWidth = 0;
+  imageHeight = 0;
+  cropRect = { x: 0, y: 0, width: 200, height: 100 };
+}
+
+function getCanvasScale() {
+  if (!previewCanvas.value) {
+    return { scaleX: 1, scaleY: 1 };
+  }
+
+  const rect = previewCanvas.value.getBoundingClientRect();
+  if (rect.width <= 0 || rect.height <= 0) {
+    return { scaleX: 1, scaleY: 1 };
+  }
+
+  return {
+    scaleX: imageWidth / rect.width,
+    scaleY: imageHeight / rect.height,
+  };
 }
 
 function updateMagnifiers() {
@@ -266,9 +383,10 @@ function onMouseMove(event: MouseEvent) {
   
   const rect = previewCanvas.value?.getBoundingClientRect();
   if (!rect) return;
+  const { scaleX, scaleY } = getCanvasScale();
   
-  const x = Math.floor((event.clientX - rect.left) * (imageWidth / rect.width));
-  const y = Math.floor((event.clientY - rect.top) * (imageHeight / rect.height));
+  const x = Math.floor((event.clientX - rect.left) * scaleX);
+  const y = Math.floor((event.clientY - rect.top) * scaleY);
   
   if (isDraggingLeftTop) {
     handleLeftTopDrag(x, y);
@@ -382,9 +500,7 @@ async function onDrop(event: DragEvent) {
 }
 
 onUnmounted(() => {
-  if (previewImage.value) {
-    previewImage.value = null;
-  }
+  detachPreviewObserver();
 });
 </script>
 
@@ -548,21 +664,24 @@ onUnmounted(() => {
 
 .preview-container {
   flex: 1;
-  overflow: auto;
+  overflow: hidden;
   background: var(--bg-color4, #303030);
   display: flex;
-  align-items: flex-start;
-  justify-content: flex-start;
+  align-items: center;
+  justify-content: center;
 }
 
 .preview-wrapper {
   padding: 1px;
   background: var(--active-color, #9acd32);
+  flex: none;
 }
 
 .preview-wrapper canvas {
   display: block;
   cursor: crosshair;
+  width: 100%;
+  height: 100%;
 }
 
 .drop-hint {

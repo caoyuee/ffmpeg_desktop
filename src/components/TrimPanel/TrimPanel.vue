@@ -47,10 +47,9 @@
     </div>
 
     <CropDialog
-      :visible="showCropDialog"
-      :modelValue="false"
-      @update:visible="showCropDialog = $event"
-      @crop-updated="onCropUpdated"
+      v-model="showCropDialog"
+      :initialCrop="localPreset.video.resolution.cropFilter"
+      @confirm="onCropUpdated"
     />
   </div>
 </template>

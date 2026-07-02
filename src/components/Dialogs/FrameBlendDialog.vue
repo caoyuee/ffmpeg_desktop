@@ -19,9 +19,13 @@
                 type="text" 
                 class="text-input" 
                 v-model="settings.frameRate"
+                inputmode="decimal"
+                :class="{ invalid: validationErrors.frameRate }"
+                @input="onNumericInput('frameRate')"
                 :placeholder="t('dialog.frameBlend.frameRatePlaceholder')"
               />
               <span class="hint">{{ t('dialog.frameBlend.optional') }}</span>
+              <span v-if="validationErrors.frameRate" class="validation-error">{{ t('validation.invalidNumber') }}</span>
             </div>
           </div>
           
@@ -49,16 +53,20 @@
                 type="text" 
                 class="text-input" 
                 v-model="settings.ratio"
+                inputmode="decimal"
+                :class="{ invalid: validationErrors.ratio }"
+                @input="onNumericInput('ratio')"
                 :placeholder="t('dialog.frameBlend.ratioPlaceholder')"
               />
               <span class="hint">{{ t('dialog.frameBlend.mayNotWork') }}</span>
+              <span v-if="validationErrors.ratio" class="validation-error">{{ t('validation.invalidNumber') }}</span>
             </div>
           </div>
         </div>
         
         <div class="dialog-footer">
           <button class="btn btn-cancel" @click="close">{{ t('common.cancel') }}</button>
-          <button class="btn btn-confirm" @click="confirm">{{ t('common.ok') }}</button>
+          <button class="btn btn-confirm" :disabled="hasValidationErrors" @click="confirm">{{ t('common.ok') }}</button>
         </div>
       </div>
     </div>
@@ -66,8 +74,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { isNonNegativeDecimal, isPositiveDecimal } from '@/utils/numericValidation';
 
 interface FrameBlendSettings {
   frameRate: string;
@@ -92,9 +101,18 @@ const settings = ref<FrameBlendSettings>({
   blendMode: '',
   ratio: '',
 });
+const validationErrors = ref({
+  frameRate: false,
+  ratio: false,
+});
+const hasValidationErrors = computed(() => Object.values(validationErrors.value).some(Boolean));
 
 watch(() => props.modelValue, (newVal) => {
   settings.value = { ...newVal };
+  validationErrors.value = {
+    frameRate: false,
+    ratio: false,
+  };
 }, { immediate: true });
 
 function close() {
@@ -102,8 +120,20 @@ function close() {
 }
 
 function confirm() {
+  if (hasValidationErrors.value) return;
   emit('update:modelValue', { ...settings.value });
   close();
+}
+
+function onNumericInput(field: keyof typeof validationErrors.value) {
+  const value = settings.value[field];
+  validationErrors.value[field] = field === 'ratio'
+    ? !isNonNegativeDecimal(value)
+    : !isPositiveDecimal(value);
+
+  if (!validationErrors.value[field]) {
+    emit('update:modelValue', { ...settings.value });
+  }
 }
 
 function getFFmpegFilter(): string {
@@ -191,12 +221,15 @@ defineExpose({
 
 .form-row {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   margin-bottom: 15px;
 }
 
 .row-label {
   width: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: var(--bg-color4, #303030);
   color: var(--text-color1, #c0c0c0);
   font-size: 14px;
@@ -228,6 +261,10 @@ defineExpose({
   max-width: 175px;
 }
 
+.text-input.invalid {
+  border-color: var(--error-color, #e74c3c);
+}
+
 .text-input::placeholder {
   color: var(--text-color3, #555);
 }
@@ -247,6 +284,11 @@ defineExpose({
 
 .hint {
   color: var(--text-color3, #666);
+  font-size: 12px;
+}
+
+.validation-error {
+  color: var(--error-color, #e74c3c);
   font-size: 12px;
 }
 

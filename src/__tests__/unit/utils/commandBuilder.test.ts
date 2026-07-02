@@ -277,4 +277,24 @@ describe('FFmpegCommandBuilder', () => {
       expect(cmd).toContain('-hwaccel_device 0')
     })
   })
+
+  describe('frame server params', () => {
+    it('should use VapourSynth script as a vapoursynth input', () => {
+      const preset = makePreset({
+        video: {
+          ...DEFAULT_PRESET.video,
+          frameServer: {
+            ...DEFAULT_PRESET.video.frameServer,
+            useVapourSynth: true,
+            vpyScript: '/scripts/source.vpy',
+          },
+        },
+      })
+
+      const cmd = FFmpegCommandBuilder.build(preset, 'in.mp4', 'out.mp4')
+
+      expect(cmd).toContain('-f vapoursynth -i "/scripts/source.vpy"')
+      expect(cmd).not.toContain('-i "in.mp4"')
+    })
+  })
 })

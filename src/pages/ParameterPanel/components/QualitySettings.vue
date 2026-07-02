@@ -28,7 +28,16 @@
 
       <div v-if="localPreset.video.bitrateControl.mode !== 'CRF' && localPreset.video.bitrateControl.mode !== 'CQP'" class="form-group">
         <label>{{ t('page.params.baseBitrateKbps') }}</label>
-        <input type="text" v-model="localPreset.video.bitrateControl.baseBitrate" @input="onChange" :placeholder="t('page.params.baseBitratePlaceholder')" />
+        <input
+          type="text"
+          v-model="localPreset.video.bitrateControl.baseBitrate"
+          inputmode="numeric"
+          pattern="[1-9][0-9]*"
+          :class="{ invalid: validationErrors.baseBitrate }"
+          @input="onIntegerInput('baseBitrate')"
+          :placeholder="t('page.params.baseBitratePlaceholder')"
+        />
+        <div v-if="validationErrors.baseBitrate" class="validation-error">{{ t('validation.positiveInteger') }}</div>
       </div>
     </div>
 
@@ -37,17 +46,44 @@
       <div class="form-row">
         <div class="form-group half">
           <label>{{ t('page.params.minBitrateKbps') }}</label>
-          <input type="text" v-model="localPreset.video.bitrateControl.minBitrate" @input="onChange" :placeholder="t('page.params.optionalPlaceholder')" />
+          <input
+            type="text"
+            v-model="localPreset.video.bitrateControl.minBitrate"
+            inputmode="numeric"
+            pattern="[1-9][0-9]*"
+            :class="{ invalid: validationErrors.minBitrate }"
+            @input="onIntegerInput('minBitrate')"
+            :placeholder="t('page.params.optionalPlaceholder')"
+          />
+          <div v-if="validationErrors.minBitrate" class="validation-error">{{ t('validation.positiveInteger') }}</div>
         </div>
         <div class="form-group half">
           <label>{{ t('page.params.maxBitrateKbps') }}</label>
-          <input type="text" v-model="localPreset.video.bitrateControl.maxBitrate" @input="onChange" :placeholder="t('page.params.optionalPlaceholder')" />
+          <input
+            type="text"
+            v-model="localPreset.video.bitrateControl.maxBitrate"
+            inputmode="numeric"
+            pattern="[1-9][0-9]*"
+            :class="{ invalid: validationErrors.maxBitrate }"
+            @input="onIntegerInput('maxBitrate')"
+            :placeholder="t('page.params.optionalPlaceholder')"
+          />
+          <div v-if="validationErrors.maxBitrate" class="validation-error">{{ t('validation.positiveInteger') }}</div>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group half">
           <label>{{ t('page.params.bufferSizeKbps') }}</label>
-          <input type="text" v-model="localPreset.video.bitrateControl.bufferSize" @input="onChange" :placeholder="t('page.params.optionalPlaceholder')" />
+          <input
+            type="text"
+            v-model="localPreset.video.bitrateControl.bufferSize"
+            inputmode="numeric"
+            pattern="[1-9][0-9]*"
+            :class="{ invalid: validationErrors.bufferSize }"
+            @input="onIntegerInput('bufferSize')"
+            :placeholder="t('page.params.optionalPlaceholder')"
+          />
+          <div v-if="validationErrors.bufferSize" class="validation-error">{{ t('validation.positiveInteger') }}</div>
         </div>
       </div>
     </div>
@@ -58,6 +94,7 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
+import { isPositiveInteger } from '@/utils/numericValidation';
 
 const props = defineProps<{
   preset: PresetData;
@@ -74,10 +111,22 @@ const qualityValueNum = computed({
   get: () => parseInt(localPreset.value.video.bitrateControl.qualityValue) || 23,
   set: () => {}
 });
+const validationErrors = ref({
+  baseBitrate: false,
+  minBitrate: false,
+  maxBitrate: false,
+  bufferSize: false,
+});
 
 watch(() => props.preset, (newVal) => {
   if (newVal) {
     localPreset.value = { ...newVal };
+    validationErrors.value = {
+      baseBitrate: false,
+      minBitrate: false,
+      maxBitrate: false,
+      bufferSize: false,
+    };
   }
 }, { deep: true });
 
@@ -102,6 +151,14 @@ function onModeChange() {
     localPreset.value.video.bitrateControl.qualityParam = '';
   }
   onChange();
+}
+
+function onIntegerInput(field: keyof typeof validationErrors.value) {
+  const value = localPreset.value.video.bitrateControl[field];
+  validationErrors.value[field] = !isPositiveInteger(value);
+  if (!validationErrors.value[field]) {
+    onChange();
+  }
 }
 
 function onChange() {
@@ -155,6 +212,16 @@ function onChange() {
   color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   box-sizing: border-box;
+}
+
+.form-group input.invalid {
+  border-color: var(--error-color, #e74c3c);
+}
+
+.validation-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--error-color, #e74c3c);
 }
 
 .slider-group {

@@ -93,15 +93,39 @@
       <div class="form-row">
         <div class="form-group third">
           <label>{{ t('page.params.targetLoudness') }}</label>
-          <input type="text" v-model="localPreset.audio.loudnorm.targetLoudness" @input="onChange" placeholder="-16" />
+          <input
+            type="text"
+            v-model="localPreset.audio.loudnorm.targetLoudness"
+            inputmode="decimal"
+            :class="{ invalid: validationErrors.targetLoudness }"
+            @input="onLoudnormInput('targetLoudness')"
+            placeholder="-16"
+          />
+          <div v-if="validationErrors.targetLoudness" class="validation-error">{{ t('validation.invalidNumber') }}</div>
         </div>
         <div class="form-group third">
           <label>{{ t('page.params.dynamicRange') }}</label>
-          <input type="text" v-model="localPreset.audio.loudnorm.dynamicRange" @input="onChange" placeholder="11" />
+          <input
+            type="text"
+            v-model="localPreset.audio.loudnorm.dynamicRange"
+            inputmode="decimal"
+            :class="{ invalid: validationErrors.dynamicRange }"
+            @input="onLoudnormInput('dynamicRange')"
+            placeholder="11"
+          />
+          <div v-if="validationErrors.dynamicRange" class="validation-error">{{ t('validation.invalidNumber') }}</div>
         </div>
         <div class="form-group third">
           <label>{{ t('page.params.peakLevel') }}</label>
-          <input type="text" v-model="localPreset.audio.loudnorm.peakLevel" @input="onChange" placeholder="-1.5" />
+          <input
+            type="text"
+            v-model="localPreset.audio.loudnorm.peakLevel"
+            inputmode="decimal"
+            :class="{ invalid: validationErrors.peakLevel }"
+            @input="onLoudnormInput('peakLevel')"
+            placeholder="-1.5"
+          />
+          <div v-if="validationErrors.peakLevel" class="validation-error">{{ t('validation.invalidNumber') }}</div>
         </div>
       </div>
     </div>
@@ -112,6 +136,7 @@
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
+import { isNonNegativeDecimal, isSignedDecimal } from '@/utils/numericValidation';
 
 const props = defineProps<{
   preset: PresetData;
@@ -128,10 +153,20 @@ const qualityValueNum = computed({
   get: () => parseInt(localPreset.value.audio.qualityValue) || 2,
   set: () => {}
 });
+const validationErrors = ref({
+  targetLoudness: false,
+  dynamicRange: false,
+  peakLevel: false,
+});
 
 watch(() => props.preset, (newVal) => {
   if (newVal) {
     localPreset.value = { ...newVal };
+    validationErrors.value = {
+      targetLoudness: false,
+      dynamicRange: false,
+      peakLevel: false,
+    };
   }
 }, { deep: true });
 
@@ -139,6 +174,19 @@ function onQualityValueChange(event: Event) {
   const target = event.target as HTMLInputElement;
   localPreset.value.audio.qualityValue = target.value;
   onChange();
+}
+
+function onLoudnormInput(field: keyof typeof validationErrors.value) {
+  const value = localPreset.value.audio.loudnorm[field];
+  if (field === 'targetLoudness' || field === 'peakLevel') {
+    validationErrors.value[field] = !isSignedDecimal(value);
+  } else {
+    validationErrors.value[field] = !isNonNegativeDecimal(value);
+  }
+
+  if (!validationErrors.value[field]) {
+    onChange();
+  }
 }
 
 function onChange() {
@@ -192,6 +240,16 @@ function onChange() {
   color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   box-sizing: border-box;
+}
+
+.form-group input.invalid {
+  border-color: var(--error-color, #e74c3c);
+}
+
+.validation-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--error-color, #e74c3c);
 }
 
 .slider-group {

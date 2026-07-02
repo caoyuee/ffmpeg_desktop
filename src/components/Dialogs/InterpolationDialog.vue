@@ -19,9 +19,13 @@
                 type="text" 
                 class="text-input" 
                 v-model="settings.targetFps"
+                inputmode="decimal"
+                :class="{ invalid: validationErrors.targetFps }"
+                @input="onNumericInput('targetFps')"
                 :placeholder="t('dialog.interpolation.targetFrameRatePlaceholder')"
               />
               <span class="hint">{{ t('dialog.interpolation.cancelFilterHint') }}</span>
+              <span v-if="validationErrors.targetFps" class="validation-error">{{ t('validation.invalidNumber') }}</span>
             </div>
           </div>
           
@@ -76,6 +80,9 @@
                   type="text" 
                   class="text-input small" 
                   v-model="settings.blockSize"
+                  inputmode="numeric"
+                  :class="{ invalid: validationErrors.blockSize }"
+                  @input="onNumericInput('blockSize')"
                   :placeholder="t('dialog.interpolation.default16')"
                 />
                 <span class="input-label">{{ t('dialog.interpolation.blockSize') }}</span>
@@ -83,9 +90,13 @@
                   type="text" 
                   class="text-input small" 
                   v-model="settings.searchRange"
+                  inputmode="numeric"
+                  :class="{ invalid: validationErrors.searchRange }"
+                  @input="onNumericInput('searchRange')"
                   :placeholder="t('dialog.interpolation.default32')"
                 />
                 <span class="input-label">{{ t('dialog.interpolation.searchRangePixels') }}</span>
+                <span v-if="validationErrors.blockSize || validationErrors.searchRange" class="validation-error">{{ t('validation.positiveInteger') }}</span>
               </div>
             </div>
           </div>
@@ -97,16 +108,20 @@
                 type="text" 
                 class="text-input" 
                 v-model="settings.scThreshold"
+                inputmode="decimal"
+                :class="{ invalid: validationErrors.scThreshold }"
+                @input="onNumericInput('scThreshold')"
                 :placeholder="t('dialog.interpolation.default10')"
               />
               <span class="hint">{{ t('dialog.interpolation.cancelParamHint') }}</span>
+              <span v-if="validationErrors.scThreshold" class="validation-error">{{ t('validation.invalidNumber') }}</span>
             </div>
           </div>
         </div>
         
         <div class="dialog-footer">
           <button class="btn btn-cancel" @click="close">{{ t('common.cancel') }}</button>
-          <button class="btn btn-confirm" @click="confirm">{{ t('common.ok') }}</button>
+          <button class="btn btn-confirm" :disabled="hasValidationErrors" @click="confirm">{{ t('common.ok') }}</button>
         </div>
       </div>
     </div>
@@ -114,8 +129,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { isPositiveDecimal, isPositiveInteger } from '@/utils/numericValidation';
 
 interface InterpolationSettings {
   targetFps: string;
@@ -152,9 +168,22 @@ const settings = ref<InterpolationSettings>({
   searchRange: '',
   scThreshold: '',
 });
+const validationErrors = ref({
+  targetFps: false,
+  blockSize: false,
+  searchRange: false,
+  scThreshold: false,
+});
+const hasValidationErrors = computed(() => Object.values(validationErrors.value).some(Boolean));
 
 watch(() => props.modelValue, (newVal) => {
   settings.value = { ...newVal };
+  validationErrors.value = {
+    targetFps: false,
+    blockSize: false,
+    searchRange: false,
+    scThreshold: false,
+  };
 }, { immediate: true });
 
 function close() {
@@ -162,8 +191,23 @@ function close() {
 }
 
 function confirm() {
+  if (hasValidationErrors.value) return;
   emit('update:modelValue', { ...settings.value });
   close();
+}
+
+function onNumericInput(field: keyof typeof validationErrors.value) {
+  const value = settings.value[field];
+
+  if (field === 'blockSize' || field === 'searchRange') {
+    validationErrors.value[field] = !isPositiveInteger(value);
+  } else {
+    validationErrors.value[field] = !isPositiveDecimal(value);
+  }
+
+  if (!validationErrors.value[field]) {
+    emit('update:modelValue', { ...settings.value });
+  }
 }
 
 function getFFmpegFilter(): string {
@@ -318,6 +362,10 @@ defineExpose({
   max-width: 175px;
 }
 
+.text-input.invalid {
+  border-color: var(--error-color, #e74c3c);
+}
+
 .text-input.small {
   max-width: 83px;
 }
@@ -350,6 +398,11 @@ defineExpose({
   font-size: 12px;
 }
 
+.validation-error {
+  color: var(--error-color, #e74c3c);
+  font-size: 12px;
+}
+
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -360,9 +413,16 @@ defineExpose({
 }
 
 .checkbox-label input[type="checkbox"] {
+  -webkit-appearance: checkbox;
+  appearance: checkbox;
   width: 16px;
   height: 16px;
+  min-width: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
   cursor: pointer;
+  accent-color: var(--info-color, #3498db);
 }
 
 .dialog-footer {

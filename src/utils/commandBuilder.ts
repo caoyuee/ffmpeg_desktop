@@ -80,6 +80,8 @@ export class FFmpegCommandBuilder {
 
     if (preset.video.frameServer.useAviSynth && preset.video.frameServer.avsScript) {
       parts.push(`-i "${preset.video.frameServer.avsScript}"`);
+    } else if (preset.video.frameServer.useVapourSynth && preset.video.frameServer.vpyScript) {
+      parts.push(`-f vapoursynth -i "${preset.video.frameServer.vpyScript}"`);
     } else if (!trimParams.includes(`-i "$INPUT"`)) {
       parts.push(`-i "${inputFile}"`);
     }

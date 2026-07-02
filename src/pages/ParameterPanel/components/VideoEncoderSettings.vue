@@ -52,11 +52,29 @@
       <div class="form-row">
         <div class="form-group half">
           <label>{{ t('page.params.gpuAcceleration') }}</label>
-          <input type="text" v-model="localPreset.video.encoder.gpu" @input="onChange" :placeholder="t('page.params.gpuPlaceholder')" />
+          <input
+            type="text"
+            v-model="localPreset.video.encoder.gpu"
+            inputmode="numeric"
+            pattern="[1-9][0-9]*"
+            :class="{ invalid: validationErrors.gpu }"
+            @input="onPositiveIntegerInput('gpu')"
+            :placeholder="t('page.params.gpuPlaceholder')"
+          />
+          <div v-if="validationErrors.gpu" class="validation-error">{{ t('validation.positiveInteger') }}</div>
         </div>
         <div class="form-group half">
           <label>{{ t('page.params.threads') }}</label>
-          <input type="text" v-model="localPreset.video.encoder.threads" @input="onChange" :placeholder="t('page.params.threadsPlaceholder')" />
+          <input
+            type="text"
+            v-model="localPreset.video.encoder.threads"
+            inputmode="numeric"
+            pattern="[1-9][0-9]*"
+            :class="{ invalid: validationErrors.threads }"
+            @input="onPositiveIntegerInput('threads')"
+            :placeholder="t('page.params.threadsPlaceholder')"
+          />
+          <div v-if="validationErrors.threads" class="validation-error">{{ t('validation.positiveInteger') }}</div>
         </div>
       </div>
     </div>
@@ -79,6 +97,10 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const localPreset = ref<PresetData>({ ...props.preset });
+const validationErrors = ref({
+  gpu: false,
+  threads: false,
+});
 
 const encoderOptions: Record<string, { value: string; label: string }[]> = {
   h264: [
@@ -172,6 +194,18 @@ function onCodecChange() {
   onChange();
 }
 
+function isPositiveInteger(value: string) {
+  return value === '' || /^[1-9]\d*$/.test(value);
+}
+
+function onPositiveIntegerInput(field: 'gpu' | 'threads') {
+  const value = localPreset.value.video.encoder[field];
+  validationErrors.value[field] = !isPositiveInteger(value);
+  if (!validationErrors.value[field]) {
+    onChange();
+  }
+}
+
 function onChange() {
   emit('update:preset', localPreset.value);
 }
@@ -215,6 +249,16 @@ function onChange() {
   color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   box-sizing: border-box;
+}
+
+.form-group input.invalid {
+  border-color: var(--error-color, #e74c3c);
+}
+
+.validation-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--error-color, #e74c3c);
 }
 
 .form-row {

@@ -37,8 +37,8 @@
           <label>{{ t('page.params.colorPanel.gamma') }}</label>
           <div class="slider-group">
             <input type="range" min="0.1" max="10" step="0.1"
-              v-model="localPreset.video.colorManagement.gamma" @input="onColorChange" />
-            <span class="param-value">{{ localPreset.video.colorManagement.gamma || '1' }}</span>
+              :value="gammaSliderValue" @input="onGammaInput" />
+            <span class="param-value">{{ gammaSliderValue }}</span>
           </div>
         </div>
 
@@ -145,7 +145,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue';
+import { computed, ref, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 
@@ -168,6 +168,8 @@ const expandedSections = reactive({
   tonemap: false,
 });
 
+const gammaSliderValue = computed(() => localPreset.value.video.colorManagement.gamma || '1');
+
 watch(() => props.preset, (newVal) => {
   localPreset.value = { ...newVal };
 }, { deep: true });
@@ -178,6 +180,12 @@ function toggleSection(section: keyof typeof expandedSections) {
 
 function onColorChange() {
   emit('update:preset', localPreset.value);
+}
+
+function onGammaInput(event: Event) {
+  const input = event.target as HTMLInputElement;
+  localPreset.value.video.colorManagement.gamma = input.value;
+  onColorChange();
 }
 
 function resetBasic() {

@@ -35,4 +35,21 @@ describe('ColorPanel', () => {
     expect(wrapper.text()).toContain('Color Space')
     expect(wrapper.text()).toContain('Tone Mapping')
   })
+
+  it('positions gamma slider at 1 when gamma is unset', () => {
+    const wrapper = mountWithLocale('en-US')
+    const gammaInput = wrapper.findAll('input[type="range"]')[3]
+
+    expect(gammaInput.element.value).toBe('1')
+  })
+
+  it('updates preset gamma when gamma slider changes', async () => {
+    const wrapper = mountWithLocale('en-US')
+    const gammaInput = wrapper.findAll('input[type="range"]')[3]
+
+    await gammaInput.setValue('2')
+
+    const emittedPreset = wrapper.emitted('update:preset')?.[0]?.[0]
+    expect(emittedPreset.video.colorManagement.gamma).toBe('2')
+  })
 })

@@ -288,9 +288,16 @@ function onStreamChange() {
 }
 
 .checkbox-label input[type="checkbox"] {
+  -webkit-appearance: checkbox;
+  appearance: checkbox;
   width: 16px;
   height: 16px;
+  min-width: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
   cursor: pointer;
+  accent-color: var(--info-color, #3498db);
 }
 
 .form-row {

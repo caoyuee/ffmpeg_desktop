@@ -1,4 +1,6 @@
 import { describe, expect, it } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { mount } from '@vue/test-utils'
 import { createI18n } from 'vue-i18n'
 import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue'
@@ -42,5 +44,17 @@ describe('FrameBlendDialog', () => {
     expect(text).toContain('OK')
 
     wrapper.unmount()
+  })
+
+  it('stretches the row label to match the row content height', () => {
+    const dialogCss = readFileSync(
+      resolve(process.cwd(), 'src/components/Dialogs/FrameBlendDialog.vue'),
+      'utf-8',
+    )
+
+    expect(dialogCss).toContain('.form-row {')
+    expect(dialogCss).toContain('align-items: stretch;')
+    expect(dialogCss).toContain('.row-label {')
+    expect(dialogCss).toContain('display: flex;')
   })
 })

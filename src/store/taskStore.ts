@@ -4,6 +4,7 @@ import type { Task, TaskProgress } from "@/types/task";
 import { TaskStatus } from "@/types/task";
 import { invoke } from "@tauri-apps/api/core";
 import { listen, UnlistenFn } from "@tauri-apps/api/event";
+import { loadAppSettings, type AppSettings } from "@/utils/appSettings";
 
 type ErrorType = "network" | "permission" | "not_found" | "invalid_input" | "process" | "unknown";
 
@@ -18,7 +19,9 @@ function formatError(error: unknown): string {
 }
 
 let audioCtx: AudioContext | null = null;
-function playNotification(frequency: number, duration: number) {
+function playNotification(settings: AppSettings, frequency: number, duration: number) {
+  if (!settings.playSound) return;
+
   try {
     if (!audioCtx) audioCtx = new AudioContext();
     const osc = audioCtx.createOscillator();
@@ -54,9 +57,42 @@ function classifyError(error: unknown): ErrorType {
   return "unknown";
 }
 
+function shouldDeleteFailedOutput(settings: AppSettings, inputFile: string, outputFile: string): boolean {
+  if (!outputFile || outputFile.trim().toLowerCase() === inputFile.trim().toLowerCase()) {
+    return false;
+  }
+
+  if (settings.failedOutputDeleteMode === "never") {
+    return false;
+  }
+
+  if (settings.failedOutputDeleteMode === "mp4") {
+    return outputFile.trim().toLowerCase().endsWith(".mp4");
+  }
+
+  return true;
+}
+
+function getDirectoryPath(filePath: string): string {
+  const lastSlash = Math.max(filePath.lastIndexOf("/"), filePath.lastIndexOf("\\"));
+  if (lastSlash <= 0) return ".";
+  return filePath.slice(0, lastSlash);
+}
+
+async function openOutputFolder(settings: AppSettings, outputFile: string) {
+  if (!settings.autoOpenOutputFolder || !outputFile) return;
+
+  try {
+    const { openPath } = await import("@tauri-apps/plugin-opener");
+    await openPath(getDirectoryPath(outputFile));
+  } catch {
+    // Opening the folder is a convenience action; the completed task should stay completed.
+  }
+}
+
 export const useTaskStore = defineStore("tasks", () => {
   const tasks = ref<Task[]>([]);
-  const maxConcurrent = ref(1);
+  const maxConcurrent = ref(loadAppSettings().maxConcurrentTasks);
   const runningCount = ref(0);
   const currentTaskId = ref<string | null>(null);
   let isStarting = false;
@@ -271,7 +307,9 @@ export const useTaskStore = defineStore("tasks", () => {
               });
             } catch { /* ignore */ }
           }
-          playNotification(800, 0.15);
+          const appSettings = loadAppSettings();
+          await openOutputFolder(appSettings, task.outputFile);
+          playNotification(appSettings, 800, 0.15);
 
           tryStartNext();
         }
@@ -297,10 +335,10 @@ export const useTaskStore = defineStore("tasks", () => {
           addTaskLog(taskId, task.error, true);
           runningCount.value--;
 
-          if (task.outputFile) {
+          if (shouldDeleteFailedOutput(loadAppSettings(), task.inputFile, task.outputFile)) {
             try { await invoke("delete_file", { path: task.outputFile }); } catch { /* ignore */ }
           }
-          playNotification(300, 0.3);
+          playNotification(loadAppSettings(), 300, 0.3);
 
           tryStartNext();
         }

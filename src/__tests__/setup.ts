@@ -16,6 +16,7 @@ vi.mock('@tauri-apps/plugin-dialog', () => ({
 
 vi.mock('@tauri-apps/plugin-opener', () => ({
   openUrl: vi.fn(),
+  openPath: vi.fn(),
 }))
 
 global.ResizeObserver = vi.fn().mockImplementation(() => ({

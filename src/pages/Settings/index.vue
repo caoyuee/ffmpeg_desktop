@@ -137,6 +137,15 @@
             <span>{{ t('page.settings.playSound') }}</span>
           </label>
         </div>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.failedOutputDeleteMode') }}</label>
+          <select v-model="settings.failedOutputDeleteMode" @change="saveSettings">
+            <option value="mp4">{{ t('page.settings.failedOutputDeleteMp4') }}</option>
+            <option value="all">{{ t('page.settings.failedOutputDeleteAll') }}</option>
+            <option value="never">{{ t('page.settings.failedOutputDeleteNever') }}</option>
+          </select>
+        </div>
       </div>
 
       <div v-show="activeTab === 'storage'" class="settings-section">
@@ -231,33 +240,17 @@
 import { ref, onMounted, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
-import { setLocale, availableLanguages, type LanguageCode } from '@/i18n';
-import { useSettingStore, type ThemeMode } from '@/store/settingStore';
+import { setLocale, availableLanguages } from '@/i18n';
+import { useSettingStore } from '@/store/settingStore';
+import { useTaskStore } from '@/store/taskStore';
 import { useUpdateChecker } from '@/hooks/useUpdateChecker';
+import { DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings, type AppSettings } from '@/utils/appSettings';
 import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue';
 import Toast from '@/components/Dialogs/Toast.vue';
 
-const { t, locale } = useI18n();
+const { t } = useI18n();
 const settingStore = useSettingStore();
-
-interface AppSettings {
-  language: LanguageCode;
-  theme: ThemeMode;
-  autoCheckUpdate: boolean;
-  minimizeToTray: boolean;
-  closeToTray: boolean;
-  ffmpegPath: string;
-  ffprobePath: string;
-  maxConcurrentTasks: number;
-  taskPriority: string;
-  defaultOutputDir: string;
-  customOutputDir: string;
-  autoOpenOutputFolder: boolean;
-  showNotification: boolean;
-  playSound: boolean;
-  presetDir: string;
-  logRetentionDays: number;
-}
+const taskStore = useTaskStore();
 
 const tabs = [
   { id: 'general', label: computed(() => t('page.settings.general')) },
@@ -268,24 +261,7 @@ const tabs = [
 ];
 
 const activeTab = ref('general');
-const settings = ref<AppSettings>({
-  language: 'zh-CN',
-  theme: 'system',
-  autoCheckUpdate: true,
-  minimizeToTray: false,
-  closeToTray: false,
-  ffmpegPath: '',
-  ffprobePath: '',
-  maxConcurrentTasks: 2,
-  taskPriority: 'normal',
-  defaultOutputDir: 'same',
-  customOutputDir: '',
-  autoOpenOutputFolder: false,
-  showNotification: true,
-  playSound: false,
-  presetDir: '',
-  logRetentionDays: 30,
-});
+const settings = ref<AppSettings>({ ...DEFAULT_APP_SETTINGS });
 
 const ffmpegTestResult = ref<{ success: boolean; message: string } | null>(null);
 
@@ -306,17 +282,11 @@ watch(() => settings.value.language, (newLang) => {
 });
 
 function loadSettings() {
-  settings.value.theme = settingStore.theme as ThemeMode;
-  settings.value.language = settingStore.language as LanguageCode;
-  const saved = localStorage.getItem('appSettings');
-  if (saved) {
-    try {
-      const parsed = JSON.parse(saved);
-      settings.value = { ...settings.value, ...parsed };
-    } catch (e) {
-      console.error('Failed to load settings:', e);
-    }
-  }
+  settings.value = {
+    ...loadAppSettings(),
+    theme: settingStore.theme,
+    language: settingStore.language,
+  };
   invoke('set_tray_settings', {
     minimizeToTray: settings.value.minimizeToTray,
     closeToTray: settings.value.closeToTray,
@@ -324,7 +294,10 @@ function loadSettings() {
 }
 
 function saveSettings() {
-  localStorage.setItem('appSettings', JSON.stringify(settings.value));
+  settings.value.maxConcurrentTasks = Math.min(Math.max(Number(settings.value.maxConcurrentTasks) || 1, 1), 8);
+  settingStore.updateLanguage(settings.value.language);
+  taskStore.maxConcurrent = settings.value.maxConcurrentTasks;
+  saveAppSettings(settings.value);
   invoke('set_tray_settings', {
     minimizeToTray: settings.value.minimizeToTray,
     closeToTray: settings.value.closeToTray,

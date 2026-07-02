@@ -19,15 +19,22 @@
                 type="text" 
                 class="text-input small" 
                 v-model="settings.width"
+                inputmode="numeric"
+                :class="{ invalid: validationErrors.width }"
+                @input="onNumericInput('width')"
                 :placeholder="t('dialog.superResolution.widthPlaceholder')"
               />
               <input 
                 type="text" 
                 class="text-input small" 
                 v-model="settings.height"
+                inputmode="numeric"
+                :class="{ invalid: validationErrors.height }"
+                @input="onNumericInput('height')"
                 :placeholder="t('dialog.superResolution.heightPlaceholder')"
               />
               <span class="hint">{{ t('dialog.superResolution.cancelFilterHint') }}</span>
+              <span v-if="validationErrors.width || validationErrors.height" class="validation-error">{{ t('validation.positiveInteger') }}</span>
             </div>
           </div>
           
@@ -59,9 +66,13 @@
                 type="text" 
                 class="text-input small" 
                 v-model="settings.antiRinging"
+                inputmode="decimal"
+                :class="{ invalid: validationErrors.antiRinging }"
+                @input="onNumericInput('antiRinging')"
                 placeholder=""
               />
               <span class="hint">{{ t('dialog.superResolution.antiRingingHint') }}</span>
+              <span v-if="validationErrors.antiRinging" class="validation-error">{{ t('validation.invalidNumber') }}</span>
             </div>
           </div>
           
@@ -96,7 +107,7 @@
         
         <div class="dialog-footer">
           <button class="btn btn-cancel" @click="close">{{ t('common.cancel') }}</button>
-          <button class="btn btn-confirm" @click="confirm">{{ t('common.ok') }}</button>
+          <button class="btn btn-confirm" :disabled="hasValidationErrors" @click="confirm">{{ t('common.ok') }}</button>
         </div>
       </div>
     </div>
@@ -104,9 +115,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { open } from '@tauri-apps/plugin-dialog';
+import { isNonNegativeDecimal, isPositiveInteger } from '@/utils/numericValidation';
 
 interface SuperResolutionSettings {
   width: string;
@@ -140,10 +152,21 @@ const settings = ref<SuperResolutionSettings>({
 
 const shaders = ref<string[]>([]);
 const selectedShaderIndex = ref(-1);
+const validationErrors = ref({
+  width: false,
+  height: false,
+  antiRinging: false,
+});
+const hasValidationErrors = computed(() => Object.values(validationErrors.value).some(Boolean));
 
 watch(() => props.modelValue, (newVal) => {
   settings.value = { ...newVal };
   shaders.value = [...newVal.shaders];
+  validationErrors.value = {
+    width: false,
+    height: false,
+    antiRinging: false,
+  };
 }, { immediate: true });
 
 function close() {
@@ -151,9 +174,23 @@ function close() {
 }
 
 function confirm() {
+  if (hasValidationErrors.value) return;
   settings.value.shaders = [...shaders.value];
   emit('update:modelValue', { ...settings.value });
   close();
+}
+
+function onNumericInput(field: keyof typeof validationErrors.value) {
+  const value = settings.value[field];
+  if (field === 'antiRinging') {
+    validationErrors.value[field] = !isNonNegativeDecimal(value);
+  } else {
+    validationErrors.value[field] = !isPositiveInteger(value);
+  }
+
+  if (!validationErrors.value[field]) {
+    emit('update:modelValue', { ...settings.value });
+  }
 }
 
 async function addShader() {
@@ -345,6 +382,10 @@ defineExpose({
   max-width: 175px;
 }
 
+.text-input.invalid {
+  border-color: var(--error-color, #e74c3c);
+}
+
 .text-input.small {
   max-width: 83px;
 }
@@ -368,6 +409,11 @@ defineExpose({
 
 .hint {
   color: var(--text-color3, #666);
+  font-size: 12px;
+}
+
+.validation-error {
+  color: var(--error-color, #e74c3c);
   font-size: 12px;
 }
 

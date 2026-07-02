@@ -4,7 +4,7 @@
       <h4>{{ t('page.params.fullCustomMode') }}</h4>
       <div class="form-group">
         <label class="checkbox-label">
-          <input type="checkbox" v-model="useFullCustom" @change="onFullCustomToggle" />
+          <input class="full-custom-checkbox" type="checkbox" v-model="useFullCustom" @change="onFullCustomToggle" />
           <span>{{ t('page.params.enableFullCustom') }}</span>
         </label>
       </div>
@@ -44,12 +44,32 @@
 
       <div class="form-group">
         <label>{{ t('page.params.cpuThreads') }}</label>
-        <input type="text" v-model="localPreset.decode.cpuThreads" @input="onChange" :placeholder="t('page.params.cpuThreadsPlaceholder')" />
+        <input
+          class="cpu-threads-input"
+          type="text"
+          v-model="localPreset.decode.cpuThreads"
+          inputmode="numeric"
+          pattern="[1-9][0-9]*"
+          :class="{ invalid: validationErrors.cpuThreads }"
+          @input="onCpuThreadsInput"
+          :placeholder="t('page.params.cpuThreadsPlaceholder')"
+        />
+        <div v-if="validationErrors.cpuThreads" class="validation-error">{{ t('validation.positiveInteger') }}</div>
       </div>
 
       <div class="form-group">
         <label>{{ t('page.params.cpuAffinity') }}</label>
-        <input type="text" v-model="localPreset.decode.cpuAffinity" @input="onChange" :placeholder="t('page.params.cpuAffinityPlaceholder')" />
+        <input
+          class="cpu-affinity-input"
+          type="text"
+          v-model="localPreset.decode.cpuAffinity"
+          inputmode="numeric"
+          pattern="[0-9]+(,[0-9]+)*"
+          :class="{ invalid: validationErrors.cpuAffinity }"
+          @input="onCpuAffinityInput"
+          :placeholder="t('page.params.cpuAffinityPlaceholder')"
+        />
+        <div v-if="validationErrors.cpuAffinity" class="validation-error">{{ t('validation.cpuAffinityList') }}</div>
       </div>
     </div>
 
@@ -172,6 +192,10 @@ const emit = defineEmits<{
 
 const { t } = useI18n();
 const localPreset = ref<PresetData>({ ...props.preset });
+const validationErrors = ref({
+  cpuThreads: false,
+  cpuAffinity: false,
+});
 
 const useFullCustom = ref(!!localPreset.value.custom.fullCustom);
 
@@ -187,6 +211,32 @@ watch(() => props.preset, (newVal) => {
     localPreset.value = { ...newVal };
   }
 }, { deep: true });
+
+function isPositiveInteger(value: string) {
+  return value === '' || /^[1-9]\d*$/.test(value);
+}
+
+function isCpuAffinityList(value: string) {
+  return value === '' || /^\d+(,\d+)*$/.test(value);
+}
+
+function onCpuThreadsInput(event: Event) {
+  const input = event.target as HTMLInputElement;
+  localPreset.value.decode.cpuThreads = input.value;
+  validationErrors.value.cpuThreads = !isPositiveInteger(input.value);
+  if (!validationErrors.value.cpuThreads) {
+    onChange();
+  }
+}
+
+function onCpuAffinityInput(event: Event) {
+  const input = event.target as HTMLInputElement;
+  localPreset.value.decode.cpuAffinity = input.value;
+  validationErrors.value.cpuAffinity = !isCpuAffinityList(input.value);
+  if (!validationErrors.value.cpuAffinity) {
+    onChange();
+  }
+}
 
 function onChange() {
   emit('update:preset', localPreset.value);
@@ -243,6 +293,16 @@ function onChange() {
   font-family: 'Consolas', 'Monaco', monospace;
 }
 
+.form-group input.invalid {
+  border-color: var(--error-color, #e74c3c);
+}
+
+.validation-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--error-color, #e74c3c);
+}
+
 .form-group textarea {
   resize: vertical;
   min-height: 50px;
@@ -262,6 +322,15 @@ function onChange() {
 }
 
 .checkbox-label input[type="checkbox"] {
-  width: auto;
+  -webkit-appearance: checkbox;
+  appearance: checkbox;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  accent-color: var(--info-color, #3498db);
 }
 </style>

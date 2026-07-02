@@ -40,4 +40,17 @@ describe('CropDialog', () => {
 
     wrapper.unmount()
   })
+
+  it('syncs the crop input with the latest initial crop value', async () => {
+    const wrapper = mountWithLocale('en-US')
+
+    await wrapper.setProps({
+      initialCrop: '320:180:10:20',
+    })
+
+    const cropInput = wrapper.find('input.crop-input')
+    expect((cropInput.element as HTMLInputElement).value).toBe('320:180:10:20')
+
+    wrapper.unmount()
+  })
 })

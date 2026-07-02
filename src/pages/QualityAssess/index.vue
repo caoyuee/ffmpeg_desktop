@@ -32,15 +32,15 @@
         <label class="option-label">{{ t('page.quality.metrics') }}</label>
         <div class="option-content">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="metrics.vmaf" />
+            <input class="metric-checkbox" type="checkbox" v-model="metrics.vmaf" />
             VMAF
           </label>
           <label class="checkbox-label">
-            <input type="checkbox" v-model="metrics.ssim" />
+            <input class="metric-checkbox" type="checkbox" v-model="metrics.ssim" />
             SSIM
           </label>
           <label class="checkbox-label">
-            <input type="checkbox" v-model="metrics.psnr" />
+            <input class="metric-checkbox" type="checkbox" v-model="metrics.psnr" />
             PSNR
           </label>
         </div>
@@ -481,10 +481,17 @@ async function stopAssessment() {
   cursor: pointer;
 }
 
-.checkbox-label input {
+.checkbox-label input[type="checkbox"] {
+  -webkit-appearance: checkbox;
+  appearance: checkbox;
   width: 16px;
   height: 16px;
+  min-width: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
   cursor: pointer;
+  accent-color: var(--info-color, #3498db);
 }
 
 .select-input {

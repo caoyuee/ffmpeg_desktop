@@ -22,18 +22,26 @@
           <input
             type="text"
             v-model="localPreset.video.resolution.autoWidth"
-            @input="onChange"
+            inputmode="numeric"
+            pattern="[1-9][0-9]*"
+            :class="{ invalid: validationErrors.autoWidth }"
+            @input="onDimensionInput('autoWidth')"
             :placeholder="t('page.params.widthPlaceholder')"
           />
+          <div v-if="validationErrors.autoWidth" class="validation-error">{{ t('validation.positiveInteger') }}</div>
         </div>
         <div class="form-group half">
           <label>{{ t('page.params.height') }}</label>
           <input
             type="text"
             v-model="localPreset.video.resolution.autoHeight"
-            @input="onChange"
+            inputmode="numeric"
+            pattern="[1-9][0-9]*"
+            :class="{ invalid: validationErrors.autoHeight }"
+            @input="onDimensionInput('autoHeight')"
             :placeholder="t('page.params.heightPlaceholder')"
           />
+          <div v-if="validationErrors.autoHeight" class="validation-error">{{ t('validation.positiveInteger') }}</div>
         </div>
       </div>
 
@@ -113,6 +121,7 @@ import CropDialog from '@/components/Dialogs/CropDialog.vue';
 import InterpolationDialog from '@/components/Dialogs/InterpolationDialog.vue';
 import SuperResolutionDialog from '@/components/Dialogs/SuperResolutionDialog.vue';
 import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue';
+import { isPositiveInteger } from '@/utils/numericValidation';
 
 const { t } = useI18n();
 
@@ -129,15 +138,29 @@ const showCrop = ref(false);
 const showInterpolation = ref(false);
 const showSuperResolution = ref(false);
 const showFrameBlend = ref(false);
+const validationErrors = ref({
+  autoWidth: false,
+  autoHeight: false,
+});
 
 watch(() => props.preset, (newVal) => {
   if (newVal) {
     localPreset.value = { ...newVal };
+    validationErrors.value.autoWidth = false;
+    validationErrors.value.autoHeight = false;
   }
 }, { deep: true });
 
 function onChange() {
   emit('update:preset', localPreset.value);
+}
+
+function onDimensionInput(field: 'autoWidth' | 'autoHeight') {
+  const value = localPreset.value.video.resolution[field];
+  validationErrors.value[field] = !isPositiveInteger(value);
+  if (!validationErrors.value[field]) {
+    onChange();
+  }
 }
 
 function onCropConfirm(cropValue: string) {
@@ -207,6 +230,26 @@ function onFrameBlendUpdate(settings: PresetData['video']['filters']['frameBlend
   color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   box-sizing: border-box;
+}
+
+.form-group input.invalid {
+  border-color: var(--error-color, #e74c3c);
+}
+
+.validation-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--error-color, #e74c3c);
+}
+
+.form-group input.invalid {
+  border-color: var(--error-color, #e74c3c);
+}
+
+.validation-error {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--error-color, #e74c3c);
 }
 
 .input-row {
