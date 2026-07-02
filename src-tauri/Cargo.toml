@@ -1,6 +1,6 @@
 [package]
 name = "FFmpeg_Desktop"
-version = "0.1.5"
+version = "0.1.6"
 description = "FFmpeg_Desktop"
 authors = ["caoyuee"]
 edition = "2021"
