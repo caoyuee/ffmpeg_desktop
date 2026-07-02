@@ -145,27 +145,27 @@ pnpm tauri build
 ## 📁 项目结构
 
 ```
-ffmpeg_desktop/
-├── src/                    # Vue 前端
-│   ├── components/         # 业务组件
-│   │   ├── TaskQueue/     # 任务队列组件
-│   │   ├── ParameterPanel/# 参数面板组件
-│   │   └── PresetManager/ # 预设管理组件
-│   ├── pages/             # 页面
-│   │   ├── main/         # 主页面
-│   │   ├── logs/         # 日志页面
-│   │   └── setting/      # 设置页面
+./
+├── src/                  # Vue 前端
+│   ├── components/       # 可复用组件
+│   ├── pages/            # 路由页面
 │   ├── store/            # Pinia 状态管理
+│   ├── hooks/            # 组合式函数
 │   ├── types/            # TypeScript 类型
-│   └── utils/            # 工具函数
-├── src-tauri/            # Rust 后端
+│   ├── utils/            # 命令构建、格式化、校验等工具
+│   └── i18n/             # 中英文语言包
+├── src-tauri/            # Rust/Tauri 后端
 │   ├── src/
-│   │   ├── modules/     # 功能模块
-│   │   │   ├── task_manager.rs    # 任务管理
-│   │   │   └── preset_manager.rs  # 预设管理
-│   │   └── library/     # 核心库
+│   │   ├── modules/      # 任务、预设、窗口等功能模块
+│   │   ├── library/      # FFmpeg、探测、进程、文件等基础库
+│   │   └── utility/      # legacy 执行器和常量
+│   ├── config/           # 打包资源配置
 │   └── Cargo.toml
-└── package.json
+├── scripts/              # 发布、版本、预检脚本
+├── e2e/                  # Playwright E2E 测试
+├── .agents/              # Agent 规范、技能、项目文档
+├── package.json
+└── pnpm-lock.yaml
 ```
 
 ## 🔧 配置
@@ -213,7 +213,7 @@ ffmpeg_desktop/
 ```bash
 # 克隆项目
 git clone <repository-url>
-cd ffmpeg_desktop
+cd <repo-dir>
 
 # 安装依赖
 pnpm install
