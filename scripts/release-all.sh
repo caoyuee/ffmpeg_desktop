@@ -134,23 +134,7 @@ if git -C "$REPO_DIR" rev-parse "$tag" >/dev/null 2>&1; then
   exit 1
 fi
 
-if [ "${SKIP_BUNDLE:-0}" != "1" ]; then
-  case "$(uname -s)" in
-    Linux)
-      echo "==> Building Linux deb bundle"
-      pnpm tauri build --bundles deb
-      ;;
-    MINGW*|MSYS*|CYGWIN*|Windows_NT)
-      echo "==> Building Windows nsis bundle"
-      pnpm tauri build --bundles nsis
-      ;;
-    *)
-      echo "==> Skipping local bundle build on unsupported platform: $(uname -s)"
-      ;;
-  esac
-else
-  echo "==> Skipping local bundle build (SKIP_BUNDLE=1)"
-fi
+echo "==> Skipping local bundle build; installers are built by GitHub Actions."
 
 git -C "$REPO_DIR" add -A
 
@@ -194,12 +178,7 @@ if [ -n "${GITEE_TOKEN:-}" ]; then
     "$tag" \
     "$branch" \
     "${RELEASE_BODY:-Automated release $tag}")"
-  GITEE_OWNER="$gitee_owner" \
-  GITEE_REPO="$gitee_repo" \
-  GITEE_RELEASE_ID="$gitee_release_id" \
-  GITEE_RELEASE_TAG="$tag" \
-  GITEE_ASSET_VERSION="$version" \
-  bash scripts/upload-gitee-assets.sh
+  echo "==> Created Gitee release $gitee_release_id; asset uploads are handled by GitHub Actions."
 else
   echo "==> GITEE_TOKEN is not set; skipped Gitee Release API."
 fi
@@ -218,12 +197,7 @@ if [ -n "${GITHUB_TOKEN:-}" ]; then
     "$tag" \
     "$branch" \
     "${RELEASE_BODY:-Automated release $tag}")"
-  GITHUB_OWNER="$github_owner" \
-  GITHUB_REPO="$github_repo" \
-  GITHUB_RELEASE_ID="$github_release_id" \
-  GITHUB_RELEASE_TAG="$tag" \
-  GITHUB_ASSET_VERSION="$version" \
-  bash scripts/upload-github-assets.sh
+  echo "==> Created GitHub release $github_release_id; asset uploads are handled by GitHub Actions."
 else
   echo "==> GITHUB_TOKEN is not set; skipped GitHub Release API."
 fi
