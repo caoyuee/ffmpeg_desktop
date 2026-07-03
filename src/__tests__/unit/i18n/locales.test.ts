@@ -110,6 +110,9 @@ describe('i18n locales', () => {
       'tune',
       'gpuAcceleration',
       'gpuPlaceholder',
+      'detectingHardware',
+      'unavailableHardwareEncodersDisabled',
+      'hardwareEncoderUnsupported',
       'threads',
       'threadsPlaceholder',
     ])

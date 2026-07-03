@@ -5,6 +5,7 @@ import { useFFmpegSettingsStore } from "./ffmpegSettingsStore";
 import { useTaskStore } from "./taskStore";
 import { usePresetStore } from "./presetStore";
 import { useFileListStore } from "./fileListStore";
+import { useHardwareCapabilityStore } from "./hardwareCapabilityStore";
 
 export {
   useSettingStore,
@@ -14,4 +15,5 @@ export {
   useTaskStore,
   usePresetStore,
   useFileListStore,
+  useHardwareCapabilityStore,
 };

@@ -42,6 +42,7 @@ pub fn run() {
             read_json_file,
             probe_media_info,
             check_ffmpeg_tools,
+            detect_hardware_acceleration,
             install_ffmpeg_command,
             get_system_info_app,
             check_ffmpeg_from_path,

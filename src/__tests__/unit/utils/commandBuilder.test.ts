@@ -91,6 +91,51 @@ describe('FFmpegCommandBuilder', () => {
       expect(cmd).toContain('crf')
       expect(cmd).toContain('18')
     })
+
+    it('should add nvenc gpu index when provided', () => {
+      const preset = makePreset({
+        video: {
+          ...DEFAULT_PRESET.video,
+          encoder: {
+            ...DEFAULT_PRESET.video.encoder,
+            codec: 'h264_nvenc',
+            gpu: '1',
+          },
+        },
+      })
+
+      const cmd = FFmpegCommandBuilder.build(preset, 'in.mp4', 'out.mp4')
+
+      expect(cmd).toContain('-c:v h264_nvenc')
+      expect(cmd).toContain('-gpu 1')
+    })
+
+    it('should prepare vaapi upload filters and device for vaapi encoders', () => {
+      const preset = makePreset({
+        decode: {
+          ...DEFAULT_PRESET.decode,
+          hwAccelParamName: '-vaapi_device',
+          hwAccelParam: '/dev/dri/renderD128',
+        },
+        video: {
+          ...DEFAULT_PRESET.video,
+          encoder: {
+            ...DEFAULT_PRESET.video.encoder,
+            codec: 'h264_vaapi',
+          },
+          resolution: {
+            ...DEFAULT_PRESET.video.resolution,
+            size: '1280:720',
+          },
+        },
+      })
+
+      const cmd = FFmpegCommandBuilder.build(preset, 'in.mp4', 'out.mp4')
+
+      expect(cmd).toContain('-vaapi_device /dev/dri/renderD128')
+      expect(cmd).toContain('-vf "scale=1280:720,format=nv12,hwupload"')
+      expect(cmd).toContain('-c:v h264_vaapi')
+    })
   })
 
   describe('audio params', () => {

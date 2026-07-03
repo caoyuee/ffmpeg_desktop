@@ -19,10 +19,24 @@
       <div class="form-group">
         <label>{{ t('page.params.specificEncoder') }}</label>
         <select v-model="localPreset.video.encoder.codec" @change="onCodecChange">
-          <option v-for="enc in availableEncoders" :key="enc.value" :value="enc.value">
+          <option
+            v-for="enc in availableEncoders"
+            :key="enc.value"
+            :value="enc.value"
+            :disabled="isEncoderDisabled(enc.value)"
+          >
             {{ enc.label }}
           </option>
         </select>
+        <div v-if="hardwareStore.loading" class="field-hint">
+          {{ t('page.params.detectingHardware') }}
+        </div>
+        <div v-else-if="selectedHardwareEncoderUnavailable" class="validation-error">
+          {{ t('page.params.hardwareEncoderUnsupported', { encoder: localPreset.video.encoder.codec }) }}
+        </div>
+        <div v-else-if="hasUnavailableHardwareEncoders" class="field-hint">
+          {{ t('page.params.unavailableHardwareEncodersDisabled') }}
+        </div>
       </div>
 
       <div v-if="codecPresets.length" class="form-group">
@@ -82,10 +96,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 import { getCodecMeta } from '@/config/codecDatabase';
+import { useHardwareCapabilityStore } from '@/store/hardwareCapabilityStore';
 
 const props = defineProps<{
   preset: PresetData;
@@ -96,6 +111,7 @@ const emit = defineEmits<{
 }>();
 
 const { t } = useI18n();
+const hardwareStore = useHardwareCapabilityStore();
 const localPreset = ref<PresetData>({ ...props.preset });
 const validationErrors = ref({
   gpu: false,
@@ -162,6 +178,15 @@ const availableEncoders = computed(() => {
   return encoderOptions[localPreset.value.video.encoder.category] || [];
 });
 
+const hasUnavailableHardwareEncoders = computed(() => {
+  return availableEncoders.value.some((encoder) => isEncoderDisabled(encoder.value));
+});
+
+const selectedHardwareEncoderUnavailable = computed(() => {
+  const codec = localPreset.value.video.encoder.codec;
+  return isHardwareEncoder(codec) && !isHardwareEncoderAvailable(codec);
+});
+
 const codecMeta = computed(() => {
   return getCodecMeta(localPreset.value.video.encoder.codec);
 });
@@ -175,6 +200,12 @@ watch(() => props.preset, (newVal) => {
     localPreset.value = { ...newVal };
   }
 }, { deep: true });
+
+onMounted(() => {
+  if (!hardwareStore.capabilities && !hardwareStore.loading) {
+    void hardwareStore.detect();
+  }
+});
 
 function onCategoryChange() {
   const encoders = encoderOptions[localPreset.value.video.encoder.category];
@@ -192,6 +223,24 @@ function onCodecChange() {
   localPreset.value.video.encoder.profile = '';
   localPreset.value.video.encoder.tune = '';
   onChange();
+}
+
+function isHardwareEncoder(codec: string): boolean {
+  return /_(nvenc|qsv|amf|vaapi|videotoolbox|vulkan|d3d12va)$/.test(codec);
+}
+
+function isHardwareEncoderAvailable(codec: string): boolean {
+  if (!isHardwareEncoder(codec)) {
+    return true;
+  }
+  if (!hardwareStore.capabilities) {
+    return true;
+  }
+  return hardwareStore.hasEncoder(codec);
+}
+
+function isEncoderDisabled(codec: string): boolean {
+  return isHardwareEncoder(codec) && !isHardwareEncoderAvailable(codec);
 }
 
 function isPositiveInteger(value: string) {
@@ -259,6 +308,12 @@ function onChange() {
   margin-top: 6px;
   font-size: 12px;
   color: var(--error-color, #e74c3c);
+}
+
+.field-hint {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-color2, #808080);
 }
 
 .form-row {

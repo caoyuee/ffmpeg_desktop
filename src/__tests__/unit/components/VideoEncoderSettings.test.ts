@@ -1,18 +1,28 @@
-import { describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { createI18n } from 'vue-i18n'
+import { createPinia, setActivePinia } from 'pinia'
+import { invoke } from '@tauri-apps/api/core'
 import VideoEncoderSettings from '@/pages/ParameterPanel/components/VideoEncoderSettings.vue'
 import enUS from '@/i18n/locales/en-US'
 import zhCN from '@/i18n/locales/zh-CN'
 import { DEFAULT_PRESET } from '@/types/preset'
 import type { PresetData } from '@/types/preset'
+import { useHardwareCapabilityStore } from '@/store/hardwareCapabilityStore'
+
+vi.mocked(invoke)
 
 describe('VideoEncoderSettings', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    vi.mocked(invoke).mockReset()
+  })
+
   function createPreset(): PresetData {
     return structuredClone(DEFAULT_PRESET)
   }
 
-  function mountWithLocale(locale: 'zh-CN' | 'en-US' = 'en-US') {
+  function mountWithLocale(locale: 'zh-CN' | 'en-US' = 'en-US', preset = createPreset()) {
     const i18n = createI18n({
       legacy: false,
       locale,
@@ -27,7 +37,7 @@ describe('VideoEncoderSettings', () => {
         plugins: [i18n],
       },
       props: {
-        preset: createPreset(),
+        preset,
       },
     })
   }
@@ -62,5 +72,45 @@ describe('VideoEncoderSettings', () => {
 
     expect(wrapper.text()).not.toContain('Please enter a positive integer')
     expect(wrapper.emitted('update:preset')).toBeTruthy()
+  })
+
+  it('disables unavailable hardware encoders after capability detection', async () => {
+    const store = useHardwareCapabilityStore()
+    store.capabilities = {
+      ffmpegPath: 'ffmpeg',
+      backends: ['nvenc'],
+      encoders: ['h264_nvenc'],
+      hwaccels: ['cuda'],
+      filters: [],
+    }
+
+    const preset = createPreset()
+    preset.video.encoder.category = 'h264'
+
+    const wrapper = mountWithLocale('en-US', preset)
+    const options = wrapper.findAll('option')
+    const qsvOption = options.find((option) => option.attributes('value') === 'h264_qsv')
+
+    expect(qsvOption?.attributes('disabled')).toBeDefined()
+    expect(wrapper.text()).toContain('Unavailable hardware encoders are disabled')
+  })
+
+  it('warns when the selected hardware encoder is unavailable', () => {
+    const store = useHardwareCapabilityStore()
+    store.capabilities = {
+      ffmpegPath: 'ffmpeg',
+      backends: [],
+      encoders: [],
+      hwaccels: [],
+      filters: [],
+    }
+
+    const preset = createPreset()
+    preset.video.encoder.category = 'h264'
+    preset.video.encoder.codec = 'h264_nvenc'
+
+    const wrapper = mountWithLocale('en-US', preset)
+
+    expect(wrapper.text()).toContain('Current FFmpeg does not support h264_nvenc')
   })
 })

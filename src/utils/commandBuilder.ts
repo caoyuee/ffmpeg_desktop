@@ -325,6 +325,8 @@ export class FFmpegCommandBuilder {
       filters.push(customVideoFilter);
     }
 
+    filters.push(...this.buildHardwareUploadFilters(video.encoder.codec, filters));
+
     return filters;
   }
 
@@ -532,6 +534,10 @@ export class FFmpegCommandBuilder {
       params.push(`-threads ${video.encoder.threads}`);
     }
 
+    if (this.supportsGpuIndex(video.encoder.codec) && video.encoder.gpu) {
+      params.push(`-gpu ${video.encoder.gpu}`);
+    }
+
     if (video.colorManagement.colorSpace) {
       params.push(`-colorspace ${video.colorManagement.colorSpace}`);
     }
@@ -550,6 +556,36 @@ export class FFmpegCommandBuilder {
     }
 
     return params;
+  }
+
+  private static buildHardwareUploadFilters(
+    codec: string,
+    existingFilters: string[],
+  ): string[] {
+    if (!this.isVaapiEncoder(codec)) {
+      return [];
+    }
+
+    const hasFormat = existingFilters.some((filter) => filter.startsWith("format="));
+    const hasHwUpload = existingFilters.some((filter) => filter === "hwupload" || filter.startsWith("hwupload="));
+    const filters: string[] = [];
+
+    if (!hasFormat) {
+      filters.push("format=nv12");
+    }
+    if (!hasHwUpload) {
+      filters.push("hwupload");
+    }
+
+    return filters;
+  }
+
+  private static isVaapiEncoder(codec: string): boolean {
+    return codec.endsWith("_vaapi");
+  }
+
+  private static supportsGpuIndex(codec: string): boolean {
+    return codec.endsWith("_nvenc") || codec.endsWith("_amf");
   }
 
   private static buildAudioFilters(

@@ -9,8 +9,8 @@ pub mod tray_settings;
 pub mod video_preview;
 
 pub use ffmpeg_tools::{
-    check_ffmpeg_from_path, check_ffmpeg_tools, get_system_info_app, install_ffmpeg_command,
-    test_ffmpeg,
+    check_ffmpeg_from_path, check_ffmpeg_tools, detect_hardware_acceleration, get_system_info_app,
+    install_ffmpeg_command, test_ffmpeg,
 };
 pub use ffplay::{seek_ffplay, set_ffplay_volume, start_ffplay, stop_ffplay, toggle_ffplay_pause};
 pub use file_commands::{
