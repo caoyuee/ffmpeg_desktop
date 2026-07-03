@@ -2,7 +2,9 @@
   <div class="home-page">
     <div class="welcome-section">
       <div class="logo-area">
-        <div class="logo">🎬</div>
+        <div class="logo">
+          <img src="@/assets/app-icon.png" :alt="t('page.home.title')" />
+        </div>
         <h1>{{ t('page.home.title') }}</h1>
         <p class="subtitle">{{ t('page.home.subtitle') }}</p>
       </div>
@@ -11,22 +13,22 @@
         <h3>{{ t('page.home.quickStart') }}</h3>
         <div class="action-grid">
           <div class="action-card" @click="goToQueue">
-            <span class="icon">📋</span>
+            <AppIcon name="queue" class="icon" :size="32" />
             <span class="title">{{ t('page.home.encodingQueue') }}</span>
             <span class="desc">{{ t('page.home.encodingQueueDesc') }}</span>
           </div>
           <div class="action-card" @click="goToParams">
-            <span class="icon">⚙️</span>
+            <AppIcon name="params" class="icon" :size="32" />
             <span class="title">{{ t('page.home.paramSettings') }}</span>
             <span class="desc">{{ t('page.home.paramSettingsDesc') }}</span>
           </div>
           <div class="action-card" @click="goToMediaInfo">
-            <span class="icon">ℹ️</span>
+            <AppIcon name="mediainfo" class="icon" :size="32" />
             <span class="title">{{ t('page.home.mediaInfo') }}</span>
             <span class="desc">{{ t('page.home.mediaInfoDesc') }}</span>
           </div>
           <div class="action-card" @click="goToSettings">
-            <span class="icon">🔧</span>
+            <AppIcon name="settings" class="icon" :size="32" />
             <span class="title">{{ t('page.home.softwareSettings') }}</span>
             <span class="desc">{{ t('page.home.softwareSettingsDesc') }}</span>
           </div>
@@ -88,6 +90,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const router = useRouter();
 const { t } = useI18n();
@@ -125,28 +128,46 @@ function openGitHub() {
 .home-page {
   display: flex;
   flex-direction: column;
-  padding: 40px;
-  gap: 32px;
-  max-width: 900px;
+  padding: 28px;
+  gap: 20px;
+  max-width: 1120px;
   margin: 0 auto;
 }
 
 .welcome-section {
-  text-align: center;
+  display: grid;
+  grid-template-columns: minmax(260px, 0.9fr) minmax(420px, 1.4fr);
+  gap: 20px;
+  align-items: stretch;
 }
 
 .logo-area {
-  margin-bottom: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 260px;
+  padding: 28px;
+  background: var(--bg-color2, #242424);
+  border: 1px solid var(--border-color1, #333);
+  border-radius: 8px;
 }
 
 .logo {
-  font-size: 64px;
   margin-bottom: 16px;
+  display: flex;
+  justify-content: flex-start;
+}
+
+.logo img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
 }
 
 .logo-area h1 {
   margin: 0;
-  font-size: 28px;
+  font-size: 30px;
   color: var(--text-color1, #c0c0c0);
 }
 
@@ -162,20 +183,28 @@ function openGitHub() {
   color: var(--text-color1, #c0c0c0);
 }
 
+.quick-actions {
+  padding: 20px;
+  background: var(--bg-color2, #242424);
+  border: 1px solid var(--border-color1, #333);
+  border-radius: 8px;
+}
+
 .action-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
+  gap: 10px;
 }
 
 .action-card {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 24px;
-  background: var(--bg-color2, #242424);
+  align-items: flex-start;
+  min-height: 116px;
+  padding: 16px;
+  background: var(--bg-color1, #181818);
   border: 1px solid var(--border-color1, #333);
-  border-radius: 8px;
+  border-radius: 6px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -186,8 +215,9 @@ function openGitHub() {
 }
 
 .action-card .icon {
-  font-size: 32px;
   margin-bottom: 12px;
+  color: var(--info-color, #3498db);
+  display: inline-flex;
 }
 
 .action-card .title {
@@ -199,18 +229,20 @@ function openGitHub() {
 .action-card .desc {
   font-size: 12px;
   color: var(--text-color2, #808080);
+  line-height: 1.5;
 }
 
 .info-section {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: 12px;
 }
 
 .info-card {
   background: var(--bg-color2, #242424);
+  border: 1px solid var(--border-color1, #333);
   border-radius: 8px;
-  padding: 20px;
+  padding: 16px;
 }
 
 .info-card h4 {
@@ -274,9 +306,20 @@ function openGitHub() {
 
 .version-info {
   display: flex;
-  justify-content: center;
+  justify-content: flex-end;
   gap: 12px;
   font-size: 12px;
   color: var(--text-color2, #606060);
+}
+
+@media (max-width: 900px) {
+  .welcome-section,
+  .info-section {
+    grid-template-columns: 1fr;
+  }
+
+  .action-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -1,31 +1,36 @@
 <template>
   <div class="merge-page">
-    <div class="page-header">
-      <span class="header-text">{{ t('page.merge.hint') }}</span>
+    <div class="app-page-hint">
+      <span class="app-page-hint__text">{{ t('page.merge.hint') }}</span>
     </div>
     
-    <div class="toolbar">
-      <button class="btn btn-add" @click="addFiles">
-        <span class="icon">📁</span> {{ t('page.merge.addFiles') }}
-      </button>
-      <button class="btn btn-move" @click="moveUp" :disabled="selectedIndices.length === 0">
-        <span class="icon">⬆️</span> {{ t('page.merge.moveUp') }}
-      </button>
-      <button class="btn btn-move" @click="moveDown" :disabled="selectedIndices.length === 0">
-        <span class="icon">⬇️</span> {{ t('page.merge.moveDown') }}
-      </button>
-      <button class="btn btn-remove" @click="removeSelected" :disabled="selectedIndices.length === 0">
-        <span class="icon">🗑️</span> {{ t('page.merge.remove') }}
-      </button>
+    <div class="app-toolbar">
+      <div class="app-toolbar__group">
+        <button class="app-btn app-btn--primary" @click="addFiles">
+          <AppIcon name="folder-plus" :size="16" class="icon" /> {{ t('page.merge.addFiles') }}
+        </button>
+      </div>
+      <div class="app-toolbar__divider"></div>
+      <div class="app-toolbar__group">
+        <button class="app-btn" @click="moveUp" :disabled="selectedIndices.length === 0">
+          <AppIcon name="arrow-up" :size="16" class="icon" /> {{ t('page.merge.moveUp') }}
+        </button>
+        <button class="app-btn" @click="moveDown" :disabled="selectedIndices.length === 0">
+          <AppIcon name="arrow-down" :size="16" class="icon" /> {{ t('page.merge.moveDown') }}
+        </button>
+        <button class="app-btn app-btn--danger" @click="removeSelected" :disabled="selectedIndices.length === 0">
+          <AppIcon name="trash" :size="16" class="icon" /> {{ t('page.merge.remove') }}
+        </button>
+      </div>
       <span class="hint">{{ t('page.merge.keyboardHint') }}</span>
     </div>
     
     <div 
-      class="file-list-container"
+      class="app-drop-zone file-list-container"
       @dragover.prevent="onDragOver"
       @dragleave="onDragLeave"
       @drop.prevent="onDrop"
-      :class="{ 'drag-over': isDragOver }"
+      :class="{ 'app-drop-zone--over': isDragOver }"
     >
       <div class="file-list" v-if="fileList.length > 0">
         <div 
@@ -40,23 +45,23 @@
           <span class="file-name">{{ file }}</span>
         </div>
       </div>
-      <div class="empty-hint" v-else>
+      <div class="app-empty-state empty-hint" v-else>
         <span>{{ t('page.prepare.dragHint') }}</span>
       </div>
     </div>
     
-    <div class="bottom-bar">
-      <button class="btn btn-browse" @click="selectOutput">
-        <span class="icon">📂</span> {{ t('page.merge.selectOutput') }}
+    <div class="app-bottom-bar">
+      <button class="app-btn" @click="selectOutput">
+        <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('page.merge.selectOutput') }}
       </button>
-      <input 
-        type="text" 
-        class="output-input" 
-        v-model="outputPath" 
+      <input
+        type="text"
+        class="app-input--compact app-output-input"
+        v-model="outputPath"
         :placeholder="t('page.merge.selectOutput')"
       />
-      <button class="btn btn-start" @click="startMerge" :disabled="fileList.length < 2 || !outputPath">
-        <span class="icon">▶️</span> {{ t('page.merge.startMerge') }}
+      <button class="app-btn app-btn--primary" @click="startMerge" :disabled="fileList.length < 2 || !outputPath">
+        <AppIcon name="play" :size="16" class="icon" /> {{ t('page.merge.startMerge') }}
       </button>
     </div>
   </div>
@@ -69,6 +74,7 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { useTaskStore } from '@/store/taskStore';
 import { getFFmpegPath } from '@/utils/ffmpegPath';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const { t } = useI18n();
 const taskStore = useTaskStore();
@@ -244,91 +250,13 @@ onUnmounted(() => {
   height: 100%;
   background: var(--bg-color2, #181818);
   padding: 10px;
-}
-
-.page-header {
-  padding: 10px;
-  background: var(--bg-color3, #242424);
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-
-.header-text {
-  color: #888;
-  font-size: 13px;
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px;
-  background: var(--bg-color3, #242424);
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 16px;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-add {
-  background: var(--bg-color4, #383838);
-  color: #9acd32;
-}
-
-.btn-add:hover:not(:disabled) {
-  border-color: #9acd32;
-}
-
-.btn-move {
-  background: var(--bg-color4, #383838);
-  color: #6495ed;
-}
-
-.btn-move:hover:not(:disabled) {
-  border-color: #6495ed;
-}
-
-.btn-remove {
-  background: var(--bg-color4, #383838);
-  color: #cd5c5c;
-}
-
-.btn-remove:hover:not(:disabled) {
-  border-color: #cd5c5c;
+  gap: 10px;
 }
 
 .hint {
-  color: #666;
+  color: var(--text-color2, #808080);
   font-size: 12px;
   margin-left: auto;
-}
-
-.file-list-container {
-  flex: 1;
-  background: var(--bg-color1, #181818);
-  border-radius: 4px;
-  overflow: auto;
-  border: 2px dashed transparent;
-  transition: border-color 0.2s;
-}
-
-.file-list-container.drag-over {
-  border-color: #9acd32;
 }
 
 .file-list {
@@ -353,13 +281,13 @@ onUnmounted(() => {
 }
 
 .file-index {
-  color: #666;
+  color: var(--text-color2, #808080);
   font-size: 12px;
   min-width: 30px;
 }
 
 .file-name {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   flex: 1;
   overflow: hidden;
@@ -368,47 +296,6 @@ onUnmounted(() => {
 }
 
 .empty-hint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #555;
   font-size: 14px;
-}
-
-.bottom-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  background: var(--bg-color3, #242424);
-  border-radius: 4px;
-  margin-top: 10px;
-}
-
-.btn-browse {
-  background: var(--bg-color4, #383838);
-  color: #9acd32;
-}
-
-.btn-start {
-  background: var(--bg-color4, #383838);
-  color: #9acd32;
-  min-width: 100px;
-}
-
-.output-input {
-  flex: 1;
-  padding: 8px 16px;
-  background: var(--bg-color1, #181818);
-  border: none;
-  border-radius: 15px;
-  color: #c0c0c0;
-  font-size: 13px;
-  outline: none;
-}
-
-.output-input::placeholder {
-  color: #555;
 }
 </style>

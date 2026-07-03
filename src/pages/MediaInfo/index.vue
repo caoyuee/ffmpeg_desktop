@@ -1,24 +1,31 @@
 <template>
   <div class="media-info-page">
-    <div class="toolbar">
-      <div class="file-selector">
-        <label>{{ t('page.mediainfo.selectFile') }}</label>
-        <select v-model="selectedFile" @change="loadMediaInfo">
+    <div class="app-toolbar">
+      <div class="app-toolbar__group file-selector">
+        <label class="app-field-label">{{ t('page.mediainfo.selectFile') }}</label>
+        <select class="app-input--compact file-select" v-model="selectedFile" @change="loadMediaInfo">
           <option value="">{{ t('page.mediainfo.pleaseSelect') }}</option>
           <option v-for="file in recentFiles" :key="file" :value="file">
             {{ getFileName(file) }}
           </option>
         </select>
-        <button @click="browseFile">{{ t('common.browse') }}...</button>
+        <button class="app-btn" @click="browseFile">
+          <AppIcon name="folder-open" :size="16" class="icon" />
+          {{ t('common.browse') }}...
+        </button>
       </div>
-      <button class="refresh-btn" @click="loadMediaInfo" :disabled="!selectedFile">
+      <div class="app-toolbar__spacer"></div>
+      <button class="app-btn app-btn--primary" @click="loadMediaInfo" :disabled="!selectedFile">
+        <AppIcon name="refresh" :size="16" class="icon" />
         {{ t('page.mediainfo.refresh') }}
       </button>
     </div>
 
     <div class="info-container">
-      <div v-if="!selectedFile" class="empty-state">
-        <div class="empty-icon">ℹ️</div>
+      <div v-if="!selectedFile" class="app-empty-state empty-state">
+        <div class="empty-icon">
+          <AppIcon name="mediainfo" :size="64" />
+        </div>
         <p>{{ t('page.mediainfo.pleaseSelectFile') }}</p>
       </div>
 
@@ -28,8 +35,8 @@
       </div>
 
       <div v-else-if="mediaInfo" class="media-info-content">
-        <div class="info-section">
-          <h4>{{ t('page.mediainfo.basicInfo') }}</h4>
+        <div class="app-card info-section">
+          <h4 class="app-section-title">{{ t('page.mediainfo.basicInfo') }}</h4>
           <div class="info-grid">
             <div class="info-item">
               <span class="label">{{ t('page.mediainfo.filename') }}</span>
@@ -54,8 +61,8 @@
           </div>
         </div>
 
-        <div v-for="(stream, index) in mediaInfo.streams" :key="index" class="info-section stream-section">
-          <h4>{{ getStreamType(stream.codec_type) }} {{ t('page.mediainfo.stream') }} #{{ stream.index }}</h4>
+        <div v-for="(stream, index) in mediaInfo.streams" :key="index" class="app-card info-section stream-section">
+          <h4 class="app-section-title">{{ getStreamType(stream.codec_type) }} {{ t('page.mediainfo.stream') }} #{{ stream.index }}</h4>
           <div class="info-grid">
             <div class="info-item">
               <span class="label">{{ t('page.mediainfo.codec') }}</span>
@@ -92,8 +99,8 @@
           </div>
         </div>
 
-        <div class="info-section">
-          <h4>{{ t('page.mediainfo.metadata') }}</h4>
+        <div class="app-card info-section">
+          <h4 class="app-section-title">{{ t('page.mediainfo.metadata') }}</h4>
           <div class="metadata-list">
             <div v-for="(value, key) in mediaInfo.metadata" :key="key" class="metadata-item">
               <span class="key">{{ key }}:</span>
@@ -110,6 +117,7 @@
 import { ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const { t } = useI18n();
 
@@ -147,7 +155,7 @@ async function browseFile() {
   const selected = await open({
     multiple: false,
     filters: [
-      { name: '媒体文件', extensions: ['mp4', 'mkv', 'avi', 'mov', 'flv', 'webm', 'mp3', 'wav', 'flac'] },
+      { name: t('page.mediainfo.mediaFiles'), extensions: ['mp4', 'mkv', 'avi', 'mov', 'flv', 'webm', 'mp3', 'wav', 'flac'] },
     ],
   });
 
@@ -295,59 +303,14 @@ function getChannelLayout(channels: number): string {
   background: var(--bg-color1, #181818);
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  background: var(--bg-color2, #242424);
-  border-bottom: 1px solid var(--border-color1, #333);
-  gap: 12px;
-}
-
 .file-selector {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   flex: 1;
+  min-width: 360px;
 }
 
-.file-selector label {
-  font-size: 13px;
-  color: var(--text-color2, #808080);
-}
-
-.file-selector select {
+.file-select {
   flex: 1;
   max-width: 400px;
-  padding: 8px 12px;
-  background: var(--bg-color1, #181818);
-  border: 1px solid var(--border-color1, #444);
-  border-radius: 4px;
-  color: var(--text-color1, #c0c0c0);
-  font-size: 13px;
-}
-
-.file-selector button {
-  padding: 8px 16px;
-  background: var(--bg-color3, #303030);
-  border: 1px solid var(--border-color1, #444);
-  border-radius: 4px;
-  color: var(--text-color1, #c0c0c0);
-  cursor: pointer;
-}
-
-.refresh-btn {
-  padding: 8px 16px;
-  background: var(--info-color, #3498db);
-  border: none;
-  border-radius: 4px;
-  color: white;
-  cursor: pointer;
-}
-
-.refresh-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .info-container {
@@ -356,7 +319,6 @@ function getChannelLayout(channels: number): string {
   padding: 16px;
 }
 
-.empty-state,
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -394,17 +356,7 @@ function getChannelLayout(channels: number): string {
 }
 
 .info-section {
-  background: var(--bg-color2, #242424);
-  border-radius: 8px;
   padding: 16px;
-}
-
-.info-section h4 {
-  margin: 0 0 12px;
-  font-size: 14px;
-  color: var(--text-color1, #c0c0c0);
-  border-bottom: 1px solid var(--border-color1, #333);
-  padding-bottom: 8px;
 }
 
 .stream-section h4 {

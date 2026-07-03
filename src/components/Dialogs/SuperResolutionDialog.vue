@@ -80,12 +80,12 @@
             <label class="row-label multiline-label">{{ t('dialog.superResolution.customShaderLabel') }}</label>
             <div class="row-content column">
               <div class="shader-toolbar">
-                <button class="btn btn-shader" @click="addShader">{{ t('dialog.superResolution.add') }}</button>
-                <button class="btn btn-shader" @click="removeShader" :disabled="selectedShaderIndex < 0">{{ t('dialog.superResolution.remove') }}</button>
-                <button class="btn btn-shader" @click="moveShaderUp" :disabled="selectedShaderIndex <= 0">{{ t('dialog.superResolution.moveUp') }}</button>
-                <button class="btn btn-shader" @click="moveShaderDown" :disabled="selectedShaderIndex >= shaders.length - 1">{{ t('dialog.superResolution.moveDown') }}</button>
+                <button class="app-btn btn-shader" @click="addShader">{{ t('dialog.superResolution.add') }}</button>
+                <button class="app-btn btn-shader" @click="removeShader" :disabled="selectedShaderIndex < 0">{{ t('dialog.superResolution.remove') }}</button>
+                <button class="app-btn btn-shader" @click="moveShaderUp" :disabled="selectedShaderIndex <= 0">{{ t('dialog.superResolution.moveUp') }}</button>
+                <button class="app-btn btn-shader" @click="moveShaderDown" :disabled="selectedShaderIndex >= shaders.length - 1">{{ t('dialog.superResolution.moveDown') }}</button>
                 <span class="shader-hint">{{ t('dialog.superResolution.supportedShaderFormats') }}</span>
-                <button class="btn btn-shader download-btn" @click="downloadShaders">{{ t('dialog.superResolution.download') }}</button>
+                <button class="app-btn btn-shader download-btn" @click="downloadShaders">{{ t('dialog.superResolution.download') }}</button>
               </div>
               <div class="shader-list">
                 <div 
@@ -106,8 +106,8 @@
         </div>
         
         <div class="dialog-footer">
-          <button class="btn btn-cancel" @click="close">{{ t('common.cancel') }}</button>
-          <button class="btn btn-confirm" :disabled="hasValidationErrors" @click="confirm">{{ t('common.ok') }}</button>
+          <button class="app-btn" @click="close">{{ t('common.cancel') }}</button>
+          <button class="app-btn app-btn--primary" :disabled="hasValidationErrors" @click="confirm">{{ t('common.ok') }}</button>
         </div>
       </div>
     </div>
@@ -425,18 +425,7 @@ defineExpose({
 }
 
 .btn-shader {
-  padding: 6px 12px;
-  background: var(--bg-color4, #383838);
-  border: none;
-  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
-  cursor: pointer;
-  border-radius: 0;
-}
-
-.btn-shader:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .download-btn {
@@ -487,26 +476,4 @@ defineExpose({
   border-top: 1px solid var(--bg-color3, #242424);
 }
 
-.btn {
-  padding: 8px 20px;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.btn-cancel {
-  background: var(--bg-color4, #383838);
-  color: var(--text-color2, #888);
-}
-
-.btn-confirm {
-  background: var(--bg-color4, #383838);
-  color: var(--active-color, #9acd32);
-}
-
-.btn:hover {
-  opacity: 0.9;
-}
 </style>

@@ -6,8 +6,9 @@
         <button 
           @click="clearCompleted" 
           :disabled="!hasCompletedTasks"
-          class="btn-clear"
+          class="app-btn"
         >
+          <AppIcon name="trash" :size="15" />
           {{ t('page.queue.clearCompleted') }}
         </button>
       </div>
@@ -25,6 +26,7 @@
       />
       
       <div v-if="taskStore.tasks.length === 0" class="empty-tip">
+        <AppIcon name="queue" :size="48" class="empty-icon" />
         <p>{{ t('page.queue.empty') }}</p>
         <small>{{ t('page.prepare.dragHint') }}</small>
       </div>
@@ -38,6 +40,7 @@ import { useI18n } from 'vue-i18n';
 import { useTaskStore } from '@/store/taskStore';
 import TaskItem from './TaskItem.vue';
 import { TaskStatus } from '@/types/task';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const { t } = useI18n();
 const taskStore = useTaskStore();
@@ -72,47 +75,29 @@ function clearCompleted() {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--bg-color2, #1e1e1e);
-  border-left: 1px solid var(--border-color1, #333);
+  background: var(--bg-color1, #181818);
 }
 
 .queue-header {
-  padding: 1rem;
+  min-height: 48px;
+  padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-color1, #333);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  background: var(--bg-color2, #242424);
 }
 
 .queue-header h3 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 0.95rem;
   color: var(--text-color1, #e0e0e0);
-}
-
-.queue-actions button {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color1, #333);
-  background: var(--bg-color1, #2a2a2a);
-  color: var(--text-color1, #e0e0e0);
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.queue-actions button:hover:not(:disabled) {
-  background: var(--bg-color3, #3a3a3a);
-}
-
-.queue-actions button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 .task-list {
   flex: 1;
   overflow-y: auto;
-  padding: 0.5rem;
+  padding: 0.75rem;
 }
 
 .empty-tip {
@@ -122,6 +107,12 @@ function clearCompleted() {
   justify-content: center;
   height: 100%;
   color: var(--text-color2, #999);
+  text-align: center;
+}
+
+.empty-icon {
+  color: var(--text-color2, #808080);
+  margin-bottom: 0.5rem;
 }
 
 .empty-tip p {

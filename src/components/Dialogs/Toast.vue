@@ -2,7 +2,7 @@
   <Teleport to="body">
     <Transition name="toast">
       <div v-if="modelValue" class="toast-container" :class="type">
-        <span class="toast-icon">{{ iconMap[type || 'info'] }}</span>
+        <AppIcon :name="iconMap[type || 'info']" class="toast-icon" :size="16" />
         <span class="toast-message">{{ message }}</span>
       </div>
     </Transition>
@@ -11,6 +11,7 @@
 
 <script setup lang="ts">
 import { watch, onUnmounted, ref } from 'vue';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -25,11 +26,11 @@ const emit = defineEmits<{
   'update:modelValue': [value: boolean];
 }>();
 
-const iconMap: Record<ToastType, string> = {
-  success: '✓',
-  error: '✕',
-  warning: '⚠',
-  info: 'ℹ',
+const iconMap: Record<ToastType, 'success' | 'error' | 'warning' | 'info'> = {
+  success: 'success',
+  error: 'error',
+  warning: 'warning',
+  info: 'info',
 };
 
 const timerRef = ref<ReturnType<typeof setTimeout> | null>(null);
@@ -71,13 +72,13 @@ onUnmounted(() => {
   padding: 12px 24px;
   background: var(--bg-color2, #242424);
   border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-md, 0 4px 12px rgba(0, 0, 0, 0.3));
   z-index: 10000;
   border: 1px solid var(--border-color1, #333);
 }
 
 .toast-icon {
-  font-size: 16px;
+  flex: 0 0 auto;
 }
 
 .toast-message {

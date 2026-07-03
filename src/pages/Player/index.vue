@@ -1,18 +1,18 @@
 <template>
   <div class="player-page">
-    <div class="info-panel">
+    <div class="app-page-hint info-panel">
       <p class="info-line">{{ t('page.player.infoLine1') }}</p>
       <p class="info-line">{{ t('page.player.infoLine2') }}</p>
       <p class="info-line">{{ t('page.player.infoLine3') }}</p>
     </div>
 
     <div
-      class="player-container"
+      class="app-drop-zone player-container"
       @dragenter.prevent="onDragEnter"
       @dragover.prevent
       @dragleave="onDragLeave"
       @drop.prevent="onDrop"
-      :class="{ 'drag-over': isDragOver }"
+      :class="{ 'app-drop-zone--over': isDragOver }"
     >
       <VideoPlayer
         v-if="videoSrc"
@@ -27,10 +27,9 @@
       </div>
     </div>
 
-    <div class="control-bar">
-      <button class="btn" @click="openFile">{{ t('page.player.open') }}</button>
-      <span class="btn-spacer"></span>
-      <button class="btn" @click="closeVideo" :disabled="!currentFile">{{ t('page.player.close') }}</button>
+    <div class="app-bottom-bar control-bar">
+      <button class="app-btn app-btn--primary" @click="openFile">{{ t('page.player.open') }}</button>
+      <button class="app-btn" @click="closeVideo" :disabled="!currentFile">{{ t('page.player.close') }}</button>
     </div>
   </div>
 </template>
@@ -158,9 +157,8 @@ onUnmounted(() => {
 }
 
 .info-panel {
-  background: var(--bg-color3, #242424);
-  padding: 10px 16px 16px;
   flex-shrink: 0;
+  border-radius: 0;
 }
 
 .info-line {
@@ -173,18 +171,10 @@ onUnmounted(() => {
 
 .player-container {
   flex: 1;
-  background: #000;
+  background: var(--video-bg-color, #000000);
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed transparent;
-  transition: border-color 0.2s;
-  overflow: hidden;
-  min-height: 0;
-}
-
-.player-container.drag-over {
-  border-color: #9acd32;
 }
 
 .player-hint {
@@ -193,37 +183,8 @@ onUnmounted(() => {
 }
 
 .control-bar {
-  display: flex;
-  align-items: center;
   height: 50px;
-  padding: 0 16px;
-  background: var(--bg-color3, #242424);
   flex-shrink: 0;
-}
-
-.btn {
-  padding: 6px 24px;
-  background: var(--bg-color4, #383838);
-  border: 1px solid var(--bg-color4, #383838);
-  border-radius: 15px;
-  color: var(--text-color1, #c0c0c0);
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-  min-width: 80px;
-}
-
-.btn:hover:not(:disabled) {
-  border-color: var(--text-color1, #c0c0c0);
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-spacer {
-  width: 10px;
-  flex-shrink: 0;
+  border-radius: 0;
 }
 </style>

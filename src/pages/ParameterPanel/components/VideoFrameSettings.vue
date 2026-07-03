@@ -54,7 +54,7 @@
             @input="onChange"
             :placeholder="t('page.params.cropFilterPlaceholder')"
           />
-          <button @click="showCrop = true">{{ t('page.params.cropWindow') }}</button>
+          <button class="app-btn" @click="showCrop = true">{{ t('page.params.cropWindow') }}</button>
         </div>
       </div>
     </div>
@@ -81,9 +81,9 @@
     <div class="form-section">
       <h4>{{ t('page.params.advancedFeatures') }}</h4>
       <div class="form-row">
-        <button class="advanced-btn" @click="showInterpolation = true">{{ t('page.params.interpolationParams') }}</button>
-        <button class="advanced-btn" @click="showSuperResolution = true">{{ t('page.params.superResolutionParams') }}</button>
-        <button class="advanced-btn" @click="showFrameBlend = true">{{ t('page.params.frameBlend') }}</button>
+        <button class="app-btn advanced-btn" @click="showInterpolation = true">{{ t('page.params.interpolationParams') }}</button>
+        <button class="app-btn advanced-btn" @click="showSuperResolution = true">{{ t('page.params.superResolutionParams') }}</button>
+        <button class="app-btn advanced-btn" @click="showFrameBlend = true">{{ t('page.params.frameBlend') }}</button>
       </div>
     </div>
 
@@ -261,13 +261,7 @@ function onFrameBlendUpdate(settings: PresetData['video']['filters']['frameBlend
   flex: 1;
 }
 
-.input-row button {
-  padding: 8px 16px;
-  background: var(--bg-color3, #404040);
-  border: 1px solid var(--border-color1, #555);
-  border-radius: 4px;
-  color: var(--text-color1, #c0c0c0);
-  cursor: pointer;
+.input-row .app-btn {
   white-space: nowrap;
 }
 
@@ -282,16 +276,5 @@ function onFrameBlendUpdate(settings: PresetData['video']['filters']['frameBlend
 
 .advanced-btn {
   flex: 1;
-  padding: 10px 16px;
-  background: var(--bg-color3, #303030);
-  border: 1px solid var(--border-color1, #444);
-  border-radius: 4px;
-  color: var(--text-color1, #c0c0c0);
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.advanced-btn:hover {
-  background: var(--hover-bg, #404040);
 }
 </style>

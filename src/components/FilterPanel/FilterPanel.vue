@@ -3,7 +3,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('deinterlace')">
         <h4>{{ t('page.params.filterPanel.deinterlace') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.deinterlace ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.deinterlace ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.deinterlace" class="section-content">
         <div class="form-group">
@@ -22,7 +22,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('denoise')">
         <h4>{{ t('page.params.filterPanel.denoise') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.denoise ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.denoise ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.denoise" class="section-content">
         <div class="form-group">
@@ -73,7 +73,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('sharpen')">
         <h4>{{ t('page.params.filterPanel.sharpen') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.sharpen ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.sharpen ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.sharpen" class="section-content">
         <div class="form-group">
@@ -100,7 +100,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('transform')">
         <h4>{{ t('page.params.filterPanel.transform') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.transform ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.transform ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.transform" class="section-content">
         <div class="form-group">
@@ -129,9 +129,9 @@
       </div>
       <div class="section-content">
         <div class="tool-buttons">
-          <button class="tool-btn" @click="showInterpolation = true">{{ t('page.params.filterPanel.interpolationTool') }}</button>
-          <button class="tool-btn" @click="showFrameBlend = true">{{ t('page.params.filterPanel.frameBlendTool') }}</button>
-          <button class="tool-btn" @click="showSuperResolution = true">{{ t('page.params.filterPanel.superResolutionTool') }}</button>
+          <button class="app-btn tool-btn" @click="showInterpolation = true">{{ t('page.params.filterPanel.interpolationTool') }}</button>
+          <button class="app-btn tool-btn" @click="showFrameBlend = true">{{ t('page.params.filterPanel.frameBlendTool') }}</button>
+          <button class="app-btn tool-btn" @click="showSuperResolution = true">{{ t('page.params.filterPanel.superResolutionTool') }}</button>
         </div>
       </div>
     </div>
@@ -161,6 +161,7 @@
 import { ref, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 import InterpolationDialog from '@/components/Dialogs/InterpolationDialog.vue';
 import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue';
 import SuperResolutionDialog from '@/components/Dialogs/SuperResolutionDialog.vue';
@@ -334,18 +335,4 @@ function onDenoiseMethodChange() {
   flex-wrap: wrap;
 }
 
-.tool-btn {
-  padding: 8px 16px;
-  background: var(--active-bg, #404040);
-  border: 1px solid var(--border-color1, #444);
-  border-radius: 4px;
-  color: var(--active-color, #9acd32);
-  cursor: pointer;
-  font-size: 12px;
-  transition: background 0.2s;
-}
-
-.tool-btn:hover {
-  background: var(--hover-bg, #505050);
-}
 </style>

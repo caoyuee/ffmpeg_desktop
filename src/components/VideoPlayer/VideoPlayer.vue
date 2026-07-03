@@ -21,8 +21,8 @@
 
     <div class="video-overlay" v-if="showOverlay" @click="togglePlay">
       <div class="play-button">
-        <span v-if="isPlaying">⏸</span>
-        <span v-else>▶</span>
+        <AppIcon v-if="isPlaying" name="pause" :size="28" />
+        <AppIcon v-else name="play" :size="28" />
       </div>
     </div>
 
@@ -39,24 +39,24 @@
 
       <div class="controls-row">
         <div class="controls-left">
-          <button class="control-btn" @click="togglePlay" :title="isPlaying ? '暂停' : '播放'">
-            <span v-if="isPlaying">⏸</span>
-            <span v-else>▶</span>
+          <button class="control-btn" @click="togglePlay" :title="isPlaying ? t('page.player.pause') : t('page.player.play')">
+            <AppIcon v-if="isPlaying" name="pause" :size="16" />
+            <AppIcon v-else name="play" :size="16" />
           </button>
 
-          <button class="control-btn" @click="skipBackward" title="后退10秒">
-            <span>⏪</span>
+          <button class="control-btn" @click="skipBackward" :title="t('page.player.skipBackward')">
+            <AppIcon name="rewind" :size="16" />
           </button>
 
-          <button class="control-btn" @click="skipForward" title="前进10秒">
-            <span>⏩</span>
+          <button class="control-btn" @click="skipForward" :title="t('page.player.skipForward')">
+            <AppIcon name="forward" :size="16" />
           </button>
 
           <div class="volume-control">
-            <button class="control-btn" @click="toggleMute" :title="isMuted ? '取消静音' : '静音'">
-              <span v-if="isMuted || volume === 0">🔇</span>
-              <span v-else-if="volume < 50">🔉</span>
-              <span v-else>🔊</span>
+            <button class="control-btn" @click="toggleMute" :title="isMuted ? t('page.player.unmute') : t('page.player.mute')">
+              <AppIcon v-if="isMuted || volume === 0" name="volume-mute" :size="16" />
+              <AppIcon v-else-if="volume < 50" name="volume-low" :size="16" />
+              <AppIcon v-else name="volume-high" :size="16" />
             </button>
             <input
               type="range"
@@ -75,7 +75,7 @@
 
         <div class="controls-right">
           <div class="speed-control" @mouseenter="onSpeedMenuEnter" @mouseleave="onSpeedMenuLeave">
-            <button class="control-btn" :title="'播放速度: ' + playbackRate + 'x'">
+            <button class="control-btn" :title="t('page.player.playbackRate', { rate: playbackRate })">
               <span>{{ playbackRate }}x</span>
             </button>
             <div class="speed-menu" v-show="showSpeedMenu" @mouseenter="onSpeedMenuEnter" @mouseleave="onSpeedMenuLeave">
@@ -91,9 +91,9 @@
             </div>
           </div>
 
-          <button class="control-btn" @click="toggleFullscreen" title="全屏">
-            <span v-if="isFullscreen">⇲</span>
-            <span v-else>⛶</span>
+          <button class="control-btn" @click="toggleFullscreen" :title="t('page.player.fullscreen')">
+            <AppIcon v-if="isFullscreen" name="exit-fullscreen" :size="16" />
+            <AppIcon v-else name="fullscreen" :size="16" />
           </button>
         </div>
       </div>
@@ -103,7 +103,9 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { convertFileSrc } from '@tauri-apps/api/core';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 interface Props {
   src?: string;
@@ -130,6 +132,8 @@ const emit = defineEmits<{
   'ended': [];
   'error': [error: Event];
 }>();
+
+const { t } = useI18n();
 
 const videoRef = ref<HTMLVideoElement | null>(null);
 const playerRef = ref<HTMLDivElement | null>(null);
@@ -460,7 +464,7 @@ defineExpose({
   position: relative;
   width: 100%;
   height: 100%;
-  background: #000;
+  background: var(--video-bg-color, #000000);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -482,7 +486,7 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.3);
+  background: var(--video-overlay-bg, rgba(0, 0, 0, 0.3));
   cursor: pointer;
 }
 
@@ -490,7 +494,7 @@ defineExpose({
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--video-control-bg, rgba(255, 255, 255, 0.2));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -498,13 +502,13 @@ defineExpose({
 }
 
 .play-button:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--video-control-hover-bg, rgba(255, 255, 255, 0.3));
   transform: scale(1.1);
 }
 
 .play-button span {
   font-size: 32px;
-  color: white;
+  color: var(--video-control-color, #ffffff);
   margin-left: 4px;
 }
 
@@ -517,14 +521,14 @@ defineExpose({
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--video-loading-bg, rgba(0, 0, 0, 0.5));
 }
 
 .spinner {
   width: 48px;
   height: 48px;
-  border: 4px solid rgba(255, 255, 255, 0.2);
-  border-top-color: #9acd32;
+  border: 4px solid var(--video-control-bg, rgba(255, 255, 255, 0.2));
+  border-top-color: var(--active-color, #9acd32);
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -540,7 +544,7 @@ defineExpose({
   bottom: 0;
   left: 0;
   right: 0;
-  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  background: linear-gradient(transparent, var(--video-controls-gradient, rgba(0, 0, 0, 0.8)));
   padding: 20px 12px 12px;
   opacity: 0;
   transition: opacity 0.3s;
@@ -553,7 +557,7 @@ defineExpose({
 .progress-container {
   position: relative;
   height: 4px;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--video-control-bg, rgba(255, 255, 255, 0.2));
   border-radius: 2px;
   cursor: pointer;
   margin-bottom: 12px;
@@ -568,7 +572,7 @@ defineExpose({
   top: 0;
   left: 0;
   height: 100%;
-  background: rgba(255, 255, 255, 0.3);
+  background: var(--video-control-hover-bg, rgba(255, 255, 255, 0.3));
   border-radius: 2px;
 }
 
@@ -577,7 +581,7 @@ defineExpose({
   top: 0;
   left: 0;
   height: 100%;
-  background: #9acd32;
+  background: var(--active-color, #9acd32);
   border-radius: 2px;
 }
 
@@ -587,7 +591,7 @@ defineExpose({
   transform: translate(-50%, -50%);
   width: 12px;
   height: 12px;
-  background: #9acd32;
+  background: var(--active-color, #9acd32);
   border-radius: 50%;
   opacity: 0;
   transition: opacity 0.2s;
@@ -613,7 +617,7 @@ defineExpose({
 .control-btn {
   background: transparent;
   border: none;
-  color: white;
+  color: var(--video-control-color, #ffffff);
   font-size: 16px;
   padding: 6px 10px;
   cursor: pointer;
@@ -626,7 +630,7 @@ defineExpose({
 }
 
 .control-btn:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--video-control-muted-bg, rgba(255, 255, 255, 0.1));
 }
 
 .volume-control {
@@ -640,7 +644,7 @@ defineExpose({
   height: 4px;
   -webkit-appearance: none;
   appearance: none;
-  background: rgba(255, 255, 255, 0.2);
+  background: var(--video-control-bg, rgba(255, 255, 255, 0.2));
   border-radius: 2px;
   cursor: pointer;
 }
@@ -650,7 +654,7 @@ defineExpose({
   appearance: none;
   width: 10px;
   height: 10px;
-  background: white;
+  background: var(--video-control-color, #ffffff);
   border-radius: 50%;
   cursor: pointer;
 }
@@ -658,14 +662,14 @@ defineExpose({
 .volume-slider::-moz-range-thumb {
   width: 10px;
   height: 10px;
-  background: white;
+  background: var(--video-control-color, #ffffff);
   border-radius: 50%;
   cursor: pointer;
   border: none;
 }
 
 .time-display {
-  color: white;
+  color: var(--video-control-color, #ffffff);
   font-size: 12px;
   font-family: monospace;
   margin-left: 8px;
@@ -681,7 +685,7 @@ defineExpose({
   left: 50%;
   transform: translateX(-50%);
   margin-bottom: 4px;
-  background: rgba(0, 0, 0, 0.9);
+  background: var(--video-menu-bg, rgba(0, 0, 0, 0.9));
   border-radius: 6px;
   padding: 4px 0;
   min-width: 64px;
@@ -690,7 +694,7 @@ defineExpose({
 
 .speed-option {
   padding: 6px 16px;
-  color: #ccc;
+  color: var(--video-muted-text, #cccccc);
   font-size: 13px;
   cursor: pointer;
   text-align: center;
@@ -698,12 +702,12 @@ defineExpose({
 }
 
 .speed-option:hover {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: var(--video-control-bg, rgba(255, 255, 255, 0.15));
+  color: var(--video-control-color, #ffffff);
 }
 
 .speed-option.active {
-  color: #9acd32;
+  color: var(--active-color, #9acd32);
 }
 
 .video-player:fullscreen .controls {
@@ -711,6 +715,6 @@ defineExpose({
 }
 
 .video-player:fullscreen {
-  background: #000;
+  background: var(--video-bg-color, #000000);
 }
 </style>

@@ -78,7 +78,7 @@ function formatTime(seconds: number): string {
 
 .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #28a745, #20c997);
+    background: linear-gradient(90deg, var(--success-color, #27ae60), var(--active-color, #9acd32));
     transition: width 0.3s ease;
 }
 

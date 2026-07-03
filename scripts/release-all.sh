@@ -203,3 +203,13 @@ else
 fi
 
 echo "==> Released $tag to both remotes"
+cat <<EOF
+==> Updater follow-up:
+    1. Ensure GitHub Actions secrets are set:
+       TAURI_SIGNING_PRIVATE_KEY          # private key file content, not a local path
+       TAURI_SIGNING_PRIVATE_KEY_PASSWORD # empty if the key was generated with --ci
+    2. After signed installers and .sig files are available, generate latest.json:
+       pnpm updater:manifest -- --base-url https://gitee.com/caoyuee/ffmpeg_desktop/releases/download/latest --artifact <platform=artifact-path>
+    3. Upload latest.json, installers, and matching .sig files to the Gitee release/tag used by:
+       https://gitee.com/caoyuee/ffmpeg_desktop/releases/download/latest/latest.json
+EOF

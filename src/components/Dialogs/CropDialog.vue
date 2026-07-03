@@ -21,23 +21,23 @@
         </div>
       </div>
       
-      <div class="toolbar">
-        <button class="btn btn-open" @click="openVideo">
-          <span class="icon">📁</span> {{ t('dialog.crop.open') }}
+      <div class="app-toolbar crop-toolbar">
+        <button class="app-btn" @click="openVideo">
+          <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('dialog.crop.open') }}
         </button>
-        <input 
-          type="text" 
-          class="crop-input" 
+        <input
+          type="text"
+          class="app-input--compact crop-input"
           v-model="cropParams"
           :placeholder="t('dialog.crop.cropPlaceholder')"
           @keydown.enter="applyCropParams"
         />
-        <button class="btn btn-confirm" @click="confirm">
-          <span class="icon">✓</span> {{ t('dialog.crop.complete') }}
+        <button class="app-btn app-btn--primary" @click="confirm">
+          <AppIcon name="check" :size="16" class="icon" /> {{ t('dialog.crop.complete') }}
         </button>
-        <input 
-          type="text" 
-          class="timestamp-input" 
+        <input
+          type="text"
+          class="app-input--compact timestamp-input"
           v-model="timestamp"
           :placeholder="t('dialog.crop.timestamp')"
         />
@@ -85,6 +85,7 @@ import { useI18n } from 'vue-i18n';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { calculateContainSize } from '@/utils/cropPreview';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 interface Props {
   modelValue: boolean;
@@ -340,7 +341,7 @@ function drawMagnifier(canvas: HTMLCanvasElement, centerX: number, centerY: numb
   if (!ctx || !previewImage.value) return;
   
   const magnifierSize = 5;
-  ctx.fillStyle = '#181818';
+  ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--bg-color1').trim() || 'Canvas';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
   const sourceX = Math.max(0, centerX - magnifierSize);
@@ -574,65 +575,17 @@ onUnmounted(() => {
   height: 100%;
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.crop-toolbar {
   padding: 10px 20px;
-  background: var(--bg-color3, #242424);
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 16px;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.btn-open {
-  background: var(--bg-color4, #383838);
-  color: var(--active-color, #9acd32);
-}
-
-.btn-confirm {
-  background: var(--bg-color4, #383838);
-  color: var(--warning-color, #daa520);
 }
 
 .crop-input {
   flex: 1;
   max-width: 200px;
-  padding: 6px 12px;
-  background: var(--bg-color1, #181818);
-  border: none;
-  border-radius: 15px;
-  color: var(--text-color1, #c0c0c0);
-  font-size: 13px;
-  outline: none;
-}
-
-.crop-input::placeholder {
-  color: var(--text-color3, #555);
 }
 
 .timestamp-input {
   width: 150px;
-  padding: 6px 12px;
-  background: var(--bg-color1, #181818);
-  border: none;
-  border-radius: 15px;
-  color: var(--text-color1, #c0c0c0);
-  font-size: 13px;
-  outline: none;
-}
-
-.timestamp-input::placeholder {
-  color: var(--text-color3, #555);
 }
 
 .ratio-select {

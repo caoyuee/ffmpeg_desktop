@@ -10,10 +10,10 @@
             <p>{{ message }}</p>
           </div>
           <div class="dialog-footer">
-            <button class="btn btn-cancel" @click="onCancel">
+            <button class="app-btn" @click="onCancel">
               {{ cancelText }}
             </button>
-            <button class="btn btn-confirm" @click="onConfirm">
+            <button class="app-btn app-btn--primary" @click="onConfirm">
               {{ confirmText }}
             </button>
           </div>
@@ -56,7 +56,7 @@ function onCancel() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--overlay-bg, rgba(0, 0, 0, 0.6));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -68,7 +68,7 @@ function onCancel() {
   border-radius: 8px;
   min-width: 320px;
   max-width: 480px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  box-shadow: var(--shadow-lg, 0 4px 20px rgba(0, 0, 0, 0.4));
   border: 1px solid var(--border-color1, #333);
 }
 
@@ -100,34 +100,6 @@ function onCancel() {
   justify-content: flex-end;
   gap: 12px;
   border-top: 1px solid var(--border-color1, #333);
-}
-
-.btn {
-  padding: 8px 20px;
-  border-radius: 4px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-cancel {
-  background: var(--bg-color3, #303030);
-  border: 1px solid var(--border-color1, #444);
-  color: var(--text-color1, #c0c0c0);
-}
-
-.btn-cancel:hover {
-  background: var(--hover-bg, #404040);
-}
-
-.btn-confirm {
-  background: var(--info-color, #3498db);
-  border: none;
-  color: white;
-}
-
-.btn-confirm:hover {
-  background: var(--info-color-hover, #2980b9);
 }
 
 .dialog-enter-active,

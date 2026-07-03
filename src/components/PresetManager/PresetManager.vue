@@ -3,8 +3,14 @@
     <div class="preset-header">
       <h3>{{ t('page.params.presetPanel.title') }}</h3>
       <div class="preset-actions">
-        <button @click="createNewPreset" class="btn-primary">+ {{ t('page.params.presetPanel.create') }}</button>
-        <button @click="importPreset" class="btn-secondary">{{ t('page.params.presetPanel.import') }}</button>
+        <button @click="createNewPreset" class="app-btn app-btn--primary">
+          <AppIcon name="add" :size="16" />
+          {{ t('page.params.presetPanel.create') }}
+        </button>
+        <button @click="importPreset" class="app-btn">
+          <AppIcon name="folder-open" :size="16" />
+          {{ t('page.params.presetPanel.import') }}
+        </button>
       </div>
     </div>
 
@@ -26,9 +32,15 @@
           </div>
         </div>
         <div class="preset-item-actions">
-          <button @click.stop="editPreset(preset)" title="编辑">✏️</button>
-          <button @click.stop="exportPreset(preset.id)" title="导出">📤</button>
-          <button @click.stop="deletePreset(preset.id)" title="删除">🗑️</button>
+          <button @click.stop="editPreset(preset)" :title="t('common.edit')">
+            <AppIcon name="edit" :size="15" />
+          </button>
+          <button @click.stop="exportPreset(preset.id)" :title="t('preset.export')">
+            <AppIcon name="export" :size="15" />
+          </button>
+          <button @click.stop="deletePreset(preset.id)" :title="t('preset.delete')">
+            <AppIcon name="trash" :size="15" />
+          </button>
         </div>
       </div>
 
@@ -42,7 +54,9 @@
       <div class="preset-editor" @click.stop>
         <div class="editor-header">
           <h4>{{ editorMode === "create" ? t('page.params.presetPanel.create') : t('page.params.presetPanel.edit') }}</h4>
-          <button @click="closeEditor" class="btn-close">✕</button>
+          <button @click="closeEditor" class="app-btn app-btn--icon">
+            <AppIcon name="close" :size="16" />
+          </button>
         </div>
 
         <div class="editor-content">
@@ -100,8 +114,8 @@
         </div>
 
         <div class="editor-footer">
-          <button @click="closeEditor" class="btn-secondary">{{ t('common.cancel') }}</button>
-          <button @click="savePreset" class="btn-primary">{{ t('common.save') }}</button>
+          <button @click="closeEditor" class="app-btn">{{ t('common.cancel') }}</button>
+          <button @click="savePreset" class="app-btn app-btn--primary">{{ t('common.save') }}</button>
         </div>
       </div>
     </div>
@@ -129,6 +143,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { open, save } from "@tauri-apps/plugin-dialog";
 import ConfirmDialog from "@/components/Dialogs/ConfirmDialog.vue";
 import Toast from "@/components/Dialogs/Toast.vue";
+import AppIcon from "@/components/AppIcon/AppIcon.vue";
 
 const { t } = useI18n();
 const presetStore = usePresetStore();
@@ -283,34 +298,6 @@ async function importPreset() {
   gap: 0.5rem;
 }
 
-.btn-primary {
-  padding: 0.5rem 1rem;
-  border: none;
-  border-radius: 4px;
-  background: var(--info-color, #3498db);
-  color: white;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-primary:hover {
-  background: var(--info-color-dark, #2980b9);
-}
-
-.btn-secondary {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color1, #333);
-  border-radius: 4px;
-  background: var(--bg-color1, #2a2a2a);
-  color: var(--text-color1, #e0e0e0);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-secondary:hover {
-  background: var(--bg-color3, #3a3a3a);
-}
-
 .preset-list {
   flex: 1;
   overflow-y: auto;
@@ -395,7 +382,7 @@ async function importPreset() {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
+  background: var(--overlay-bg, rgba(0, 0, 0, 0.7));
   display: flex;
   align-items: center;
   justify-content: center;
@@ -424,15 +411,6 @@ async function importPreset() {
 .editor-header h4 {
   margin: 0;
   color: var(--text-color1, #e0e0e0);
-}
-
-.btn-close {
-  padding: 0.25rem 0.5rem;
-  border: none;
-  background: transparent;
-  color: var(--text-color1, #e0e0e0);
-  cursor: pointer;
-  font-size: 1.2rem;
 }
 
 .editor-content {

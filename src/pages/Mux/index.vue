@@ -1,22 +1,27 @@
 <template>
   <div class="mux-page">
-    <div class="page-header">
-      <span class="header-text">{{ t('page.mux.hint') }}</span>
+    <div class="app-page-hint">
+      <span class="app-page-hint__text">{{ t('page.mux.hint') }}</span>
     </div>
     
-    <div class="toolbar">
-      <button class="btn btn-add" @click="addFiles">
-        <span class="icon">📁</span> {{ t('page.mux.addFiles') }}
-      </button>
-      <button class="btn btn-move" @click="moveUp" :disabled="selectedIndex === null">
-        <span class="icon">⬆️</span> {{ t('page.mux.moveUp') }}
-      </button>
-      <button class="btn btn-move" @click="moveDown" :disabled="selectedIndex === null">
-        <span class="icon">⬇️</span> {{ t('page.mux.moveDown') }}
-      </button>
-      <button class="btn btn-remove" @click="removeSelected" :disabled="selectedIndex === null">
-        <span class="icon">🗑️</span> {{ t('page.mux.remove') }}
-      </button>
+    <div class="app-toolbar">
+      <div class="app-toolbar__group">
+        <button class="app-btn app-btn--primary" @click="addFiles">
+          <AppIcon name="folder-plus" :size="16" class="icon" /> {{ t('page.mux.addFiles') }}
+        </button>
+      </div>
+      <div class="app-toolbar__divider"></div>
+      <div class="app-toolbar__group">
+        <button class="app-btn" @click="moveUp" :disabled="selectedIndex === null">
+          <AppIcon name="arrow-up" :size="16" class="icon" /> {{ t('page.mux.moveUp') }}
+        </button>
+        <button class="app-btn" @click="moveDown" :disabled="selectedIndex === null">
+          <AppIcon name="arrow-down" :size="16" class="icon" /> {{ t('page.mux.moveDown') }}
+        </button>
+        <button class="app-btn app-btn--danger" @click="removeSelected" :disabled="selectedIndex === null">
+          <AppIcon name="trash" :size="16" class="icon" /> {{ t('page.mux.remove') }}
+        </button>
+      </div>
       <div class="column-headers">
         <span class="col-header">{{ t('page.mux.video') }}</span>
         <span class="col-header">{{ t('page.mux.audio') }}</span>
@@ -31,11 +36,11 @@
     </div>
     
     <div 
-      class="file-list-container"
+      class="app-drop-zone file-list-container"
       @dragover.prevent="onDragOver"
       @dragleave="onDragLeave"
       @drop.prevent="onDrop"
-      :class="{ 'drag-over': isDragOver }"
+      :class="{ 'app-drop-zone--over': isDragOver }"
     >
       <div class="file-list" v-if="fileList.length > 0">
         <div 
@@ -50,11 +55,17 @@
           <span class="stream-cell">{{ file.videoStreams || '-' }}</span>
           <span class="stream-cell">{{ file.audioStreams || '-' }}</span>
           <span class="stream-cell">{{ file.subtitleStreams || '-' }}</span>
-          <span class="stream-cell">{{ file.useChapters ? '✓' : '-' }}</span>
-          <span class="stream-cell">{{ file.useMetadata ? '✓' : '-' }}</span>
+          <span class="stream-cell">
+            <AppIcon v-if="file.useChapters" name="check" :size="12" />
+            <span v-else>-</span>
+          </span>
+          <span class="stream-cell">
+            <AppIcon v-if="file.useMetadata" name="check" :size="12" />
+            <span v-else>-</span>
+          </span>
         </div>
       </div>
-      <div class="empty-hint" v-else>
+      <div class="app-empty-state empty-hint" v-else>
         <span>{{ t('page.mux.dragHint') }}</span>
       </div>
     </div>
@@ -107,18 +118,18 @@
       </div>
     </div>
     
-    <div class="bottom-bar">
-      <button class="btn btn-browse" @click="selectOutput">
-        <span class="icon">📂</span> {{ t('page.mux.selectOutput') }}
+    <div class="app-bottom-bar">
+      <button class="app-btn" @click="selectOutput">
+        <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('page.mux.selectOutput') }}
       </button>
-      <input 
-        type="text" 
-        class="output-input" 
-        v-model="outputPath" 
+      <input
+        type="text"
+        class="app-input--compact app-output-input"
+        v-model="outputPath"
         :placeholder="t('page.mux.outputTo')"
       />
-      <button class="btn btn-start" @click="startMux" :disabled="fileList.length < 1 || !outputPath">
-        <span class="icon">▶️</span> {{ t('page.mux.startMux') }}
+      <button class="app-btn app-btn--primary" @click="startMux" :disabled="fileList.length < 1 || !outputPath">
+        <AppIcon name="play" :size="16" class="icon" /> {{ t('page.mux.startMux') }}
       </button>
     </div>
   </div>
@@ -131,6 +142,7 @@ import { open, save } from '@tauri-apps/plugin-dialog';
 import { useTaskStore } from '@/store/taskStore';
 import { getFFmpegPath } from '@/utils/ffmpegPath';
 import StreamSelectorDialog from '@/components/Dialogs/StreamSelectorDialog.vue';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const { t } = useI18n();
 
@@ -367,59 +379,7 @@ onUnmounted(() => {
   height: 100%;
   background: var(--bg-color2, #181818);
   padding: 10px;
-}
-
-.page-header {
-  padding: 10px;
-  background: var(--bg-color3, #242424);
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-
-.header-text {
-  color: #888;
-  font-size: 13px;
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px;
-  background: var(--bg-color3, #242424);
-  border-radius: 4px;
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 16px;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-add {
-  background: var(--bg-color4, #383838);
-  color: #9acd32;
-}
-
-.btn-move {
-  background: var(--bg-color4, #383838);
-  color: #6495ed;
-}
-
-.btn-remove {
-  background: var(--bg-color4, #383838);
-  color: #cd5c5c;
+  gap: 10px;
 }
 
 .column-headers {
@@ -429,29 +389,15 @@ onUnmounted(() => {
 }
 
 .col-header {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   min-width: 75px;
   text-align: center;
 }
 
 .hint-bar {
-  padding: 10px;
-  color: #666;
+  color: var(--text-color2, #808080);
   font-size: 12px;
-}
-
-.file-list-container {
-  flex: 1;
-  background: var(--bg-color1, #181818);
-  border-radius: 4px;
-  overflow: auto;
-  border: 2px dashed transparent;
-  transition: border-color 0.2s;
-}
-
-.file-list-container.drag-over {
-  border-color: #9acd32;
 }
 
 .file-list {
@@ -476,7 +422,7 @@ onUnmounted(() => {
 }
 
 .file-name {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   flex: 1;
   overflow: hidden;
@@ -486,18 +432,13 @@ onUnmounted(() => {
 }
 
 .stream-cell {
-  color: #888;
+  color: var(--text-color2, #808080);
   font-size: 12px;
   min-width: 75px;
   text-align: center;
 }
 
 .empty-hint {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: #555;
   font-size: 14px;
 }
 
@@ -516,7 +457,7 @@ onUnmounted(() => {
 }
 
 .stream-label {
-  color: #888;
+  color: var(--text-color2, #808080);
   font-size: 13px;
   min-width: 100px;
 }
@@ -527,14 +468,14 @@ onUnmounted(() => {
   background: var(--bg-color1, #181818);
   border: none;
   border-radius: 15px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   outline: none;
   min-width: 150px;
 }
 
 .stream-input::placeholder {
-  color: #555;
+  color: var(--text-color2, #808080);
 }
 
 .option-row {
@@ -547,7 +488,7 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   cursor: pointer;
 }
@@ -558,39 +499,4 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.bottom-bar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  background: var(--bg-color3, #242424);
-  border-radius: 4px;
-  margin-top: 10px;
-}
-
-.btn-browse {
-  background: var(--bg-color4, #383838);
-  color: #9acd32;
-}
-
-.btn-start {
-  background: var(--bg-color4, #383838);
-  color: #9acd32;
-  min-width: 100px;
-}
-
-.output-input {
-  flex: 1;
-  padding: 8px 16px;
-  background: var(--bg-color1, #181818);
-  border: none;
-  border-radius: 15px;
-  color: #c0c0c0;
-  font-size: 13px;
-  outline: none;
-}
-
-.output-input::placeholder {
-  color: #555;
-}
 </style>

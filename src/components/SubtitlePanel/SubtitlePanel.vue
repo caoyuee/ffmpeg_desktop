@@ -3,7 +3,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('source')">
         <h4>{{ t('page.params.subtitlePanel.subtitleBurn') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.source ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.source ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.source" class="section-content">
         <div class="form-group">
@@ -21,7 +21,7 @@
             <div class="file-input-group">
               <input type="text" v-model="localPreset.video.subtitleBurn.externalFileName" 
                 :placeholder="t('page.params.subtitlePanel.subtitleFilePlaceholder')" readonly />
-              <button type="button" @click="selectSubtitleFile">{{ t('page.params.subtitlePanel.select') }}</button>
+              <button type="button" class="app-btn app-btn--primary" @click="selectSubtitleFile">{{ t('page.params.subtitlePanel.select') }}</button>
             </div>
           </div>
         </div>
@@ -39,7 +39,7 @@
     <div v-if="subtitleMode !== 'none'" class="panel-section">
       <div class="section-header" @click="toggleSection('style')">
         <h4>{{ t('page.params.subtitlePanel.fontStyle') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.style ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.style ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.style" class="section-content">
         <div class="form-row">
@@ -93,7 +93,7 @@
     <div v-if="subtitleMode !== 'none'" class="panel-section">
       <div class="section-header" @click="toggleSection('position')">
         <h4>{{ t('page.params.subtitlePanel.borderAndPosition') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.position ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.position ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.position" class="section-content">
         <div class="form-row">
@@ -153,6 +153,7 @@
 import { ref, reactive, watch, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const props = defineProps<{
   preset: PresetData;
@@ -380,19 +381,8 @@ onMounted(() => {
   flex: 1;
 }
 
-.file-input-group button {
-  padding: 0.5rem 1rem;
-  border: 1px solid var(--border-color1, #333);
-  border-radius: 4px;
-  background: var(--info-color, #3498db);
-  color: white;
-  font-size: 0.85rem;
-  cursor: pointer;
+.file-input-group .app-btn {
   white-space: nowrap;
-}
-
-.file-input-group button:hover {
-  background: var(--info-color-hover, #2980b9);
 }
 
 .color-input-group {

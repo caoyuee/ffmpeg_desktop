@@ -3,7 +3,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('basic')">
         <h4>{{ t('page.params.colorPanel.basicAdjustments') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.basic ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.basic ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.basic" class="section-content">
         <div class="form-group">
@@ -42,14 +42,14 @@
           </div>
         </div>
 
-        <button class="reset-btn" @click="resetBasic">{{ t('page.params.colorPanel.resetBasicAdjustments') }}</button>
+        <button class="app-btn reset-btn" @click="resetBasic">{{ t('page.params.colorPanel.resetBasicAdjustments') }}</button>
       </div>
     </div>
 
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('format')">
         <h4>{{ t('page.params.colorPanel.pixelFormat') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.format ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.format ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.format" class="section-content">
         <div class="form-group">
@@ -74,7 +74,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('space')">
         <h4>{{ t('page.params.colorPanel.colorSpace') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.space ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.space ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.space" class="section-content">
         <div class="form-group">
@@ -123,7 +123,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('tonemap')">
         <h4>{{ t('page.params.colorPanel.toneMapping') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.tonemap ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.tonemap ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.tonemap" class="section-content">
         <div class="form-group">
@@ -148,6 +148,7 @@
 import { computed, ref, reactive, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const props = defineProps<{
   preset: PresetData;
@@ -286,18 +287,7 @@ function resetBasic() {
 
 .reset-btn {
   width: 100%;
-  padding: 0.5rem;
   margin-top: 0.75rem;
-  border: 1px solid var(--border-color1, #333);
-  border-radius: 4px;
-  background: var(--bg-color3, #3a3a3a);
-  color: var(--text-color1, #e0e0e0);
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-
-.reset-btn:hover {
-  background: var(--hover-bg, #444);
 }
 
 .hint {

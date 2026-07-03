@@ -4,48 +4,58 @@
     :class="{ 'drag-over': isDragOver }"
     @dragover.prevent="onHtmlDragOver"
   >
-    <div class="toolbar">
-      <button class="toolbar-btn" @click="startAll" :title="t('page.queue.startAll')">
-        <span class="icon">▶</span> {{ t('common.start') }}
-      </button>
-      <button class="toolbar-btn" @click="pauseAll" :title="t('common.pause')">
-        <span class="icon">⏸</span> {{ t('common.pause') }}
-      </button>
-      <button class="toolbar-btn" @click="stopAll" :title="t('page.queue.stopAll')">
-        <span class="icon">⏹</span> {{ t('common.stop') }}
-      </button>
-      <div class="toolbar-divider"></div>
-      <button class="toolbar-btn" @click="removeSelected" :title="t('common.remove')">
-        <span class="icon">🗑</span> {{ t('common.remove') }}
-      </button>
-      <button class="toolbar-btn" @click="resetSelected" :title="t('common.reset')">
-        <span class="icon">↺</span> {{ t('common.reset') }}
-      </button>
-      <div class="toolbar-divider"></div>
-      <button class="toolbar-btn" @click="moveUp" title="F3">
-        <span class="icon">↑</span>
-      </button>
-      <button class="toolbar-btn" @click="moveDown" title="F4">
-        <span class="icon">↓</span>
-      </button>
-      <div class="toolbar-divider"></div>
-      <button class="toolbar-btn" @click="selectAll" title="Ctrl+A">
-        {{ t('stream.selectAll') }}
-      </button>
-      <button class="toolbar-btn" @click="invertSelection" title="Alt+A">
-        {{ t('stream.deselectAll') }}
-      </button>
-      <div class="toolbar-divider"></div>
-      <input
-        type="text"
-        v-model="stdinInput"
-        :placeholder="t('page.queue.stdinPlaceholder')"
-        class="stdin-input"
-        @keyup.enter="sendStdin"
-      />
-      <button class="toolbar-btn" @click="sendStdin" :disabled="!stdinInput">
-        {{ t('common.send') }}
-      </button>
+    <div class="app-toolbar queue-toolbar">
+      <div class="app-toolbar__group">
+        <button class="app-btn app-btn--primary" @click="startAll" :title="t('page.queue.startAll')">
+          <AppIcon name="play" :size="16" class="icon" /> {{ t('common.start') }}
+        </button>
+        <button class="app-btn" @click="pauseAll" :title="t('common.pause')">
+          <AppIcon name="pause" :size="16" class="icon" /> {{ t('common.pause') }}
+        </button>
+        <button class="app-btn app-btn--danger" @click="stopAll" :title="t('page.queue.stopAll')">
+          <AppIcon name="stop" :size="16" class="icon" /> {{ t('common.stop') }}
+        </button>
+      </div>
+      <div class="app-toolbar__divider"></div>
+      <div class="app-toolbar__group">
+        <button class="app-btn" @click="removeSelected" :title="t('common.remove')">
+          <AppIcon name="trash" :size="16" class="icon" /> {{ t('common.remove') }}
+        </button>
+        <button class="app-btn" @click="resetSelected" :title="t('common.reset')">
+          <AppIcon name="reset" :size="16" class="icon" /> {{ t('common.reset') }}
+        </button>
+      </div>
+      <div class="app-toolbar__divider"></div>
+      <div class="app-toolbar__group">
+        <button class="app-btn app-btn--icon" @click="moveUp" title="F3">
+          <AppIcon name="arrow-up" :size="16" class="icon" />
+        </button>
+        <button class="app-btn app-btn--icon" @click="moveDown" title="F4">
+          <AppIcon name="arrow-down" :size="16" class="icon" />
+        </button>
+      </div>
+      <div class="app-toolbar__divider"></div>
+      <div class="app-toolbar__group">
+        <button class="app-btn" @click="selectAll" title="Ctrl+A">
+          {{ t('stream.selectAll') }}
+        </button>
+        <button class="app-btn" @click="invertSelection" title="Alt+A">
+          {{ t('stream.deselectAll') }}
+        </button>
+      </div>
+      <div class="app-toolbar__spacer"></div>
+      <div class="stdin-group">
+        <input
+          type="text"
+          v-model="stdinInput"
+          :placeholder="t('page.queue.stdinPlaceholder')"
+          class="app-input--compact stdin-input"
+          @keyup.enter="sendStdin"
+        />
+        <button class="app-btn" @click="sendStdin" :disabled="!stdinInput">
+          {{ t('common.send') }}
+        </button>
+      </div>
     </div>
 
     <div class="status-bar">
@@ -89,12 +99,14 @@
             <option value="all">{{ t('page.queue.latestOutput') }}</option>
             <option value="error">{{ t('page.queue.errorOnly') }}</option>
           </select>
-          <button class="copy-btn" @click="copyOutput">{{ t('page.queue.copy') }}</button>
+          <button class="app-btn copy-btn" @click="copyOutput">{{ t('page.queue.copy') }}</button>
           <label class="auto-scroll-label">
             <input type="checkbox" v-model="autoScroll" />
             {{ t('page.queue.forceScroll') }}
           </label>
-          <button class="close-btn" @click="showOutputPanel = false">✕</button>
+          <button class="app-btn app-btn--icon close-btn" @click="showOutputPanel = false">
+            <AppIcon name="close" :size="14" />
+          </button>
         </div>
         <div class="output-content" ref="outputRef">
           <pre>{{ outputLog }}</pre>
@@ -102,7 +114,7 @@
       </div>
     </div>
 
-    <div class="toggle-output-btn" @click="showOutputPanel = !showOutputPanel">
+    <div class="app-btn toggle-output-btn" @click="showOutputPanel = !showOutputPanel">
       {{ showOutputPanel ? t('page.queue.hideOutput') : t('page.queue.showOutput') }}
     </div>
 
@@ -125,6 +137,7 @@ import { usePresetStore } from '@/store/presetStore';
 import { FFmpegCommandBuilder } from '@/utils/commandBuilder';
 import { generateOutputPath } from '@/hooks/useFormatters';
 import { TaskStatus } from '@/types/task';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const { t } = useI18n();
 const taskStore = useTaskStore();
@@ -428,58 +441,28 @@ onUnmounted(() => {
   outline-color: var(--active-color, #9acd32);
 }
 
-.toolbar {
+.stdin-group {
   display: flex;
   align-items: center;
-  padding: 8px 12px;
-  background: var(--bg-color2, #242424);
-  border-bottom: 1px solid var(--border-color1, #333);
-  gap: 4px;
-}
-
-.toolbar-btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  background: var(--bg-color3, #303030);
-  border: 1px solid var(--border-color1, #444);
-  border-radius: 4px;
-  color: var(--text-color1, #c0c0c0);
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.toolbar-btn:hover {
-  background: var(--hover-bg, #404040);
-  border-color: var(--active-color, #9acd32);
-}
-
-.toolbar-btn .icon {
-  font-size: 14px;
-}
-
-.toolbar-divider {
-  width: 1px;
-  height: 24px;
-  background: var(--border-color1, #444);
-  margin: 0 8px;
+  gap: 6px;
 }
 
 .status-bar {
-  display: flex;
-  align-items: center;
-  padding: 8px 16px;
-  background: var(--bg-color3);
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 1px;
+  background: var(--border-color1, #333);
   border-bottom: 1px solid var(--border-color1, #333);
-  gap: 24px;
 }
 
 .status-item {
   display: flex;
-  align-items: center;
-  gap: 6px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: 58px;
+  padding: 10px 14px;
+  background: var(--bg-color2, #242424);
 }
 
 .status-label {
@@ -488,9 +471,10 @@ onUnmounted(() => {
 }
 
 .status-value {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--text-color1, #c0c0c0);
   font-family: monospace;
+  font-weight: 600;
 }
 
 .main-content {
@@ -502,11 +486,12 @@ onUnmounted(() => {
 .task-list-container {
   flex: 1;
   overflow: auto;
-  padding: 12px;
+  padding: 14px;
+  background: var(--bg-color1, #181818);
 }
 
 .output-panel {
-  width: 400px;
+  width: min(420px, 36vw);
   background: var(--bg-color2, #242424);
   border-left: 1px solid var(--border-color1, #333);
   display: flex;
@@ -516,6 +501,7 @@ onUnmounted(() => {
 .output-header {
   display: flex;
   align-items: center;
+  min-height: 48px;
   padding: 8px 12px;
   gap: 8px;
   border-bottom: 1px solid var(--border-color1, #333);
@@ -531,13 +517,7 @@ onUnmounted(() => {
 }
 
 .copy-btn {
-  padding: 4px 12px;
-  background: var(--bg-color3, #404040);
-  border: 1px solid var(--border-color1, #555);
-  border-radius: 4px;
-  color: var(--text-color1, #c0c0c0);
   font-size: 12px;
-  cursor: pointer;
 }
 
 .auto-scroll-label {
@@ -551,16 +531,6 @@ onUnmounted(() => {
 
 .close-btn {
   margin-left: auto;
-  padding: 4px 8px;
-  background: transparent;
-  border: none;
-  color: var(--text-color2, #808080);
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.close-btn:hover {
-  color: var(--text-color1, #c0c0c0);
 }
 
 .output-content {
@@ -582,27 +552,11 @@ onUnmounted(() => {
   position: absolute;
   right: 12px;
   bottom: 12px;
-  padding: 8px 16px;
-  background: var(--bg-color3, #404040);
-  border: 1px solid var(--border-color1, #555);
-  border-radius: 4px;
-  color: var(--text-color1, #c0c0c0);
   font-size: 12px;
-  cursor: pointer;
-}
-
-.toggle-output-btn:hover {
-  background: var(--hover-bg, #505050);
 }
 
 .stdin-input {
-  width: 180px;
-  padding: 4px 8px;
-  background: var(--bg-color1, #181818);
-  border: 1px solid var(--border-color1, #444);
-  border-radius: 4px;
-  color: var(--text-color1, #c0c0c0);
-  font-size: 12px;
+  width: 220px;
 }
 
 .drag-hint {

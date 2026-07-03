@@ -1,19 +1,21 @@
 <template>
   <div class="quality-assess-page">
-    <div class="page-header">
-      <span class="header-text">{{ t('page.quality.hint') }}</span>
+    <div class="app-page-hint">
+      <span class="app-page-hint__text">{{ t('page.quality.hint') }}</span>
     </div>
     
-    <div class="toolbar">
-      <button class="btn btn-add" @click="selectReference">
-        <span class="icon">📁</span> {{ t('page.quality.selectReference') }}
-      </button>
-      <button class="btn btn-add" @click="selectDistorted">
-        <span class="icon">📁</span> {{ t('page.quality.selectDistorted') }}
-      </button>
-      <button class="btn btn-clear" @click="clearAll">
-        <span class="icon">🗑️</span> {{ t('page.quality.clear') }}
-      </button>
+    <div class="app-toolbar">
+      <div class="app-toolbar__group">
+        <button class="app-btn app-btn--primary" @click="selectReference">
+          <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('page.quality.selectReference') }}
+        </button>
+        <button class="app-btn" @click="selectDistorted">
+          <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('page.quality.selectDistorted') }}
+        </button>
+        <button class="app-btn app-btn--danger" @click="clearAll">
+          <AppIcon name="trash" :size="16" class="icon" /> {{ t('page.quality.clear') }}
+        </button>
+      </div>
     </div>
     
     <div class="files-section">
@@ -65,20 +67,20 @@
             <option value="xml">XML</option>
             <option value="csv">CSV</option>
           </select>
-          <button class="btn btn-browse" @click="selectOutputPath">
-            <span class="icon">📂</span> {{ t('page.quality.selectSaveLocation') }}
+          <button class="app-btn" @click="selectOutputPath">
+            <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('page.quality.selectSaveLocation') }}
           </button>
           <input type="text" class="file-input small" v-model="outputPath" :placeholder="t('page.quality.reportPath')" />
         </div>
       </div>
     </div>
     
-    <div class="action-bar">
-      <button class="btn btn-start" @click="startAssessment" :disabled="!canStart">
-        <span class="icon">▶️</span> {{ t('page.quality.startAssessment') }}
+    <div class="app-bottom-bar">
+      <button class="app-btn app-btn--primary" @click="startAssessment" :disabled="!canStart">
+        <AppIcon name="play" :size="16" class="icon" /> {{ t('page.quality.startAssessment') }}
       </button>
-      <button class="btn btn-stop" @click="stopAssessment" :disabled="!isRunning">
-        <span class="icon">⏹️</span> {{ t('page.quality.stopAssessment') }}
+      <button class="app-btn app-btn--danger" @click="stopAssessment" :disabled="!isRunning">
+        <AppIcon name="stop" :size="16" class="icon" /> {{ t('page.quality.stopAssessment') }}
       </button>
     </div>
     
@@ -133,6 +135,7 @@ import { useI18n } from 'vue-i18n';
 import { open, save } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const { t } = useI18n();
 
@@ -343,68 +346,6 @@ async function stopAssessment() {
   gap: 10px;
 }
 
-.page-header {
-  padding: 10px;
-  background: var(--bg-color3, #242424);
-  border-radius: 4px;
-}
-
-.header-text {
-  color: #888;
-  font-size: 13px;
-}
-
-.toolbar {
-  display: flex;
-  gap: 8px;
-  padding: 10px;
-  background: var(--bg-color3, #242424);
-  border-radius: 4px;
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 16px;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.btn-add {
-  background: var(--bg-color4, #383838);
-  color: #9acd32;
-}
-
-.btn-clear {
-  background: var(--bg-color4, #383838);
-  color: #cd5c5c;
-}
-
-.btn-browse {
-  background: var(--bg-color4, #383838);
-  color: #6495ed;
-  padding: 4px 12px;
-}
-
-.btn-start {
-  background: var(--bg-color4, #383838);
-  color: #9acd32;
-}
-
-.btn-stop {
-  background: var(--bg-color4, #383838);
-  color: #cd5c5c;
-}
-
 .files-section {
   background: var(--bg-color3, #242424);
   border-radius: 4px;
@@ -423,7 +364,7 @@ async function stopAssessment() {
 }
 
 .file-label {
-  color: #888;
+  color: var(--text-color2, #808080);
   font-size: 13px;
   min-width: 120px;
 }
@@ -434,7 +375,7 @@ async function stopAssessment() {
   background: var(--bg-color1, #181818);
   border: none;
   border-radius: 15px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   outline: none;
 }
@@ -461,7 +402,7 @@ async function stopAssessment() {
 }
 
 .option-label {
-  color: #888;
+  color: var(--text-color2, #808080);
   font-size: 13px;
   min-width: 100px;
 }
@@ -476,7 +417,7 @@ async function stopAssessment() {
   display: flex;
   align-items: center;
   gap: 6px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   cursor: pointer;
 }
@@ -499,18 +440,10 @@ async function stopAssessment() {
   background: var(--bg-color4, #303030);
   border: none;
   border-radius: 4px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
   outline: none;
   cursor: pointer;
-}
-
-.action-bar {
-  display: flex;
-  gap: 10px;
-  padding: 10px;
-  background: var(--bg-color3, #242424);
-  border-radius: 4px;
 }
 
 .progress-section {
@@ -532,18 +465,18 @@ async function stopAssessment() {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #9acd32, #6495ed);
+  background: linear-gradient(90deg, var(--active-color, #9acd32), var(--info-color, #3498db));
   transition: width 0.3s;
 }
 
 .progress-text {
-  color: #9acd32;
+  color: var(--active-color, #9acd32);
   font-size: 13px;
   min-width: 50px;
 }
 
 .status-text {
-  color: #888;
+  color: var(--text-color2, #808080);
   font-size: 12px;
 }
 
@@ -558,7 +491,7 @@ async function stopAssessment() {
 }
 
 .results-title {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 14px;
   font-weight: 500;
 }
@@ -578,14 +511,14 @@ async function stopAssessment() {
 
 .result-label {
   display: block;
-  color: #888;
+  color: var(--text-color2, #808080);
   font-size: 12px;
   margin-bottom: 5px;
 }
 
 .result-value {
   display: block;
-  color: #9acd32;
+  color: var(--active-color, #9acd32);
   font-size: 24px;
   font-weight: bold;
   margin-bottom: 5px;
@@ -593,13 +526,13 @@ async function stopAssessment() {
 
 .result-hint {
   display: block;
-  color: #666;
+  color: var(--text-color2, #808080);
   font-size: 11px;
 }
 
 .result-minmax {
   display: block;
-  color: #555;
+  color: var(--disabled-color, #7f8c8d);
   font-size: 10px;
   margin-top: 5px;
 }
@@ -616,7 +549,7 @@ async function stopAssessment() {
 .log-header {
   padding: 8px 10px;
   border-bottom: 1px solid var(--bg-color4, #383838);
-  color: #888;
+  color: var(--text-color2, #808080);
   font-size: 12px;
 }
 
@@ -629,7 +562,7 @@ async function stopAssessment() {
 }
 
 .log-line {
-  color: #888;
+  color: var(--text-color2, #808080);
   line-height: 1.6;
 }
 </style>

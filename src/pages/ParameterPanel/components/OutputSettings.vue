@@ -32,7 +32,7 @@
         <label>{{ t('page.params.outputDirectory') }}</label>
         <div class="input-row">
           <input type="text" v-model="localPreset.output.location" @input="onChange" :placeholder="t('page.params.outputDirectoryPlaceholder')" />
-          <button @click="selectDirectory">{{ t('page.params.selectDirectory') }}</button>
+          <button class="app-btn" @click="selectDirectory">{{ t('page.params.selectDirectory') }}</button>
         </div>
       </div>
     </div>
@@ -225,13 +225,7 @@ async function selectDirectory() {
   flex: 1;
 }
 
-.input-row button {
-  padding: 8px 16px;
-  background: var(--bg-color3, #404040);
-  border: 1px solid var(--border-color1, #555);
-  border-radius: 4px;
-  color: var(--text-color1, #c0c0c0);
-  cursor: pointer;
+.input-row .app-btn {
   white-space: nowrap;
 }
 
@@ -267,8 +261,8 @@ async function selectDirectory() {
 .compat-warning {
   margin-top: 8px;
   padding: 8px 12px;
-  background: rgba(255, 193, 7, 0.1);
-  border: 1px solid rgba(255, 193, 7, 0.3);
+  background: var(--warning-bg, rgba(255, 193, 7, 0.1));
+  border: 1px solid var(--warning-border, rgba(255, 193, 7, 0.3));
   border-radius: 4px;
   display: flex;
   flex-direction: column;
@@ -277,6 +271,6 @@ async function selectDirectory() {
 
 .compat-warning span {
   font-size: 12px;
-  color: #ffc107;
+  color: var(--warning-color, #ffc107);
 }
 </style>

@@ -12,9 +12,9 @@
     </div>
 
     <div class="settings-content">
-      <div v-show="activeTab === 'general'" class="settings-section">
+      <div v-show="activeTab === 'general'" class="app-card settings-section">
         <h4>{{ t('page.settings.general') }}</h4>
-        
+
         <div class="form-group">
           <label>{{ t('page.settings.language') }}</label>
           <select v-model="settings.language" @change="saveSettings">
@@ -55,14 +55,14 @@
         </div>
       </div>
 
-      <div v-show="activeTab === 'ffmpeg'" class="settings-section">
+      <div v-show="activeTab === 'ffmpeg'" class="app-card settings-section">
         <h4>{{ t('page.settings.ffmpeg') }}</h4>
 
         <div class="form-group">
           <label>{{ t('page.settings.ffmpegPath') }}</label>
           <div class="input-row">
             <input type="text" v-model="settings.ffmpegPath" @change="saveSettings" :placeholder="t('common.browse')" />
-            <button @click="browseFFmpeg">{{ t('common.browse') }}</button>
+            <button class="app-btn" @click="browseFFmpeg">{{ t('common.browse') }}</button>
           </div>
         </div>
 
@@ -70,7 +70,7 @@
           <label>{{ t('page.settings.ffprobePath') }}</label>
           <div class="input-row">
             <input type="text" v-model="settings.ffprobePath" @change="saveSettings" :placeholder="t('common.browse')" />
-            <button @click="browseFFprobe">{{ t('common.browse') }}</button>
+            <button class="app-btn" @click="browseFFprobe">{{ t('common.browse') }}</button>
           </div>
         </div>
 
@@ -89,14 +89,14 @@
         </div>
 
         <div class="form-group">
-          <button class="test-btn" @click="testFFmpeg">{{ t('page.settings.testFFmpeg') }}</button>
+          <button class="app-btn app-btn--primary" @click="testFFmpeg">{{ t('page.settings.testFFmpeg') }}</button>
           <span v-if="ffmpegTestResult" :class="['test-result', ffmpegTestResult.success ? 'success' : 'error']">
             {{ ffmpegTestResult.message }}
           </span>
         </div>
       </div>
 
-      <div v-show="activeTab === 'output'" class="settings-section">
+      <div v-show="activeTab === 'output'" class="app-card settings-section">
         <h4>{{ t('page.settings.output') }}</h4>
 
         <div class="form-group">
@@ -113,7 +113,7 @@
           <label>{{ t('page.settings.customDir') }}</label>
           <div class="input-row">
             <input type="text" v-model="settings.customOutputDir" @change="saveSettings" />
-            <button @click="browseOutputDir">{{ t('common.browse') }}</button>
+            <button class="app-btn" @click="browseOutputDir">{{ t('common.browse') }}</button>
           </div>
         </div>
 
@@ -148,14 +148,14 @@
         </div>
       </div>
 
-      <div v-show="activeTab === 'storage'" class="settings-section">
+      <div v-show="activeTab === 'storage'" class="app-card settings-section">
         <h4>{{ t('page.settings.storage') }}</h4>
 
         <div class="form-group">
           <label>{{ t('page.settings.presetDir') }}</label>
           <div class="input-row">
             <input type="text" v-model="settings.presetDir" @change="saveSettings" />
-            <button @click="browsePresetDir">{{ t('common.browse') }}</button>
+            <button class="app-btn" @click="browsePresetDir">{{ t('common.browse') }}</button>
           </div>
         </div>
 
@@ -165,29 +165,42 @@
         </div>
 
         <div class="form-group">
-          <button class="danger-btn" @click="showClearCacheDialog = true">{{ t('page.settings.clearCache') }}</button>
-          <button class="danger-btn" @click="showClearLogsDialog = true">{{ t('page.settings.clearLogs') }}</button>
+          <button class="app-btn app-btn--danger" @click="showClearCacheDialog = true">{{ t('page.settings.clearCache') }}</button>
+          <button class="app-btn app-btn--danger" @click="showClearLogsDialog = true">{{ t('page.settings.clearLogs') }}</button>
         </div>
       </div>
 
-      <div v-show="activeTab === 'about'" class="settings-section">
+      <div v-show="activeTab === 'about'" class="app-card settings-section">
         <h4>{{ t('page.settings.about') }}</h4>
 
         <div class="about-content">
-          <div class="app-logo">🎬</div>
+          <div class="app-logo">
+            <img src="@/assets/app-icon.png" :alt="t('about.softwareName')" />
+          </div>
           <h3>{{ t('about.softwareName') }}</h3>
-          <p class="version">{{ t('about.version') }} 0.1.1</p>
+          <p class="version">{{ t('about.version') }} {{ appVersion || '-' }}</p>
           <p class="description">{{ t('about.description') }}</p>
 
           <div class="update-section">
-            <button class="update-btn" :disabled="updateState.checking" @click="checkUpdate">
+            <button class="app-btn app-btn--primary" :disabled="updateState.checking" @click="checkUpdate">
               {{ updateState.checking ? t('about.checking') : t('about.checkUpdate') }}
             </button>
             <p v-if="updateState.hasUpdate" class="update-info success">
               {{ t('about.updateAvailable', { version: updateState.latestRelease?.version }) }}
-              <a :href="updateState.latestRelease?.url" target="_blank">{{ t('about.viewRelease') }}</a>
+              <a v-if="updateState.latestRelease?.url" :href="updateState.latestRelease.url" target="_blank">{{ t('about.viewRelease') }}</a>
             </p>
-            <p v-else-if="updateState.latestRelease && !updateState.hasUpdate" class="update-info">
+            <button
+              v-if="updateState.hasUpdate"
+              class="app-btn app-btn--primary install-update-btn"
+              :disabled="updateState.installing"
+              @click="installUpdate"
+            >
+              {{ updateState.installing ? t('about.installingUpdate') : t('about.downloadAndInstall') }}
+            </button>
+            <p v-if="updateState.installing && updateState.downloadProgress !== null" class="update-info">
+              {{ t('about.downloadingUpdate', { progress: updateState.downloadProgress }) }}
+            </p>
+            <p v-else-if="updateState.checked && !updateState.hasUpdate && !updateState.error" class="update-info">
               {{ t('about.upToDate') }}
             </p>
             <p v-if="updateState.error" class="update-info error">
@@ -195,10 +208,10 @@
             </p>
           </div>
 
-          <div class="tech-stack">
-            <span>Tauri 2.x</span>
-            <span>Vue 3</span>
-            <span>TypeScript</span>
+          <div class="app-pill-list tech-stack">
+            <span class="app-pill">Tauri 2.x</span>
+            <span class="app-pill">Vue 3</span>
+            <span class="app-pill">TypeScript</span>
           </div>
 
           <div class="links">
@@ -239,6 +252,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { getVersion } from '@tauri-apps/api/app';
 import { invoke } from '@tauri-apps/api/core';
 import { setLocale, availableLanguages } from '@/i18n';
 import { useSettingStore } from '@/store/settingStore';
@@ -262,6 +276,7 @@ const tabs = [
 
 const activeTab = ref('general');
 const settings = ref<AppSettings>({ ...DEFAULT_APP_SETTINGS });
+const appVersion = ref('');
 
 const ffmpegTestResult = ref<{ success: boolean; message: string } | null>(null);
 
@@ -271,10 +286,14 @@ const showToast = ref(false);
 const toastMessage = ref('');
 const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success');
 
-const { state: updateState, checkForUpdates } = useUpdateChecker();
+const { state: updateState, checkForUpdates, downloadAndInstallUpdate } = useUpdateChecker();
 
 onMounted(() => {
   loadSettings();
+  loadVersion();
+  if (settings.value.autoCheckUpdate) {
+    checkForUpdates();
+  }
 });
 
 watch(() => settings.value.language, (newLang) => {
@@ -291,6 +310,14 @@ function loadSettings() {
     minimizeToTray: settings.value.minimizeToTray,
     closeToTray: settings.value.closeToTray,
   }).catch(() => {});
+}
+
+async function loadVersion() {
+  try {
+    appVersion.value = await getVersion();
+  } catch {
+    appVersion.value = '';
+  }
 }
 
 function saveSettings() {
@@ -357,9 +384,9 @@ async function testFFmpeg() {
     const result = await invoke<string>('test_ffmpeg', { 
       path: settings.value.ffmpegPath || '' 
     });
-    ffmpegTestResult.value = { success: true, message: result || 'FFmpeg 可用' };
+    ffmpegTestResult.value = { success: true, message: result || t('page.settings.ffmpegAvailable') };
   } catch (error) {
-    ffmpegTestResult.value = { success: false, message: '未找到 FFmpeg: ' + String(error) };
+    ffmpegTestResult.value = { success: false, message: `${t('page.settings.ffmpegNotFound')}: ${String(error)}` };
   }
 }
 
@@ -391,6 +418,10 @@ function openReleases() {
 
 async function checkUpdate() {
   await checkForUpdates();
+}
+
+async function installUpdate() {
+  await downloadAndInstallUpdate();
 }
 </script>
 
@@ -435,6 +466,7 @@ async function checkUpdate() {
 
 .settings-section {
   max-width: 600px;
+  padding: 20px;
 }
 
 .settings-section h4 {
@@ -484,15 +516,6 @@ async function checkUpdate() {
   flex: 1;
 }
 
-.input-row button {
-  padding: 10px 16px;
-  background: var(--bg-color3, #303030);
-  border: 1px solid var(--border-color1, #444);
-  border-radius: 4px;
-  color: var(--text-color1, #c0c0c0);
-  cursor: pointer;
-}
-
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -515,16 +538,6 @@ async function checkUpdate() {
   accent-color: var(--info-color, #3498db);
 }
 
-
-.test-btn {
-  padding: 10px 20px;
-  background: var(--info-color, #3498db);
-  border: none;
-  border-radius: 4px;
-  color: white;
-  cursor: pointer;
-}
-
 .test-result {
   margin-left: 12px;
   font-size: 13px;
@@ -538,29 +551,22 @@ async function checkUpdate() {
   color: var(--error-color, #e74c3c);
 }
 
-.danger-btn {
-  padding: 10px 20px;
-  background: transparent;
-  border: 1px solid var(--error-color, #e74c3c);
-  border-radius: 4px;
-  color: var(--error-color, #e74c3c);
-  cursor: pointer;
-  margin-right: 12px;
-}
-
-.danger-btn:hover {
-  background: var(--error-color, #e74c3c);
-  color: white;
-}
-
 .about-content {
   text-align: center;
-  padding: 40px 0;
+  padding: 24px 0;
 }
 
 .app-logo {
-  font-size: 64px;
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-logo img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
 }
 
 .about-content h3 {
@@ -582,41 +588,15 @@ async function checkUpdate() {
 }
 
 .tech-stack {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
   margin: 24px 0;
-}
-
-.tech-stack span {
-  padding: 6px 12px;
-  background: var(--bg-color2, #242424);
-  border-radius: 4px;
-  font-size: 12px;
-  color: var(--text-color2, #909090);
 }
 
 .update-section {
   margin: 16px 0;
 }
 
-.update-btn {
-  padding: 8px 20px;
-  background: var(--info-color, #3498db);
-  border: none;
-  border-radius: 4px;
-  color: white;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.update-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.update-btn:hover:not(:disabled) {
-  background: #2980b9;
+.install-update-btn {
+  margin-top: 8px;
 }
 
 .update-info {

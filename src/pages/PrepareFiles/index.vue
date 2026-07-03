@@ -1,44 +1,60 @@
 <template>
   <div class="prepare-files-page">
-    <div class="toolbar">
-      <button class="toolbar-btn" @click="addFiles">
-        <span class="icon">📁</span> {{ t('page.prepare.addFiles') }}
-      </button>
-      <button class="toolbar-btn" @click="addFolder">
-        <span class="icon">📂</span> {{ t('page.prepare.addFolder') }}
-      </button>
-      <div class="toolbar-divider"></div>
-      <button class="toolbar-btn" @click="sortFiles">
-        <span class="icon">↕️</span> {{ t('common.sort') }}
-      </button>
-      <button class="toolbar-btn" @click="removeSelected">
-        <span class="icon">🗑</span> {{ t('common.remove') }}
-      </button>
+    <div class="app-toolbar prepare-toolbar">
+      <div class="app-toolbar__group">
+        <button class="app-btn app-btn--primary" @click="addFiles">
+          <AppIcon name="folder-plus" :size="16" class="icon" /> {{ t('page.prepare.addFiles') }}
+        </button>
+        <button class="app-btn" @click="addFolder">
+          <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('page.prepare.addFolder') }}
+        </button>
+      </div>
+      <div class="app-toolbar__divider"></div>
+      <div class="app-toolbar__group">
+        <button class="app-btn" @click="sortFiles">
+          <AppIcon name="sort" :size="16" class="icon" /> {{ t('common.sort') }}
+        </button>
+        <button class="app-btn app-btn--danger" @click="removeSelected">
+          <AppIcon name="trash" :size="16" class="icon" /> {{ t('common.remove') }}
+        </button>
+      </div>
     </div>
 
     <div class="file-list-container">
-      <div v-if="files.length === 0" class="empty-state">
-        <div class="empty-icon">📄</div>
+      <div v-if="files.length === 0" class="app-empty-state empty-state">
+        <div class="empty-icon">
+          <AppIcon name="drop-files" :size="54" />
+        </div>
         <p>{{ t('page.prepare.dragHint') }}</p>
+        <div class="empty-actions">
+          <button class="app-btn app-btn--primary" @click="addFiles">
+            <AppIcon name="folder-plus" :size="16" class="icon" /> {{ t('page.prepare.addFiles') }}
+          </button>
+          <button class="app-btn" @click="addFolder">
+            <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('page.prepare.addFolder') }}
+          </button>
+        </div>
       </div>
-      <div v-else class="file-list">
+      <div v-else class="app-list file-list">
         <div
           v-for="(file, index) in files"
           :key="index"
-          :class="['file-item', { selected: selectedFiles.includes(index) }]"
+          :class="['app-list-item', 'file-item', { selected: selectedFiles.includes(index) }]"
           @click="toggleSelect(index, $event)"
           @dblclick="previewFile(file)"
         >
           <div class="file-checkbox">
             <span class="checkbox-mark" :class="{ checked: selectedFiles.includes(index) }"></span>
           </div>
-          <div class="file-icon">🎬</div>
+          <div class="file-icon"><AppIcon name="video" :size="20" /></div>
           <div class="file-info">
             <div class="file-name">{{ getFileName(file) }}</div>
             <div class="file-path">{{ file }}</div>
           </div>
           <div class="file-actions">
-            <button @click.stop="removeFile(index)">✕</button>
+            <button @click.stop="removeFile(index)">
+              <AppIcon name="close" :size="14" />
+            </button>
           </div>
         </div>
       </div>
@@ -48,7 +64,8 @@
       <div class="file-count">
         {{ t('page.prepare.selectedCount', { count: selectedFiles.length, total: files.length }) }}
       </div>
-      <button class="add-to-queue-btn" @click="addToQueue" :disabled="selectedFiles.length === 0">
+      <button class="app-btn app-btn--primary add-to-queue-btn" @click="addToQueue" :disabled="selectedFiles.length === 0">
+        <AppIcon name="queue" :size="16" />
         {{ t('page.prepare.addToQueue') }}
       </button>
     </div>
@@ -65,6 +82,7 @@ import { usePresetStore } from '@/store/presetStore';
 import { useFileListStore } from '@/store/fileListStore';
 import { FFmpegCommandBuilder } from '@/utils/commandBuilder';
 import { generateOutputPath } from '@/hooks/useFormatters';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -184,81 +202,42 @@ function addToQueue() {
   background: var(--bg-color1, #181818);
 }
 
-.toolbar {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  background: var(--bg-color2, #242424);
-  border-bottom: 1px solid var(--border-color1, #333);
-  gap: 8px;
-}
-
-.toolbar-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: var(--bg-color3, #303030);
-  border: 1px solid var(--border-color1, #444);
-  border-radius: 4px;
-  color: var(--text-color1, #c0c0c0);
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.toolbar-btn:hover {
-  background: var(--hover-bg, #404040);
-}
-
-.toolbar-divider {
-  width: 1px;
-  height: 24px;
-  background: var(--border-color1, #444);
-  margin: 0 8px;
-}
-
 .file-list-container {
   flex: 1;
   overflow: auto;
-  padding: 16px;
-}
-
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-color2, #606060);
+  padding: 18px;
 }
 
 .empty-icon {
-  font-size: 64px;
+  width: 88px;
+  height: 88px;
   margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--info-color, #3498db);
+  background: var(--bg-color1, #181818);
+  border: 1px solid var(--border-color1, #444444);
+  border-radius: 8px;
 }
 
 .empty-state p {
   font-size: 14px;
+  margin: 0 0 16px;
+  color: var(--text-color2, #808080);
 }
 
-.file-list {
+.empty-actions {
   display: flex;
-  flex-direction: column;
-  gap: 4px;
+  gap: 8px;
 }
 
 .file-item {
   display: flex;
   align-items: center;
-  padding: 12px;
-  background: var(--bg-color2, #242424);
-  border: 1px solid var(--border-color1, #333);
-  border-radius: 4px;
+  min-height: 54px;
+  padding: 10px 12px;
   cursor: pointer;
-}
-
-.file-item:hover {
-  background: var(--hover-bg, #2a2a2a);
 }
 
 .file-item.selected {
@@ -294,14 +273,16 @@ function addToQueue() {
   top: 0;
   width: 6px;
   height: 10px;
-  border: solid #181818;
+  border: solid var(--bg-color1, #181818);
   border-width: 0 2px 2px 0;
   transform: rotate(45deg);
 }
 
 .file-icon {
-  font-size: 24px;
   margin-right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .file-info {
@@ -326,15 +307,22 @@ function addToQueue() {
 }
 
 .file-actions button {
-  padding: 4px 8px;
+  width: 30px;
+  height: 30px;
+  padding: 0;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
   color: var(--text-color2, #808080);
   cursor: pointer;
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .file-actions button:hover {
+  background: var(--hover-bg, #303030);
+  border-color: var(--error-color, #e74c3c);
   color: var(--error-color, #e74c3c);
 }
 
@@ -342,7 +330,8 @@ function addToQueue() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px;
+  min-height: 56px;
+  padding: 10px 16px;
   background: var(--bg-color2, #242424);
   border-top: 1px solid var(--border-color1, #333);
 }
@@ -353,21 +342,6 @@ function addToQueue() {
 }
 
 .add-to-queue-btn {
-  padding: 10px 24px;
-  background: var(--success-color, #27ae60);
-  border: none;
-  border-radius: 4px;
-  color: white;
   font-size: 14px;
-  cursor: pointer;
-}
-
-.add-to-queue-btn:hover:not(:disabled) {
-  background: var(--success-color-hover, #2ecc71);
-}
-
-.add-to-queue-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 </style>

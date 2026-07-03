@@ -19,7 +19,7 @@
             <div class="command-box">
               <pre>{{ commandPreview }}</pre>
             </div>
-            <button class="copy-btn" @click="copyCommand">{{ t('page.params.copyCommand') }}</button>
+            <button class="app-btn app-btn--primary" @click="copyCommand">{{ t('page.params.copyCommand') }}</button>
           </div>
           <div class="params-summary">
             <h4>{{ t('page.params.paramsSummary') }}</h4>
@@ -283,20 +283,6 @@ function copyCommand() {
   color: var(--text-color2, #909090);
   white-space: pre-wrap;
   word-break: break-all;
-}
-
-.copy-btn {
-  padding: 8px 16px;
-  background: var(--info-color, #3498db);
-  border: none;
-  border-radius: 4px;
-  color: white;
-  font-size: 12px;
-  cursor: pointer;
-}
-
-.copy-btn:hover {
-  background: var(--info-color-hover, #2980b9);
 }
 
 .summary-list {

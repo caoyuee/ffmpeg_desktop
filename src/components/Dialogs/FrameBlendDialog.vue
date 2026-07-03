@@ -65,8 +65,8 @@
         </div>
         
         <div class="dialog-footer">
-          <button class="btn btn-cancel" @click="close">{{ t('common.cancel') }}</button>
-          <button class="btn btn-confirm" :disabled="hasValidationErrors" @click="confirm">{{ t('common.ok') }}</button>
+          <button class="app-btn" @click="close">{{ t('common.cancel') }}</button>
+          <button class="app-btn app-btn--primary" :disabled="hasValidationErrors" @click="confirm">{{ t('common.ok') }}</button>
         </div>
       </div>
     </div>
@@ -300,26 +300,4 @@ defineExpose({
   border-top: 1px solid var(--bg-color3, #242424);
 }
 
-.btn {
-  padding: 8px 20px;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.btn-cancel {
-  background: var(--bg-color4, #383838);
-  color: var(--text-color2, #888);
-}
-
-.btn-confirm {
-  background: var(--bg-color4, #383838);
-  color: var(--active-color, #9acd32);
-}
-
-.btn:hover {
-  opacity: 0.9;
-}
 </style>

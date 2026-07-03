@@ -2,7 +2,9 @@
   <div class="independent-panel">
     <div class="panel-header">
       <span class="header-title">{{ titleText }}</span>
-      <button class="btn-close" @click="closeWindow">✕</button>
+      <button class="app-btn app-btn--icon" @click="closeWindow">
+        <AppIcon name="close" :size="16" />
+      </button>
     </div>
 
     <div class="panel-body">
@@ -65,7 +67,7 @@
 
     <div class="panel-footer">
       <span class="file-count">{{ t('page.independentPanel.fileCount', { count: fileList.length }) }}</span>
-      <button class="btn-confirm" @click="confirmAndAdd" :disabled="fileList.length === 0">
+      <button class="app-btn app-btn--primary" @click="confirmAndAdd" :disabled="fileList.length === 0">
         {{ t('page.independentPanel.confirmAndAdd') }}
       </button>
     </div>
@@ -83,6 +85,7 @@ import { DEFAULT_PRESET } from '@/types/preset'
 import { FFmpegCommandBuilder } from '@/utils/commandBuilder'
 import { generateOutputPath } from '@/hooks/useFormatters'
 import { usePresetStore } from '@/store/presetStore'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
 import ColorPanel from '@/components/ColorPanel/ColorPanel.vue'
 import FilterPanel from '@/components/FilterPanel/FilterPanel.vue'
 import TrimPanel from '@/components/TrimPanel/TrimPanel.vue'
@@ -189,21 +192,6 @@ onMounted(async () => {
 
 .header-title {
   font-size: 13px;
-  color: var(--text-color1, #c0c0c0);
-}
-
-.btn-close {
-  background: none;
-  border: none;
-  color: var(--text-color2, #808080);
-  font-size: 16px;
-  cursor: pointer;
-  padding: 4px 8px;
-  border-radius: 4px;
-}
-
-.btn-close:hover {
-  background: var(--hover-bg, #303030);
   color: var(--text-color1, #c0c0c0);
 }
 
@@ -317,24 +305,4 @@ onMounted(async () => {
   color: var(--text-color2, #808080);
 }
 
-.btn-confirm {
-  padding: 8px 24px;
-  background: var(--active-color, #9acd32);
-  color: var(--bg-color1, #181818);
-  border: none;
-  border-radius: 4px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.btn-confirm:hover {
-  opacity: 0.9;
-}
-
-.btn-confirm:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
 </style>

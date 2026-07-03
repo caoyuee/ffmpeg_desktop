@@ -6,12 +6,12 @@
           <span class="dialog-title">{{ t('dialog.streamSelector.title') }}</span>
         </div>
         
-        <div class="dialog-toolbar">
-          <button class="btn btn-open" @click="openFile">
-            <span class="icon">📁</span> {{ t('dialog.streamSelector.open') }}
+        <div class="app-toolbar dialog-toolbar">
+          <button class="app-btn app-btn--primary" @click="openFile">
+            <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('dialog.streamSelector.open') }}
           </button>
-          <button class="btn btn-reset" @click="resetSelection">
-            <span class="icon">🔄</span> {{ t('dialog.streamSelector.reset') }}
+          <button class="app-btn app-btn--danger" @click="resetSelection">
+            <AppIcon name="reset" :size="16" class="icon" /> {{ t('dialog.streamSelector.reset') }}
           </button>
           <span class="file-name" v-if="currentFile">{{ getFileName(currentFile) }}</span>
         </div>
@@ -21,20 +21,20 @@
           @dragover.prevent="isDragOver = true"
           @dragleave="isDragOver = false"
           @drop.prevent="onDrop"
-          :class="{ 'drag-over': isDragOver }"
+          :class="{ 'app-drop-zone--over': isDragOver }"
         >
           <div v-if="isLoading" class="loading-hint">
             <span>{{ t('dialog.streamSelector.loading') }}</span>
           </div>
           
-          <div v-else-if="streams.length === 0" class="empty-hint">
+          <div v-else-if="streams.length === 0" class="app-empty-state empty-hint">
             <span>{{ t('dialog.streamSelector.emptyHint') }}</span>
           </div>
           
           <div v-else class="streams-container">
             <div class="stream-section" v-if="videoStreams.length > 0">
               <div class="section-header video-header">
-                <span class="section-icon">🎬</span>
+                <AppIcon name="video" :size="16" class="section-icon" />
                 <span class="section-title">{{ t('dialog.streamSelector.videoStream') }}</span>
               </div>
               <div 
@@ -44,7 +44,9 @@
                 :class="{ selected: selectedStreams.video.includes(index) }"
                 @click="toggleStream('video', index)"
               >
-                <span class="stream-checkbox" :class="{ checked: selectedStreams.video.includes(index) }">✓</span>
+                <span class="stream-checkbox" :class="{ checked: selectedStreams.video.includes(index) }">
+                  <AppIcon v-if="selectedStreams.video.includes(index)" name="check" :size="12" />
+                </span>
                 <div class="stream-info">
                   <span class="stream-name">{{ t('dialog.streamSelector.videoStreamName', { index }) }}</span>
                   <span class="stream-details">
@@ -62,7 +64,7 @@
             
             <div class="stream-section" v-if="audioStreams.length > 0">
               <div class="section-header audio-header">
-                <span class="section-icon">🔊</span>
+                <AppIcon name="audio" :size="16" class="section-icon" />
                 <span class="section-title">{{ t('dialog.streamSelector.audioStream') }}</span>
               </div>
               <div 
@@ -72,7 +74,9 @@
                 :class="{ selected: selectedStreams.audio.includes(index) }"
                 @click="toggleStream('audio', index)"
               >
-                <span class="stream-checkbox audio" :class="{ checked: selectedStreams.audio.includes(index) }">✓</span>
+                <span class="stream-checkbox audio" :class="{ checked: selectedStreams.audio.includes(index) }">
+                  <AppIcon v-if="selectedStreams.audio.includes(index)" name="check" :size="12" />
+                </span>
                 <div class="stream-info">
                   <span class="stream-name">{{ t('dialog.streamSelector.audioStreamName', { index }) }}</span>
                   <span class="stream-details">
@@ -89,7 +93,7 @@
             
             <div class="stream-section" v-if="subtitleStreams.length > 0">
               <div class="section-header subtitle-header">
-                <span class="section-icon">📝</span>
+                <AppIcon name="subtitle" :size="16" class="section-icon" />
                 <span class="section-title">{{ t('dialog.streamSelector.subtitleStream') }}</span>
               </div>
               <div 
@@ -99,7 +103,9 @@
                 :class="{ selected: selectedStreams.subtitle.includes(index) }"
                 @click="toggleStream('subtitle', index)"
               >
-                <span class="stream-checkbox subtitle" :class="{ checked: selectedStreams.subtitle.includes(index) }">✓</span>
+                <span class="stream-checkbox subtitle" :class="{ checked: selectedStreams.subtitle.includes(index) }">
+                  <AppIcon v-if="selectedStreams.subtitle.includes(index)" name="check" :size="12" />
+                </span>
                 <div class="stream-info">
                   <span class="stream-name">{{ t('dialog.streamSelector.subtitleStreamName', { index }) }}</span>
                   <span class="stream-details">
@@ -114,8 +120,8 @@
         </div>
         
         <div class="dialog-footer">
-          <button class="btn btn-cancel" @click="close">{{ t('common.cancel') }}</button>
-          <button class="btn btn-confirm" @click="confirm">{{ t('common.confirm') }}</button>
+          <button class="app-btn" @click="close">{{ t('common.cancel') }}</button>
+          <button class="app-btn app-btn--primary" @click="confirm">{{ t('common.confirm') }}</button>
         </div>
       </div>
     </div>
@@ -127,6 +133,7 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { open } from '@tauri-apps/plugin-dialog';
 import { invoke } from '@tauri-apps/api/core';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 interface StreamInfo {
   index: number;
@@ -334,43 +341,7 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
 }
 
 .dialog-toolbar {
-  display: flex;
-  align-items: center;
-  gap: 10px;
   padding: 10px;
-  background: var(--bg-color3, #242424);
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 12px;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.btn-open {
-  background: var(--bg-color4, #383838);
-  color: var(--active-color, #9acd32);
-}
-
-.btn-reset {
-  background: var(--bg-color4, #383838);
-  color: var(--error-color, #cd5c5c);
-}
-
-.btn-cancel {
-  background: var(--bg-color4, #383838);
-  color: var(--text-color2, #888);
-}
-
-.btn-confirm {
-  background: var(--bg-color4, #383838);
-  color: var(--active-color, #9acd32);
 }
 
 .file-name {
@@ -386,22 +357,24 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
   flex: 1;
   overflow: auto;
   min-height: 300px;
-  border: 2px dashed transparent;
+  border: 1px dashed transparent;
   transition: border-color 0.2s;
 }
 
-.stream-list.drag-over {
-  border-color: var(--active-color, #9acd32);
-}
-
-.loading-hint,
-.empty-hint {
+.loading-hint {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 300px;
   color: var(--text-color3, #555);
   font-size: 14px;
+}
+
+.empty-hint {
+  min-height: 300px;
+  border-radius: 0;
+  border-left: none;
+  border-right: none;
 }
 
 .streams-container {
@@ -434,7 +407,9 @@ function getStreamOutput(type: 'video' | 'audio' | 'subtitle'): string {
 }
 
 .section-icon {
-  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .section-title {

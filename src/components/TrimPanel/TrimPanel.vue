@@ -43,7 +43,7 @@
     </div>
 
     <div class="panel-section">
-      <button class="tool-btn" @click="showCropDialog = true">画面裁剪工具</button>
+      <button class="app-btn tool-btn" @click="showCropDialog = true">{{ t('page.params.cropWindow') }}</button>
     </div>
 
     <CropDialog
@@ -56,6 +56,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
 import TimeInput from './TimeInput.vue';
 import CropDialog from '@/components/Dialogs/CropDialog.vue';
@@ -67,6 +68,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:preset': [preset: PresetData];
 }>();
+
+const { t } = useI18n();
 
 const localPreset = ref<PresetData>({ ...props.preset });
 const showCropDialog = ref(false);
@@ -233,17 +236,5 @@ function onCropUpdated(cropFilter: string) {
 
 .tool-btn {
   width: 100%;
-  padding: 8px 16px;
-  background: var(--active-bg, #404040);
-  border: 1px solid var(--border-color1, #444);
-  border-radius: 4px;
-  color: var(--active-color, #9acd32);
-  cursor: pointer;
-  font-size: 12px;
-  transition: background 0.2s;
-}
-
-.tool-btn:hover {
-  background: var(--hover-bg, #505050);
 }
 </style>

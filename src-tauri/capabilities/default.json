@@ -11,6 +11,8 @@
     "fs:default",
     "fs:allow-read-file",
     "fs:allow-write-file",
-    "pinia:default"
+    "pinia:default",
+    "updater:default",
+    "process:default"
   ]
 }

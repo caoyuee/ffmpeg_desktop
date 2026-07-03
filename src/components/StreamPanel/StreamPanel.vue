@@ -3,7 +3,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('video')">
         <h4>{{ t('page.params.streamPanel.videoStream') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.video ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.video ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.video" class="section-content">
         <div class="form-group">
@@ -25,7 +25,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('audio')">
         <h4>{{ t('page.params.streamPanel.audioStream') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.audio ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.audio ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.audio" class="section-content">
         <div class="form-group">
@@ -47,7 +47,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('subtitle')">
         <h4>{{ t('page.params.streamPanel.subtitleStream') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.subtitle ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.subtitle ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.subtitle" class="section-content">
         <div class="form-group">
@@ -94,7 +94,7 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('metadata')">
         <h4>{{ t('page.params.streamPanel.metadataAndChapter') }}</h4>
-        <span class="toggle-icon">{{ expandedSections.metadata ? '▼' : '▶' }}</span>
+        <AppIcon :name="expandedSections.metadata ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
       </div>
       <div v-show="expandedSections.metadata" class="section-content">
         <div class="form-group">
@@ -127,6 +127,7 @@
 import { ref, reactive, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import type { PresetData } from '@/types/preset';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const props = defineProps<{
   preset: PresetData;

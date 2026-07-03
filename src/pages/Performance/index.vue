@@ -1,25 +1,27 @@
 <template>
   <div class="performance-page">
-    <div class="toolbar">
-      <button class="btn btn-refresh" @click="refreshInterval > 0 ? stopMonitoring() : startMonitoring()">
-        <span class="icon">{{ refreshInterval > 0 ? '⏹️' : '▶️' }}</span>
-        {{ refreshInterval > 0 ? t('page.performance.stopMonitor') : t('page.performance.startMonitor') }}
-      </button>
-      <span class="refresh-rate">
-        {{ t('page.performance.refreshRate') }}:
-        <select v-model="refreshRate" @change="updateRefreshRate" :disabled="refreshInterval > 0">
-          <option :value="500">500ms</option>
-          <option :value="1000">1s</option>
-          <option :value="2000">2s</option>
-          <option :value="5000">5s</option>
-        </select>
-      </span>
+    <div class="app-toolbar">
+      <div class="app-toolbar__group">
+        <button class="app-btn app-btn--primary" @click="refreshInterval > 0 ? stopMonitoring() : startMonitoring()">
+          <AppIcon :name="refreshInterval > 0 ? 'stop' : 'play'" :size="16" class="icon" />
+          {{ refreshInterval > 0 ? t('page.performance.stopMonitor') : t('page.performance.startMonitor') }}
+        </button>
+        <span class="refresh-rate">
+          {{ t('page.performance.refreshRate') }}:
+          <select v-model="refreshRate" @change="updateRefreshRate" :disabled="refreshInterval > 0">
+            <option :value="500">500ms</option>
+            <option :value="1000">1s</option>
+            <option :value="2000">2s</option>
+            <option :value="5000">5s</option>
+          </select>
+        </span>
+      </div>
     </div>
     
     <div class="metrics-grid">
       <div class="metric-card cpu">
         <div class="metric-header">
-          <span class="metric-icon">💻</span>
+          <AppIcon name="cpu" :size="18" class="metric-icon" />
           <span class="metric-title">{{ t('page.performance.cpu') }}</span>
         </div>
         <div class="metric-value">
@@ -43,7 +45,7 @@
       
       <div class="metric-card memory">
         <div class="metric-header">
-          <span class="metric-icon">🧠</span>
+          <AppIcon name="memory" :size="18" class="metric-icon" />
           <span class="metric-title">{{ t('page.performance.memory') }}</span>
         </div>
         <div class="metric-value">
@@ -67,7 +69,7 @@
       
       <div class="metric-card gpu" v-if="metrics.gpu.memoryTotal > 0">
         <div class="metric-header">
-          <span class="metric-icon">🎮</span>
+          <AppIcon name="gpu" :size="18" class="metric-icon" />
           <span class="metric-title">{{ t('page.performance.gpu') }}</span>
         </div>
         <div class="metric-value">
@@ -91,7 +93,7 @@
       
       <div class="metric-card disk">
         <div class="metric-header">
-          <span class="metric-icon">💾</span>
+          <AppIcon name="disk" :size="18" class="metric-icon" />
           <span class="metric-title">{{ t('page.performance.disk') }}</span>
         </div>
         <div class="metric-value">
@@ -133,7 +135,7 @@
             <span class="process-cpu">CPU: {{ proc.cpu.toFixed(1) }}%</span>
             <span class="process-memory">{{ t('page.performance.memory') }}: {{ formatBytes(proc.memory) }}</span>
           </div>
-          <button class="btn btn-kill" @click="killProcess(proc.pid)">{{ t('page.performance.terminate') }}</button>
+          <button class="app-btn app-btn--danger" @click="killProcess(proc.pid)">{{ t('page.performance.terminate') }}</button>
         </div>
       </div>
     </div>
@@ -144,6 +146,7 @@
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { invoke } from '@tauri-apps/api/core';
+import AppIcon from '@/components/AppIcon/AppIcon.vue';
 
 const { t } = useI18n();
 
@@ -269,43 +272,11 @@ onUnmounted(() => {
   height: 100%;
   background: var(--bg-color2, #181818);
   padding: 10px;
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 10px;
-  background: var(--bg-color3, #242424);
-  border-radius: 4px;
-  margin-bottom: 10px;
-}
-
-.btn {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 6px 16px;
-  border: none;
-  border-radius: 15px;
-  cursor: pointer;
-  font-size: 13px;
-  transition: all 0.2s;
-}
-
-.btn-refresh {
-  background: var(--bg-color4, #383838);
-  color: #9acd32;
-}
-
-.btn-kill {
-  background: var(--bg-color4, #383838);
-  color: #cd5c5c;
-  padding: 4px 12px;
+  gap: 10px;
 }
 
 .refresh-rate {
-  color: #888;
+  color: var(--text-color2, #808080);
   font-size: 13px;
 }
 
@@ -315,7 +286,7 @@ onUnmounted(() => {
   background: var(--bg-color4, #303030);
   border: none;
   border-radius: 4px;
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   cursor: pointer;
 }
 
@@ -323,7 +294,6 @@ onUnmounted(() => {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 10px;
-  margin-bottom: 10px;
 }
 
 .metric-card {
@@ -340,11 +310,13 @@ onUnmounted(() => {
 }
 
 .metric-icon {
-  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .metric-title {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 14px;
   font-weight: 500;
 }
@@ -357,13 +329,13 @@ onUnmounted(() => {
 }
 
 .metric-value .value {
-  color: #9acd32;
+  color: var(--active-color, #9acd32);
   font-size: 28px;
   font-weight: bold;
 }
 
 .metric-value .unit {
-  color: #888;
+  color: var(--text-color2, #808080);
   font-size: 14px;
 }
 
@@ -377,7 +349,7 @@ onUnmounted(() => {
 
 .bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #9acd32, #6495ed);
+  background: linear-gradient(90deg, var(--active-color, #9acd32), var(--info-color, #3498db));
   border-radius: 3px;
   transition: width 0.3s;
 }
@@ -391,7 +363,7 @@ onUnmounted(() => {
 .detail-row {
   display: flex;
   justify-content: space-between;
-  color: #888;
+  color: var(--text-color2, #808080);
   font-size: 12px;
 }
 
@@ -414,7 +386,7 @@ onUnmounted(() => {
 }
 
 .section-title {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 14px;
   font-weight: 500;
 }
@@ -434,7 +406,7 @@ onUnmounted(() => {
 }
 
 .no-process {
-  color: #555;
+  color: var(--disabled-color, #7f8c8d);
   font-size: 13px;
   text-align: center;
   padding: 20px;
@@ -456,13 +428,13 @@ onUnmounted(() => {
 }
 
 .process-name {
-  color: #c0c0c0;
+  color: var(--text-color1, #c0c0c0);
   font-size: 13px;
 }
 
 .process-cpu,
 .process-memory {
-  color: #888;
+  color: var(--text-color2, #808080);
   font-size: 12px;
 }
 </style>
