@@ -1,0 +1,91 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  linux-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.27.0
+
+      - name: Install frontend dependencies
+        working-directory: ffmpeg_desktop
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Linux Tauri dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Frontend checks
+        working-directory: ffmpeg_desktop
+        run: |
+          pnpm typecheck
+          pnpm test:run
+
+      - name: Rust tests
+        working-directory: ffmpeg_desktop/src-tauri
+        run: cargo test
+
+      - name: Build Tauri bundle
+        working-directory: ffmpeg_desktop
+        run: pnpm tauri build --bundles deb
+
+      - name: Upload bundles to Gitee Release
+        working-directory: ffmpeg_desktop
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: bash scripts/upload-gitee-assets.sh
+
+  windows-release:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.27.0
+
+      - name: Install frontend dependencies
+        working-directory: ffmpeg_desktop
+        run: pnpm install --frozen-lockfile
+
+      - name: Build Tauri bundle
+        working-directory: ffmpeg_desktop
+        run: pnpm tauri build --bundles nsis
+
+      - name: Upload bundles to Gitee Release
+        working-directory: ffmpeg_desktop
+        shell: bash
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+        run: bash scripts/upload-gitee-assets.sh

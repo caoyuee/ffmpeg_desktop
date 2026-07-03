@@ -1,0 +1,68 @@
+{
+  "name": "ffmpeg_desktop",
+  "private": true,
+  "version": "0.1.6",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc --noEmit && vite build",
+    "build:csp-check": "pnpm build && node scripts/assert-csp-safe-build.mjs",
+    "preview": "vite preview",
+    "typecheck": "vue-tsc --noEmit",
+    "tauri": "tauri",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:report": "playwright show-report",
+    "test:report": "bash scripts/generate-test-report.sh",
+    "test:all": "pnpm test:coverage && cd src-tauri && cargo tarpaulin --out Html --out Json --out Lcov --output-dir ../test-reports/backend && cd .. && pnpm test:report",
+    "verify": "bash scripts/preflight.sh",
+    "version:bump": "node scripts/bump-version.mjs",
+    "release:all": "bash scripts/release-all.sh patch",
+    "release:gitee": "bash scripts/release-gitee.sh",
+    "release:patch": "bash scripts/release-gitee.sh patch",
+    "release:minor": "bash scripts/release-gitee.sh minor",
+    "release:major": "bash scripts/release-gitee.sh major",
+    "updater:manifest": "node scripts/generate-updater-manifest.mjs"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/plugin-dialog": "^2.5.0",
+    "@tauri-apps/plugin-opener": "^2.4.0",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-updater": "^2.10.1",
+    "@tauri-store/pinia": "^3.7.1",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.26",
+    "vue-i18n": "^9.14.4",
+    "vue-router": "^4.5.1"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.61.1",
+    "@tauri-apps/cli": "^2.10.1",
+    "@types/node": "^24.1.0",
+    "@vitejs/plugin-vue": "^6.0.3",
+    "@vitest/coverage-v8": "^4.1.4",
+    "@vitest/ui": "^4.1.4",
+    "@vue/test-utils": "^2.4.6",
+    "happy-dom": "^20.9.0",
+    "pnpm": "^10.27.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.3.0",
+    "vitest": "^4.1.4",
+    "vue-tsc": "^3.2.2"
+  },
+  "packageManager": "pnpm@10.27.0",
+  "engines": {
+    "pnpm": ">=10.27.0"
+  },
+  "pnpm": {
+    "neverBuiltDependencies": [
+      "@tauri-apps/cli"
+    ]
+  }
+}

@@ -1,0 +1,636 @@
+<template>
+  <div class="settings-page">
+    <div class="settings-tabs">
+      <div
+        v-for="tab in tabs"
+        :key="tab.id"
+        :class="['settings-tab', { active: activeTab === tab.id }]"
+        @click="activeTab = tab.id"
+      >
+        {{ tab.label }}
+      </div>
+    </div>
+
+    <div class="settings-content">
+      <div v-show="activeTab === 'general'" class="app-card settings-section">
+        <h4>{{ t('page.settings.general') }}</h4>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.language') }}</label>
+          <select v-model="settings.language" @change="saveSettings">
+            <option v-for="lang in availableLanguages" :key="lang.code" :value="lang.code">
+              {{ lang.nativeName }}
+            </option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.theme') }}</label>
+          <select v-model="settings.theme" @change="onThemeChange">
+            <option value="dark">{{ t('page.settings.themeDark') }}</option>
+            <option value="light">{{ t('page.settings.themeLight') }}</option>
+            <option value="system">{{ t('page.settings.themeSystem') }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="settings.autoCheckUpdate" @change="saveSettings" />
+            <span>{{ t('page.settings.autoCheckUpdate') }}</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="settings.minimizeToTray" @change="saveSettings" />
+            <span>{{ t('page.settings.minimizeToTray') }}</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="settings.closeToTray" @change="saveSettings" />
+            <span>{{ t('page.settings.closeToTray') }}</span>
+          </label>
+        </div>
+      </div>
+
+      <div v-show="activeTab === 'ffmpeg'" class="app-card settings-section">
+        <h4>{{ t('page.settings.ffmpeg') }}</h4>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.ffmpegPath') }}</label>
+          <div class="input-row">
+            <input type="text" v-model="settings.ffmpegPath" @change="saveSettings" :placeholder="t('common.browse')" />
+            <button class="app-btn" @click="browseFFmpeg">{{ t('common.browse') }}</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.ffprobePath') }}</label>
+          <div class="input-row">
+            <input type="text" v-model="settings.ffprobePath" @change="saveSettings" :placeholder="t('common.browse')" />
+            <button class="app-btn" @click="browseFFprobe">{{ t('common.browse') }}</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.maxConcurrentTasks') }}</label>
+          <input type="number" v-model.number="settings.maxConcurrentTasks" @change="saveSettings" min="1" max="8" />
+        </div>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.taskPriority') }}</label>
+          <select v-model="settings.taskPriority" @change="saveSettings">
+            <option value="low">{{ t('page.settings.priorityLow') }}</option>
+            <option value="normal">{{ t('page.settings.priorityNormal') }}</option>
+            <option value="high">{{ t('page.settings.priorityHigh') }}</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <button class="app-btn app-btn--primary" @click="testFFmpeg">{{ t('page.settings.testFFmpeg') }}</button>
+          <span v-if="ffmpegTestResult" :class="['test-result', ffmpegTestResult.success ? 'success' : 'error']">
+            {{ ffmpegTestResult.message }}
+          </span>
+        </div>
+      </div>
+
+      <div v-show="activeTab === 'output'" class="app-card settings-section">
+        <h4>{{ t('page.settings.output') }}</h4>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.defaultOutputDir') }}</label>
+          <div class="input-row">
+            <select v-model="settings.defaultOutputDir" @change="saveSettings">
+              <option value="same">{{ t('page.settings.sameAsSource') }}</option>
+              <option value="custom">{{ t('page.settings.customDir') }}</option>
+            </select>
+          </div>
+        </div>
+
+        <div v-if="settings.defaultOutputDir === 'custom'" class="form-group">
+          <label>{{ t('page.settings.customDir') }}</label>
+          <div class="input-row">
+            <input type="text" v-model="settings.customOutputDir" @change="saveSettings" />
+            <button class="app-btn" @click="browseOutputDir">{{ t('common.browse') }}</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="settings.autoOpenOutputFolder" @change="saveSettings" />
+            <span>{{ t('page.settings.autoOpenOutputFolder') }}</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="settings.showNotification" @change="saveSettings" />
+            <span>{{ t('page.settings.showNotification') }}</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" v-model="settings.playSound" @change="saveSettings" />
+            <span>{{ t('page.settings.playSound') }}</span>
+          </label>
+        </div>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.failedOutputDeleteMode') }}</label>
+          <select v-model="settings.failedOutputDeleteMode" @change="saveSettings">
+            <option value="mp4">{{ t('page.settings.failedOutputDeleteMp4') }}</option>
+            <option value="all">{{ t('page.settings.failedOutputDeleteAll') }}</option>
+            <option value="never">{{ t('page.settings.failedOutputDeleteNever') }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div v-show="activeTab === 'storage'" class="app-card settings-section">
+        <h4>{{ t('page.settings.storage') }}</h4>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.presetDir') }}</label>
+          <div class="input-row">
+            <input type="text" v-model="settings.presetDir" @change="saveSettings" />
+            <button class="app-btn" @click="browsePresetDir">{{ t('common.browse') }}</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.logRetentionDays') }}</label>
+          <input type="number" v-model.number="settings.logRetentionDays" @change="saveSettings" min="0" max="365" />
+        </div>
+
+        <div class="form-group">
+          <button class="app-btn app-btn--danger" @click="showClearCacheDialog = true">{{ t('page.settings.clearCache') }}</button>
+          <button class="app-btn app-btn--danger" @click="showClearLogsDialog = true">{{ t('page.settings.clearLogs') }}</button>
+        </div>
+      </div>
+
+      <div v-show="activeTab === 'about'" class="app-card settings-section">
+        <h4>{{ t('page.settings.about') }}</h4>
+
+        <div class="about-content">
+          <div class="app-logo">
+            <img src="@/assets/app-icon.png" :alt="t('about.softwareName')" />
+          </div>
+          <h3>{{ t('about.softwareName') }}</h3>
+          <p class="version">{{ t('about.version') }} {{ appVersion || '-' }}</p>
+          <p class="description">{{ t('about.description') }}</p>
+
+          <div class="update-section">
+            <button class="app-btn app-btn--primary" :disabled="updateState.checking" @click="checkUpdate">
+              {{ updateState.checking ? t('about.checking') : t('about.checkUpdate') }}
+            </button>
+            <p v-if="updateState.hasUpdate" class="update-info success">
+              {{ t('about.updateAvailable', { version: updateState.latestRelease?.version }) }}
+              <a v-if="updateState.latestRelease?.url" :href="updateState.latestRelease.url" target="_blank">{{ t('about.viewRelease') }}</a>
+            </p>
+            <button
+              v-if="updateState.hasUpdate"
+              class="app-btn app-btn--primary install-update-btn"
+              :disabled="updateState.installing"
+              @click="installUpdate"
+            >
+              {{ updateState.installing ? t('about.installingUpdate') : t('about.downloadAndInstall') }}
+            </button>
+            <p v-if="updateState.installing && updateState.downloadProgress !== null" class="update-info">
+              {{ t('about.downloadingUpdate', { progress: updateState.downloadProgress }) }}
+            </p>
+            <p v-else-if="updateState.checked && !updateState.hasUpdate && !updateState.error" class="update-info">
+              {{ t('about.upToDate') }}
+            </p>
+            <p v-if="updateState.error" class="update-info error">
+              {{ t('about.updateError') }}: {{ updateState.error }}
+            </p>
+          </div>
+
+          <div class="app-pill-list tech-stack">
+            <span class="app-pill">Tauri 2.x</span>
+            <span class="app-pill">Vue 3</span>
+            <span class="app-pill">TypeScript</span>
+          </div>
+
+          <div class="links">
+            <a href="#" @click.prevent="openGitHub">GitHub</a>
+            <a href="#" @click.prevent="openIssues">{{ t('about.issues') }}</a>
+            <a href="#" @click.prevent="openReleases">{{ t('about.releases') }}</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <ConfirmDialog
+      v-model="showClearCacheDialog"
+      :title="t('page.settings.clearCache')"
+      :message="t('page.settings.clearCacheConfirm')"
+      :confirmText="t('common.confirm')"
+      :cancelText="t('common.cancel')"
+      @confirm="clearCache"
+    />
+
+    <ConfirmDialog
+      v-model="showClearLogsDialog"
+      :title="t('page.settings.clearLogs')"
+      :message="t('page.settings.clearLogsConfirm')"
+      :confirmText="t('common.confirm')"
+      :cancelText="t('common.cancel')"
+      @confirm="clearLogs"
+    />
+
+    <Toast
+      v-model="showToast"
+      :message="toastMessage"
+      :type="toastType"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, onMounted, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { getVersion } from '@tauri-apps/api/app';
+import { invoke } from '@tauri-apps/api/core';
+import { setLocale, availableLanguages } from '@/i18n';
+import { useSettingStore } from '@/store/settingStore';
+import { useTaskStore } from '@/store/taskStore';
+import { useUpdateChecker } from '@/hooks/useUpdateChecker';
+import { DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings, type AppSettings } from '@/utils/appSettings';
+import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue';
+import Toast from '@/components/Dialogs/Toast.vue';
+
+const { t } = useI18n();
+const settingStore = useSettingStore();
+const taskStore = useTaskStore();
+
+const tabs = [
+  { id: 'general', label: computed(() => t('page.settings.general')) },
+  { id: 'ffmpeg', label: computed(() => t('page.settings.ffmpeg')) },
+  { id: 'output', label: computed(() => t('page.settings.output')) },
+  { id: 'storage', label: computed(() => t('page.settings.storage')) },
+  { id: 'about', label: computed(() => t('page.settings.about')) },
+];
+
+const activeTab = ref('general');
+const settings = ref<AppSettings>({ ...DEFAULT_APP_SETTINGS });
+const appVersion = ref('');
+
+const ffmpegTestResult = ref<{ success: boolean; message: string } | null>(null);
+
+const showClearCacheDialog = ref(false);
+const showClearLogsDialog = ref(false);
+const showToast = ref(false);
+const toastMessage = ref('');
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success');
+
+const { state: updateState, checkForUpdates, downloadAndInstallUpdate } = useUpdateChecker();
+
+onMounted(() => {
+  loadSettings();
+  loadVersion();
+  if (settings.value.autoCheckUpdate) {
+    checkForUpdates();
+  }
+});
+
+watch(() => settings.value.language, (newLang) => {
+  setLocale(newLang);
+});
+
+function loadSettings() {
+  settings.value = {
+    ...loadAppSettings(),
+    theme: settingStore.theme,
+    language: settingStore.language,
+  };
+  invoke('set_tray_settings', {
+    minimizeToTray: settings.value.minimizeToTray,
+    closeToTray: settings.value.closeToTray,
+  }).catch(() => {});
+}
+
+async function loadVersion() {
+  try {
+    appVersion.value = await getVersion();
+  } catch {
+    appVersion.value = '';
+  }
+}
+
+function saveSettings() {
+  settings.value.maxConcurrentTasks = Math.min(Math.max(Number(settings.value.maxConcurrentTasks) || 1, 1), 8);
+  settingStore.updateLanguage(settings.value.language);
+  taskStore.maxConcurrent = settings.value.maxConcurrentTasks;
+  saveAppSettings(settings.value);
+  invoke('set_tray_settings', {
+    minimizeToTray: settings.value.minimizeToTray,
+    closeToTray: settings.value.closeToTray,
+  }).catch(() => {});
+}
+
+function onThemeChange() {
+  settingStore.updateTheme(settings.value.theme);
+  saveSettings();
+}
+
+async function browseFFmpeg() {
+  const { open } = await import('@tauri-apps/plugin-dialog');
+  const selected = await open({
+    multiple: false,
+    filters: [{ name: t('common.executable'), extensions: ['exe', ''] }],
+  });
+  if (selected && typeof selected === 'string') {
+    settings.value.ffmpegPath = selected;
+    saveSettings();
+  }
+}
+
+async function browseFFprobe() {
+  const { open } = await import('@tauri-apps/plugin-dialog');
+  const selected = await open({
+    multiple: false,
+    filters: [{ name: t('common.executable'), extensions: ['exe', ''] }],
+  });
+  if (selected && typeof selected === 'string') {
+    settings.value.ffprobePath = selected;
+    saveSettings();
+  }
+}
+
+async function browseOutputDir() {
+  const { open } = await import('@tauri-apps/plugin-dialog');
+  const selected = await open({ directory: true });
+  if (selected && typeof selected === 'string') {
+    settings.value.customOutputDir = selected;
+    saveSettings();
+  }
+}
+
+async function browsePresetDir() {
+  const { open } = await import('@tauri-apps/plugin-dialog');
+  const selected = await open({ directory: true });
+  if (selected && typeof selected === 'string') {
+    settings.value.presetDir = selected;
+    saveSettings();
+  }
+}
+
+async function testFFmpeg() {
+  try {
+    const { invoke } = await import('@tauri-apps/api/core');
+    const result = await invoke<string>('test_ffmpeg', { 
+      path: settings.value.ffmpegPath || '' 
+    });
+    ffmpegTestResult.value = { success: true, message: result || t('page.settings.ffmpegAvailable') };
+  } catch (error) {
+    ffmpegTestResult.value = { success: false, message: `${t('page.settings.ffmpegNotFound')}: ${String(error)}` };
+  }
+}
+
+function clearCache() {
+  localStorage.removeItem('presetCache');
+  toastMessage.value = t('message.cacheCleared');
+  toastType.value = 'success';
+  showToast.value = true;
+}
+
+function clearLogs() {
+  localStorage.removeItem('taskLogs');
+  toastMessage.value = t('message.logsCleared');
+  toastType.value = 'success';
+  showToast.value = true;
+}
+
+function openGitHub() {
+  window.open('https://gitee.com/caoyuee/video-editor', '_blank');
+}
+
+function openIssues() {
+  window.open('https://gitee.com/caoyuee/video-editor/issues', '_blank');
+}
+
+function openReleases() {
+  window.open('https://gitee.com/caoyuee/video-editor/releases', '_blank');
+}
+
+async function checkUpdate() {
+  await checkForUpdates();
+}
+
+async function installUpdate() {
+  await downloadAndInstallUpdate();
+}
+</script>
+
+<style scoped>
+.settings-page {
+  display: flex;
+  height: 100%;
+  background: var(--bg-color1, #181818);
+}
+
+.settings-tabs {
+  width: 180px;
+  background: var(--bg-color2, #242424);
+  border-right: 1px solid var(--border-color1, #333);
+  padding: 16px 8px;
+}
+
+.settings-tab {
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--text-color2, #808080);
+  cursor: pointer;
+  border-radius: 4px;
+  margin-bottom: 4px;
+}
+
+.settings-tab:hover {
+  background: var(--hover-bg, #303030);
+  color: var(--text-color1, #c0c0c0);
+}
+
+.settings-tab.active {
+  background: var(--active-bg, #404040);
+  color: var(--active-color, #9acd32);
+}
+
+.settings-content {
+  flex: 1;
+  overflow: auto;
+  padding: 24px;
+}
+
+.settings-section {
+  max-width: 600px;
+  padding: 20px;
+}
+
+.settings-section h4 {
+  margin: 0 0 20px;
+  font-size: 16px;
+  color: var(--text-color1, #c0c0c0);
+  border-bottom: 1px solid var(--border-color1, #333);
+  padding-bottom: 12px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  color: var(--text-color2, #808080);
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--bg-color2, #242424);
+  border: 1px solid var(--border-color1, #444);
+  border-radius: 4px;
+  color: var(--text-color1, #c0c0c0);
+  font-size: 13px;
+  box-sizing: border-box;
+}
+
+.form-group small {
+  display: block;
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-color2, #606060);
+}
+
+.input-row {
+  display: flex;
+  gap: 8px;
+}
+
+.input-row input {
+  flex: 1;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-color1, #c0c0c0);
+}
+
+.checkbox-label input[type="checkbox"] {
+  -webkit-appearance: checkbox;
+  appearance: checkbox;
+  width: 16px;
+  height: 16px;
+  min-width: 16px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  accent-color: var(--info-color, #3498db);
+}
+
+.test-result {
+  margin-left: 12px;
+  font-size: 13px;
+}
+
+.test-result.success {
+  color: var(--success-color, #27ae60);
+}
+
+.test-result.error {
+  color: var(--error-color, #e74c3c);
+}
+
+.about-content {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.app-logo {
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-logo img {
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+}
+
+.about-content h3 {
+  margin: 0;
+  font-size: 24px;
+  color: var(--text-color1, #c0c0c0);
+}
+
+.version {
+  margin: 8px 0;
+  font-size: 14px;
+  color: var(--text-color2, #808080);
+}
+
+.description {
+  margin: 16px 0;
+  font-size: 14px;
+  color: var(--text-color2, #909090);
+}
+
+.tech-stack {
+  margin: 24px 0;
+}
+
+.update-section {
+  margin: 16px 0;
+}
+
+.install-update-btn {
+  margin-top: 8px;
+}
+
+.update-info {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--text-color2, #808080);
+}
+
+.update-info.success {
+  color: var(--success-color, #27ae60);
+}
+
+.update-info.success a {
+  color: var(--info-color, #3498db);
+  margin-left: 8px;
+}
+
+.update-info.error {
+  color: var(--error-color, #e74c3c);
+}
+
+.links {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+}
+
+.links a {
+  font-size: 14px;
+  color: var(--info-color, #3498db);
+  text-decoration: none;
+}
+
+.links a:hover {
+  text-decoration: underline;
+}
+</style>
