@@ -6,6 +6,7 @@ pnpm-debug.log*
 lerna-debug.log*
 node_modules
 FFmpegFreeUI-main
+e2e
 dist
 dist-ssr
 playwright-report
