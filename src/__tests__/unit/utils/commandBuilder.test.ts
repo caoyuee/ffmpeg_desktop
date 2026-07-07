@@ -1,8 +1,12 @@
-import { describe, it, expect } from 'vitest'
+import { beforeEach, describe, it, expect } from 'vitest'
 import { FFmpegCommandBuilder } from '@/utils/commandBuilder'
 import { DEFAULT_PRESET, type PresetData } from '@/types/preset'
 
 describe('FFmpegCommandBuilder', () => {
+  beforeEach(() => {
+    localStorage.clear()
+  })
+
   function makePreset(overrides: Partial<PresetData> = {}): PresetData {
     return { ...DEFAULT_PRESET, ...overrides } as PresetData
   }
@@ -18,6 +22,22 @@ describe('FFmpegCommandBuilder', () => {
       expect(cmd).toContain('-i "input.mp4"')
       expect(cmd).toContain('"output.mp4"')
       expect(cmd).toContain('-y')
+    })
+
+    it('should quote the configured Windows FFmpeg path in generated queue commands', () => {
+      localStorage.setItem('appSettings', JSON.stringify({
+        ffmpegPath: 'C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe',
+      }))
+
+      const cmd = FFmpegCommandBuilder.build(
+        makePreset(),
+        'input.webm',
+        'output.mp4',
+      )
+
+      expect(cmd).toMatch(/^"C:\\Program Files\\ffmpeg\\bin\\ffmpeg\.exe" /)
+      expect(cmd).toContain('-i "input.webm"')
+      expect(cmd).toContain('"output.mp4"')
     })
 
     it('should handle full custom mode', () => {

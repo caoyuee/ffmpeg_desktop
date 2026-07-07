@@ -207,6 +207,22 @@ describe('taskStore', () => {
     expect(store.maxConcurrent).toBe(3)
   })
 
+  it('should explain FFmpeg path setup when the executable cannot be found', async () => {
+    mockInvoke.mockRejectedValueOnce('Failed to start FFmpeg: program not found')
+    const store = useTaskStore()
+
+    await store.addTask({
+      inputFile: 'test.webm',
+      outputFile: 'output.mp4',
+      commandLine: 'ffmpeg -hide_banner -i test.webm output.mp4 -y',
+      presetId: '',
+    })
+
+    expect(store.tasks[0]!.status).toBe(TaskStatus.Error)
+    expect(store.tasks[0]!.error).toContain('未找到 FFmpeg 可执行文件')
+    expect(store.tasks[0]!.error).toContain('Failed to start FFmpeg: program not found')
+  })
+
   it('should respect disabled task sound setting on finish', async () => {
     localStorage.setItem('appSettings', JSON.stringify({ playSound: false }))
     const audioContext = vi.fn()

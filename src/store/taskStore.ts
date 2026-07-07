@@ -18,6 +18,20 @@ function formatError(error: unknown): string {
   return String(error);
 }
 
+function formatTaskStartError(error: unknown): string {
+  const message = formatError(error);
+  const normalized = message.toLowerCase();
+
+  if (
+    normalized.includes("failed to start ffmpeg") &&
+    (normalized.includes("program not found") || normalized.includes("not found"))
+  ) {
+    return `未找到 FFmpeg 可执行文件。请在“设置 > FFmpeg 路径”中选择 ffmpeg 可执行文件，或将 FFmpeg 安装到系统 PATH。原始错误: ${message}`;
+  }
+
+  return message;
+}
+
 let audioCtx: AudioContext | null = null;
 function playNotification(settings: AppSettings, frequency: number, duration: number) {
   if (!settings.playSound) return;
@@ -173,7 +187,7 @@ export const useTaskStore = defineStore("tasks", () => {
       runningCount.value++;
     } catch (error) {
       task.status = TaskStatus.Error;
-      task.error = formatError(error);
+      task.error = formatTaskStartError(error);
       task.errorType = classifyError(error);
       addTaskLog(taskId, `任务启动失败: ${task.error}`, true);
       await tryStartNext();

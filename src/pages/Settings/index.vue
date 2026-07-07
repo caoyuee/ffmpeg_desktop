@@ -254,6 +254,7 @@ import { ref, onMounted, watch, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { getVersion } from '@tauri-apps/api/app';
 import { invoke } from '@tauri-apps/api/core';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import { setLocale, availableLanguages } from '@/i18n';
 import { useSettingStore } from '@/store/settingStore';
 import { useTaskStore } from '@/store/taskStore';
@@ -287,6 +288,7 @@ const toastMessage = ref('');
 const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success');
 
 const { state: updateState, checkForUpdates, downloadAndInstallUpdate } = useUpdateChecker();
+const repositoryUrl = 'https://github.com/caoyuee/ffmpeg_desktop';
 
 onMounted(() => {
   loadSettings();
@@ -404,16 +406,16 @@ function clearLogs() {
   showToast.value = true;
 }
 
-function openGitHub() {
-  window.open('https://gitee.com/caoyuee/video-editor', '_blank');
+async function openGitHub() {
+  await openUrl(repositoryUrl);
 }
 
-function openIssues() {
-  window.open('https://gitee.com/caoyuee/video-editor/issues', '_blank');
+async function openIssues() {
+  await openUrl(`${repositoryUrl}/issues`);
 }
 
-function openReleases() {
-  window.open('https://gitee.com/caoyuee/video-editor/releases', '_blank');
+async function openReleases() {
+  await openUrl(`${repositoryUrl}/releases`);
 }
 
 async function checkUpdate() {
