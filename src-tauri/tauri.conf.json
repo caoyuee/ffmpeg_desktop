@@ -31,7 +31,7 @@
   "plugins": {
     "fs": {},
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDk0OTkwNTk2NDBFNTdDMDYKUldRR2ZPVkFsZ1dabE5memsxWHlUbTJJaWIzUUhUSGpIOGNBQzZuNjcvalRwL011UHpDZ3VmRkEK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEM5RTJGRTUxQ0QxNDlCODkKUldTSm14VE5VZjdpeWNocTJUdHVibUt2MUN6UjNVb28zZGZrM1BqTFNCWTc1UllvVjMwa3l3ZzQK",
       "endpoints": [
         "https://github.com/caoyuee/ffmpeg_desktop/releases/latest/download/latest.json"
       ],
