@@ -3,28 +3,27 @@
     <div class="queue-header">
       <h3>{{ t('page.queue.title') }} ({{ taskStore.tasks.length }})</h3>
       <div class="queue-actions">
-        <button 
-          @click="clearCompleted" 
-          :disabled="!hasCompletedTasks"
-          class="app-btn"
-        >
+        <button :disabled="!hasCompletedTasks" class="app-btn" @click="clearCompleted">
           <AppIcon name="trash" :size="15" />
           {{ t('page.queue.clearCompleted') }}
         </button>
       </div>
     </div>
-    
+
     <div class="task-list">
       <TaskItem
         v-for="task in taskStore.tasks"
         :key="task.id"
         :task="task"
+        :selected="selectedIds.has(task.id)"
+        @select="emit('select', $event)"
         @pause="handlePause"
         @resume="handleResume"
         @stop="handleStop"
         @remove="handleRemove"
+        @retry="handleRetry"
       />
-      
+
       <div v-if="taskStore.tasks.length === 0" class="empty-tip">
         <AppIcon name="queue" :size="48" class="empty-icon" />
         <p>{{ t('page.queue.empty') }}</p>
@@ -35,38 +34,54 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { useTaskStore } from '@/store/taskStore';
-import TaskItem from './TaskItem.vue';
-import { TaskStatus } from '@/types/task';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { useTaskStore } from '@/store/taskStore'
+import TaskItem from './TaskItem.vue'
+import { TaskStatus } from '@/types/task'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
 
-const { t } = useI18n();
-const taskStore = useTaskStore();
+// R1-2：选中态由页面持有（快捷键、工具栏、stdin 都依赖它），这里只负责透传与冒泡。
+withDefaults(
+  defineProps<{
+    selectedIds?: Set<string>
+  }>(),
+  {
+    selectedIds: () => new Set<string>(),
+  },
+)
+const emit = defineEmits<{
+  select: [taskId: string]
+}>()
+const { t } = useI18n()
+const taskStore = useTaskStore()
 
-const hasCompletedTasks = computed(() => 
-  taskStore.tasks.some(t => t.status === TaskStatus.Completed || t.status === TaskStatus.Stopped)
-);
+const hasCompletedTasks = computed(() =>
+  taskStore.tasks.some((t) => t.status === TaskStatus.Completed || t.status === TaskStatus.Stopped),
+)
 
 function handlePause(taskId: string) {
-  taskStore.pauseTask(taskId);
+  taskStore.pauseTask(taskId)
 }
 
 function handleResume(taskId: string) {
-  taskStore.resumeTask(taskId);
+  taskStore.resumeTask(taskId)
 }
 
 function handleStop(taskId: string) {
-  taskStore.stopTask(taskId);
+  taskStore.stopTask(taskId)
 }
 
 function handleRemove(taskId: string) {
-  taskStore.removeTask(taskId);
+  taskStore.removeTask(taskId)
+}
+
+function handleRetry(taskId: string) {
+  void taskStore.retryTask(taskId)
 }
 
 function clearCompleted() {
-  taskStore.clearCompletedTasks();
+  taskStore.clearCompletedTasks()
 }
 </script>
 

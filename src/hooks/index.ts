@@ -2,16 +2,17 @@
  * Hooks 统一导出
  */
 
-export { useFFmpegCommand } from "./useFFmpegCommand";
-export type { UseFFmpegCommandOptions } from "./useFFmpegCommand";
+// R2.1：零调用方的 legacy 命令 hook 已删除，一次性任务统一走下面的执行器。
+export { useTransientFFmpegTask } from './useTransientFFmpegTask'
+export type { TransientFFmpegTask, TransientTaskHandlers } from './useTransientFFmpegTask'
 
-export { useMediaProbe } from "./useMediaProbe";
-export type { MediaInfo } from "./useMediaProbe";
+export { useMediaProbe } from './useMediaProbe'
 
-export { useFileList } from "./useFileList";
-export type { FileItem } from "./useFileList";
+// R2.3：文件列表模型迁入 src/types/fileList.ts，局部状态的 useFileList hook 已删除，
+// 唯一状态源是 store/fileListStore.ts。
+export type { MediaInfo, FileItem, FileStatus } from '@/types/fileList'
 
-export { useCodecFilter } from "./useCodecFilter";
+// R2.2：零调用方的编码器过滤 hook 已删除；格式兼容性查询统一收敛到 config/codecDatabase。
 
 export {
   formatDuration,
@@ -22,4 +23,4 @@ export {
   extractFileName,
   extractFileExtension,
   generateOutputPath,
-} from "./useFormatters";
+} from './useFormatters'

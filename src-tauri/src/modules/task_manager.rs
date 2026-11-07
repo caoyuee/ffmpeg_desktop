@@ -109,19 +109,20 @@ pub fn start_ffmpeg(
                 let reader = BufReader::new(stderr);
                 for line in reader.lines() {
                      if let Ok(line) = line {
-                        if ERROR_RE.is_match(&line) {
-                            let _ = app_clone.emit("ffmpeg-log", serde_json::json!({
-                                "taskId": task_id_clone,
-                                "level": "error",
-                                "message": line
-                            }));
-                        }
+                        // R1-6：转发全量 stderr 行，由前端按 level / outputType 过滤。
+                        // 旧实现只发 ERROR_RE 命中的行，导致"最新输出"面板几乎永远为空。
+                        let level = if ERROR_RE.is_match(&line) { "error" } else { "info" };
                         if let Ok(progress) = parse_progress(&line) {
                             let _ = app_clone.emit("ffmpeg-progress", serde_json::json!({
                                 "taskId": task_id_clone,
                                 "progress": progress
                             }));
                         }
+                        let _ = app_clone.emit("ffmpeg-log", serde_json::json!({
+                            "taskId": task_id_clone,
+                            "level": level,
+                            "message": line.as_str()
+                        }));
                     }
                 }
             }

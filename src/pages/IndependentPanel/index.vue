@@ -9,7 +9,9 @@
 
     <div class="panel-body">
       <div class="file-list-section">
-        <div class="section-title">{{ t('page.independentPanel.fileListTitle', { count: fileList.length }) }}</div>
+        <div class="section-title">
+          {{ t('page.independentPanel.fileListTitle', { count: fileList.length }) }}
+        </div>
         <div class="file-list">
           <div v-for="(file, index) in fileList" :key="index" class="file-item">
             <span class="file-index">{{ index + 1 }}</span>
@@ -66,8 +68,14 @@
     </div>
 
     <div class="panel-footer">
-      <span class="file-count">{{ t('page.independentPanel.fileCount', { count: fileList.length }) }}</span>
-      <button class="app-btn app-btn--primary" @click="confirmAndAdd" :disabled="fileList.length === 0">
+      <span class="file-count">{{
+        t('page.independentPanel.fileCount', { count: fileList.length })
+      }}</span>
+      <button
+        class="app-btn app-btn--primary"
+        :disabled="fileList.length === 0"
+        @click="confirmAndAdd"
+      >
         {{ t('page.independentPanel.confirmAndAdd') }}
       </button>
     </div>
@@ -81,9 +89,9 @@ import { emit } from '@tauri-apps/api/event'
 import { invoke } from '@tauri-apps/api/core'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import type { PresetData } from '@/types/preset'
-import { DEFAULT_PRESET } from '@/types/preset'
-import { FFmpegCommandBuilder } from '@/utils/commandBuilder'
-import { generateOutputPath } from '@/hooks/useFormatters'
+import { normalizePreset } from '@/config/presetSchema'
+import { createTaskDrafts } from '@/config/taskDraft'
+import { useSettingsStore } from '@/store/settingsStore'
 import { usePresetStore } from '@/store/presetStore'
 import AppIcon from '@/components/AppIcon/AppIcon.vue'
 import ColorPanel from '@/components/ColorPanel/ColorPanel.vue'
@@ -99,9 +107,11 @@ import QualitySettings from '@/pages/ParameterPanel/components/QualitySettings.v
 
 const { t } = useI18n()
 const presetStore = usePresetStore()
+// R1-7：输出目录设置唯一决策值，独立面板入队时统一注入。
+const settingsStore = useSettingsStore()
 
 const activeTab = ref('output')
-const localPreset = ref<PresetData>({ ...presetStore.currentPreset } as PresetData)
+const localPreset = ref<PresetData>(normalizePreset(presetStore.currentPreset))
 const fileList = ref<string[]>([])
 
 const titleText = computed(() => t('page.independentPanel.title', { count: fileList.value.length }))
@@ -124,26 +134,18 @@ function getFileName(path: string) {
 }
 
 function onPresetUpdate(preset: PresetData) {
-  localPreset.value = { ...preset }
+  localPreset.value = normalizePreset(preset)
 }
 
 async function confirmAndAdd() {
   const preset = localPreset.value
-  const tasks = fileList.value.map(path => {
-    const outputFile = generateOutputPath(path, preset.output)
-    return {
-      inputFile: path,
-      outputFile,
-      commandLine: FFmpegCommandBuilder.build({ ...preset }, path, outputFile),
-      presetId: preset.id || 'independent',
-      cpuAffinity: preset.decode.cpuAffinity || undefined,
-      preserveFileTimes: {
-        creation: preset.output.naming.preserveCreationTime,
-        modification: preset.output.naming.preserveModifyTime,
-        access: preset.output.naming.preserveAccessTime,
-      },
-    }
-  })
+  // R3：独立面板也走唯一任务草稿层；仅保留其历史 presetId fallback。
+  const tasks = createTaskDrafts(preset, fileList.value, settingsStore.taskOutputDir).map(
+    (draft) => ({
+      ...draft,
+      presetId: draft.presetId || 'independent',
+    }),
+  )
 
   await emit('add-independent-tasks', { tasks })
   await closeWindow()
@@ -304,5 +306,4 @@ onMounted(async () => {
   font-size: 12px;
   color: var(--text-color2, #808080);
 }
-
 </style>

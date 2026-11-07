@@ -28,7 +28,10 @@
       </div>
     </div>
 
-    <div v-if="localPreset.audio.encoder && localPreset.audio.encoder !== 'copy'" class="form-section">
+    <div
+      v-if="localPreset.audio.encoder && localPreset.audio.encoder !== 'copy'"
+      class="form-section"
+    >
       <h4>{{ t('page.params.audioQuality') }}</h4>
       <div class="form-group">
         <label>{{ t('page.params.qualityControl') }}</label>
@@ -54,7 +57,13 @@
       <div v-if="localPreset.audio.qualityParam === 'quality'" class="form-group">
         <label>{{ t('page.params.qualityLevel') }}</label>
         <div class="slider-group">
-          <input type="range" min="0" max="9" v-model.number="qualityValueNum" @input="onQualityValueChange" />
+          <input
+            v-model.number="qualityValueNum"
+            type="range"
+            min="0"
+            max="9"
+            @input="onQualityValueChange"
+          />
           <span class="value">{{ localPreset.audio.qualityValue || 2 }}</span>
         </div>
       </div>
@@ -94,38 +103,44 @@
         <div class="form-group third">
           <label>{{ t('page.params.targetLoudness') }}</label>
           <input
-            type="text"
             v-model="localPreset.audio.loudnorm.targetLoudness"
+            type="text"
             inputmode="decimal"
             :class="{ invalid: validationErrors.targetLoudness }"
-            @input="onLoudnormInput('targetLoudness')"
             placeholder="-16"
+            @input="onLoudnormInput('targetLoudness')"
           />
-          <div v-if="validationErrors.targetLoudness" class="validation-error">{{ t('validation.invalidNumber') }}</div>
+          <div v-if="validationErrors.targetLoudness" class="validation-error">
+            {{ t('validation.invalidNumber') }}
+          </div>
         </div>
         <div class="form-group third">
           <label>{{ t('page.params.dynamicRange') }}</label>
           <input
-            type="text"
             v-model="localPreset.audio.loudnorm.dynamicRange"
+            type="text"
             inputmode="decimal"
             :class="{ invalid: validationErrors.dynamicRange }"
-            @input="onLoudnormInput('dynamicRange')"
             placeholder="11"
+            @input="onLoudnormInput('dynamicRange')"
           />
-          <div v-if="validationErrors.dynamicRange" class="validation-error">{{ t('validation.invalidNumber') }}</div>
+          <div v-if="validationErrors.dynamicRange" class="validation-error">
+            {{ t('validation.invalidNumber') }}
+          </div>
         </div>
         <div class="form-group third">
           <label>{{ t('page.params.peakLevel') }}</label>
           <input
-            type="text"
             v-model="localPreset.audio.loudnorm.peakLevel"
+            type="text"
             inputmode="decimal"
             :class="{ invalid: validationErrors.peakLevel }"
-            @input="onLoudnormInput('peakLevel')"
             placeholder="-1.5"
+            @input="onLoudnormInput('peakLevel')"
           />
-          <div v-if="validationErrors.peakLevel" class="validation-error">{{ t('validation.invalidNumber') }}</div>
+          <div v-if="validationErrors.peakLevel" class="validation-error">
+            {{ t('validation.invalidNumber') }}
+          </div>
         </div>
       </div>
     </div>
@@ -133,64 +148,68 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { PresetData } from '@/types/preset';
-import { isNonNegativeDecimal, isSignedDecimal } from '@/utils/numericValidation';
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { PresetData } from '@/types/preset'
+import { isNonNegativeDecimal, isSignedDecimal } from '@/utils/numericValidation'
 
 const props = defineProps<{
-  preset: PresetData;
-}>();
+  preset: PresetData
+}>()
 
 const emit = defineEmits<{
-  'update:preset': [preset: PresetData];
-}>();
+  'update:preset': [preset: PresetData]
+}>()
 
-const { t } = useI18n();
-const localPreset = ref<PresetData>({ ...props.preset });
+const { t } = useI18n()
+const localPreset = ref<PresetData>({ ...props.preset })
 
 const qualityValueNum = computed({
   get: () => parseInt(localPreset.value.audio.qualityValue) || 2,
-  set: () => {}
-});
+  set: () => {},
+})
 const validationErrors = ref({
   targetLoudness: false,
   dynamicRange: false,
   peakLevel: false,
-});
+})
 
-watch(() => props.preset, (newVal) => {
-  if (newVal) {
-    localPreset.value = { ...newVal };
-    validationErrors.value = {
-      targetLoudness: false,
-      dynamicRange: false,
-      peakLevel: false,
-    };
-  }
-}, { deep: true });
+watch(
+  () => props.preset,
+  (newVal) => {
+    if (newVal) {
+      localPreset.value = { ...newVal }
+      validationErrors.value = {
+        targetLoudness: false,
+        dynamicRange: false,
+        peakLevel: false,
+      }
+    }
+  },
+  { deep: true },
+)
 
 function onQualityValueChange(event: Event) {
-  const target = event.target as HTMLInputElement;
-  localPreset.value.audio.qualityValue = target.value;
-  onChange();
+  const target = event.target as HTMLInputElement
+  localPreset.value.audio.qualityValue = target.value
+  onChange()
 }
 
 function onLoudnormInput(field: keyof typeof validationErrors.value) {
-  const value = localPreset.value.audio.loudnorm[field];
+  const value = localPreset.value.audio.loudnorm[field]
   if (field === 'targetLoudness' || field === 'peakLevel') {
-    validationErrors.value[field] = !isSignedDecimal(value);
+    validationErrors.value[field] = !isSignedDecimal(value)
   } else {
-    validationErrors.value[field] = !isNonNegativeDecimal(value);
+    validationErrors.value[field] = !isNonNegativeDecimal(value)
   }
 
   if (!validationErrors.value[field]) {
-    onChange();
+    onChange()
   }
 }
 
 function onChange() {
-  emit('update:preset', localPreset.value);
+  emit('update:preset', localPreset.value)
 }
 </script>
 
@@ -258,7 +277,7 @@ function onChange() {
   gap: 12px;
 }
 
-.slider-group input[type="range"] {
+.slider-group input[type='range'] {
   flex: 1;
 }
 

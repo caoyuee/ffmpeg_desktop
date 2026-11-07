@@ -23,7 +23,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from 'vue'
 
 type IconName =
   | 'home'
@@ -59,6 +59,11 @@ type IconName =
   | 'edit'
   | 'refresh'
   | 'export'
+  | 'share'
+  | 'history'
+  | 'workbench'
+  | 'watch'
+  | 'compare'
   | 'reset'
   | 'arrow-up'
   | 'arrow-down'
@@ -73,13 +78,25 @@ type IconName =
   | 'video'
   | 'audio'
   | 'subtitle'
-  | 'drop-files';
+  | 'drop-files'
 
 interface IconDef {
-  paths: string[];
-  strokeWidth?: number;
-  fill?: boolean;
+  paths: string[]
+  strokeWidth?: number
+  fill?: boolean
 }
+
+const props = withDefaults(
+  defineProps<{
+    name: IconName
+    size?: number | string
+    strokeWidth?: number
+  }>(),
+  {
+    size: 20,
+    strokeWidth: 1.8,
+  },
+)
 
 const ICONS: Record<IconName, IconDef> = {
   home: {
@@ -89,19 +106,27 @@ const ICONS: Record<IconName, IconDef> = {
     paths: ['M6 7h12M6 12h12M6 17h12M3.5 7h.5M3.5 12h.5M3.5 17h.5'],
   },
   folder: {
-    paths: ['M3 7.5A2.5 2.5 0 0 1 5.5 5h5l2 2H19a2 2 0 0 1 2 2v7.5A2.5 2.5 0 0 1 18.5 19h-14A1.5 1.5 0 0 1 3 17.5z'],
+    paths: [
+      'M3 7.5A2.5 2.5 0 0 1 5.5 5h5l2 2H19a2 2 0 0 1 2 2v7.5A2.5 2.5 0 0 1 18.5 19h-14A1.5 1.5 0 0 1 3 17.5z',
+    ],
   },
   'folder-open': {
     paths: ['M3 9.5 5 6h5l2 2h9v3.5L19 18H4.5A1.5 1.5 0 0 1 3 16.5z'],
   },
   'folder-plus': {
-    paths: ['M3 7.5A2.5 2.5 0 0 1 5.5 5h5l2 2H19a2 2 0 0 1 2 2v7.5A2.5 2.5 0 0 1 18.5 19h-14A1.5 1.5 0 0 1 3 17.5z', 'M12 11v4M10 13h4'],
+    paths: [
+      'M3 7.5A2.5 2.5 0 0 1 5.5 5h5l2 2H19a2 2 0 0 1 2 2v7.5A2.5 2.5 0 0 1 18.5 19h-14A1.5 1.5 0 0 1 3 17.5z',
+      'M12 11v4M10 13h4',
+    ],
   },
   params: {
     paths: ['M4 7h4M12 7h8M8 5v4', 'M4 12h10M18 12h2M14 10v4', 'M4 17h2M10 17h10M6 15v4'],
   },
   settings: {
-    paths: ['M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8z', 'M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M5.8 5.8l1.4 1.4M16.8 16.8l1.4 1.4M5.8 18.2l1.4-1.4M16.8 7.2l1.4-1.4'],
+    paths: [
+      'M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8z',
+      'M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M5.8 5.8l1.4 1.4M16.8 16.8l1.4 1.4M5.8 18.2l1.4-1.4M16.8 7.2l1.4-1.4',
+    ],
   },
   merge: {
     paths: ['M4 7h5l4 5h7', 'M4 17h5l4-5h7'],
@@ -180,6 +205,29 @@ const ICONS: Record<IconName, IconDef> = {
   refresh: {
     paths: ['M20 12a8 8 0 1 1-2.3-5.7', 'M20 4v5h-5'],
   },
+  workbench: {
+    paths: ['M3 5h18v14H3z', 'M3 9h6v10M9 9h6M15 9h6', 'M5 7h.01M7 7h.01'],
+  },
+  watch: {
+    paths: [
+      'M3 7h6l2 3h10a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1z',
+      'M12 14v3M10.5 15.5h3',
+    ],
+  },
+  compare: {
+    paths: ['M12 3v18', 'M4 7h5M4 12h5M4 17h5', 'M15 7h5M15 12h5M15 17h5'],
+  },
+  history: {
+    paths: ['M3 12a9 9 0 1 0 3-6.7L3 8', 'M3 3v5h5', 'M12 7v5l3.5 2'],
+  },
+  share: {
+    paths: [
+      'M18 8a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
+      'M6 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
+      'M18 21a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5z',
+      'M8.2 10.8l7.6-4.4M8.2 13.2l7.6 4.4',
+    ],
+  },
   export: {
     paths: ['M14 5h5v5', 'M10 14l9-9', 'M12 19H5V5h7'],
   },
@@ -234,22 +282,13 @@ const ICONS: Record<IconName, IconDef> = {
       'M4 8H3a1.5 1.5 0 0 0-1.5 1.5V18A2.5 2.5 0 0 0 4 20h2',
     ],
   },
-};
+}
 
-const props = withDefaults(defineProps<{
-  name: IconName;
-  size?: number | string;
-  strokeWidth?: number;
-}>(), {
-  size: 20,
-  strokeWidth: 1.8,
-});
-
-const icon = computed(() => ICONS[props.name]);
+const icon = computed(() => ICONS[props.name])
 
 const sizeValue = computed(() => {
-  return typeof props.size === 'number' ? String(props.size) : props.size;
-});
+  return typeof props.size === 'number' ? String(props.size) : props.size
+})
 </script>
 
 <style scoped>

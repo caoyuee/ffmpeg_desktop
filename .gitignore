@@ -28,3 +28,7 @@ src-tauri/target
 
 # Local reference copy
 FFmpegFreeUI-main/
+# 本地会话产物（不入库）
+.Trash-*/
+_tmp_*
+.workbuddy/

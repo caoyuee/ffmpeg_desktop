@@ -3,7 +3,11 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('source')">
         <h4>{{ t('page.params.subtitlePanel.subtitleBurn') }}</h4>
-        <AppIcon :name="expandedSections.source ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.source ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.source" class="section-content">
         <div class="form-group">
@@ -19,9 +23,15 @@
           <div class="form-group">
             <label>{{ t('page.params.subtitlePanel.subtitleFile') }}</label>
             <div class="file-input-group">
-              <input type="text" v-model="localPreset.video.subtitleBurn.externalFileName" 
-                :placeholder="t('page.params.subtitlePanel.subtitleFilePlaceholder')" readonly />
-              <button type="button" class="app-btn app-btn--primary" @click="selectSubtitleFile">{{ t('page.params.subtitlePanel.select') }}</button>
+              <input
+                v-model="localPreset.video.subtitleBurn.externalFileName"
+                type="text"
+                :placeholder="t('page.params.subtitlePanel.subtitleFilePlaceholder')"
+                readonly
+              />
+              <button type="button" class="app-btn app-btn--primary" @click="selectSubtitleFile">
+                {{ t('page.params.subtitlePanel.select') }}
+              </button>
             </div>
           </div>
         </div>
@@ -29,8 +39,12 @@
         <div v-if="subtitleMode === 'embedded'" class="params-group">
           <div class="form-group">
             <label>{{ t('page.params.subtitlePanel.subtitleStreamIndex') }}</label>
-            <input type="number" min="0" v-model="localPreset.video.subtitleBurn.streamIndex" 
-              @input="onSubtitleChange" />
+            <input
+              v-model="localPreset.video.subtitleBurn.streamIndex"
+              type="number"
+              min="0"
+              @input="onSubtitleChange"
+            />
           </div>
         </div>
       </div>
@@ -39,32 +53,50 @@
     <div v-if="subtitleMode !== 'none'" class="panel-section">
       <div class="section-header" @click="toggleSection('style')">
         <h4>{{ t('page.params.subtitlePanel.fontStyle') }}</h4>
-        <AppIcon :name="expandedSections.style ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.style ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.style" class="section-content">
         <div class="form-row">
           <div class="form-group half">
             <label>{{ t('page.params.subtitlePanel.fontName') }}</label>
-            <input type="text" v-model="localPreset.video.subtitleBurn.style.fontName" 
-              @input="onSubtitleChange" :placeholder="t('page.params.subtitlePanel.fontNamePlaceholder')" />
+            <input
+              v-model="localPreset.video.subtitleBurn.style.fontName"
+              type="text"
+              :placeholder="t('page.params.subtitlePanel.fontNamePlaceholder')"
+              @input="onSubtitleChange"
+            />
           </div>
           <div class="form-group half">
             <label>{{ t('page.params.subtitlePanel.fontSize') }}</label>
-            <input type="number" min="8" max="72" 
-              v-model.number="localPreset.video.subtitleBurn.style.fontSize" 
-              @input="onSubtitleChange" />
+            <input
+              v-model.number="localPreset.video.subtitleBurn.style.fontSize"
+              type="number"
+              min="8"
+              max="72"
+              @input="onSubtitleChange"
+            />
           </div>
         </div>
 
         <div class="form-row checkbox-row">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="localPreset.video.subtitleBurn.style.bold" 
-              @change="onSubtitleChange" />
+            <input
+              v-model="localPreset.video.subtitleBurn.style.bold"
+              type="checkbox"
+              @change="onSubtitleChange"
+            />
             <span>{{ t('page.params.subtitlePanel.bold') }}</span>
           </label>
           <label class="checkbox-label">
-            <input type="checkbox" v-model="localPreset.video.subtitleBurn.style.italic" 
-              @change="onSubtitleChange" />
+            <input
+              v-model="localPreset.video.subtitleBurn.style.italic"
+              type="checkbox"
+              @change="onSubtitleChange"
+            />
             <span>{{ t('page.params.subtitlePanel.italic') }}</span>
           </label>
         </div>
@@ -73,17 +105,25 @@
           <div class="form-group half">
             <label>{{ t('page.params.subtitlePanel.primaryColor') }}</label>
             <div class="color-input-group">
-              <input type="color" v-model="primaryColorHex" @input="onColorChange('primary')" />
-              <input type="text" v-model="primaryColorHex" @input="onColorChange('primary')" 
-                class="color-text" />
+              <input v-model="primaryColorHex" type="color" @input="onColorChange('primary')" />
+              <input
+                v-model="primaryColorHex"
+                type="text"
+                class="color-text"
+                @input="onColorChange('primary')"
+              />
             </div>
           </div>
           <div class="form-group half">
             <label>{{ t('page.params.subtitlePanel.outlineColor') }}</label>
             <div class="color-input-group">
-              <input type="color" v-model="outlineColorHex" @input="onColorChange('outline')" />
-              <input type="text" v-model="outlineColorHex" @input="onColorChange('outline')" 
-                class="color-text" />
+              <input v-model="outlineColorHex" type="color" @input="onColorChange('outline')" />
+              <input
+                v-model="outlineColorHex"
+                type="text"
+                class="color-text"
+                @input="onColorChange('outline')"
+              />
             </div>
           </div>
         </div>
@@ -93,27 +133,44 @@
     <div v-if="subtitleMode !== 'none'" class="panel-section">
       <div class="section-header" @click="toggleSection('position')">
         <h4>{{ t('page.params.subtitlePanel.borderAndPosition') }}</h4>
-        <AppIcon :name="expandedSections.position ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.position ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.position" class="section-content">
         <div class="form-row">
           <div class="form-group half">
             <label>{{ t('page.params.subtitlePanel.outlineWidth') }}</label>
-            <input type="number" min="0" max="10" step="0.5"
-              v-model="localPreset.video.subtitleBurn.outlineWidth" 
-              @input="onSubtitleChange" />
+            <input
+              v-model="localPreset.video.subtitleBurn.outlineWidth"
+              type="number"
+              min="0"
+              max="10"
+              step="0.5"
+              @input="onSubtitleChange"
+            />
           </div>
           <div class="form-group half">
             <label>{{ t('page.params.subtitlePanel.shadowDistance') }}</label>
-            <input type="number" min="0" max="10" step="0.5"
-              v-model="localPreset.video.subtitleBurn.shadowDistance" 
-              @input="onSubtitleChange" />
+            <input
+              v-model="localPreset.video.subtitleBurn.shadowDistance"
+              type="number"
+              min="0"
+              max="10"
+              step="0.5"
+              @input="onSubtitleChange"
+            />
           </div>
         </div>
 
         <div class="form-group">
           <label>{{ t('page.params.subtitlePanel.alignment') }}</label>
-          <select v-model.number="localPreset.video.subtitleBurn.alignment" @change="onSubtitleChange">
+          <select
+            v-model.number="localPreset.video.subtitleBurn.alignment"
+            @change="onSubtitleChange"
+          >
             <option :value="0">{{ t('page.params.subtitlePanel.default') }}</option>
             <option :value="1">{{ t('page.params.subtitlePanel.topLeft') }}</option>
             <option :value="2">{{ t('page.params.subtitlePanel.topCenter') }}</option>
@@ -130,18 +187,30 @@
         <div class="form-row">
           <div class="form-group third">
             <label>{{ t('page.params.subtitlePanel.leftMargin') }}</label>
-            <input type="number" min="0" v-model="localPreset.video.subtitleBurn.marginL" 
-              @input="onSubtitleChange" />
+            <input
+              v-model="localPreset.video.subtitleBurn.marginL"
+              type="number"
+              min="0"
+              @input="onSubtitleChange"
+            />
           </div>
           <div class="form-group third">
             <label>{{ t('page.params.subtitlePanel.rightMargin') }}</label>
-            <input type="number" min="0" v-model="localPreset.video.subtitleBurn.marginR" 
-              @input="onSubtitleChange" />
+            <input
+              v-model="localPreset.video.subtitleBurn.marginR"
+              type="number"
+              min="0"
+              @input="onSubtitleChange"
+            />
           </div>
           <div class="form-group third">
             <label>{{ t('page.params.subtitlePanel.verticalMargin') }}</label>
-            <input type="number" min="0" v-model="localPreset.video.subtitleBurn.marginV" 
-              @input="onSubtitleChange" />
+            <input
+              v-model="localPreset.video.subtitleBurn.marginV"
+              type="number"
+              min="0"
+              @input="onSubtitleChange"
+            />
           </div>
         </div>
       </div>
@@ -150,106 +219,112 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, onMounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { PresetData } from '@/types/preset';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { ref, reactive, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { PresetData } from '@/types/preset'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
 
 const props = defineProps<{
-  preset: PresetData;
-}>();
+  preset: PresetData
+}>()
 
 const emit = defineEmits<{
-  'update:preset': [preset: PresetData];
-}>();
+  'update:preset': [preset: PresetData]
+}>()
 
-const { t } = useI18n();
+const { t } = useI18n()
 
-const localPreset = ref<PresetData>({ ...props.preset });
-const subtitleMode = ref<'none' | 'external' | 'embedded'>('none');
-const primaryColorHex = ref('#ffffff');
-const outlineColorHex = ref('#000000');
+const localPreset = ref<PresetData>({ ...props.preset })
+const subtitleMode = ref<'none' | 'external' | 'embedded'>('none')
+const primaryColorHex = ref('#ffffff')
+const outlineColorHex = ref('#000000')
 
 const expandedSections = reactive({
   source: false,
   style: false,
   position: false,
-});
+})
 
-watch(() => props.preset, (newVal) => {
-  localPreset.value = { ...newVal };
-  updateSubtitleMode();
-}, { deep: true });
+watch(
+  () => props.preset,
+  (newVal) => {
+    localPreset.value = { ...newVal }
+    updateSubtitleMode()
+  },
+  { deep: true },
+)
 
 function updateSubtitleMode() {
   if (localPreset.value.video.subtitleBurn.externalFile) {
-    subtitleMode.value = 'external';
+    subtitleMode.value = 'external'
   } else if (localPreset.value.video.subtitleBurn.embeddedStream) {
-    subtitleMode.value = 'embedded';
+    subtitleMode.value = 'embedded'
   } else {
-    subtitleMode.value = 'none';
+    subtitleMode.value = 'none'
   }
-  
+
   if (localPreset.value.video.subtitleBurn.primaryColor) {
-    primaryColorHex.value = localPreset.value.video.subtitleBurn.primaryColor;
+    primaryColorHex.value = localPreset.value.video.subtitleBurn.primaryColor
   }
   if (localPreset.value.video.subtitleBurn.outlineColor) {
-    outlineColorHex.value = localPreset.value.video.subtitleBurn.outlineColor;
+    outlineColorHex.value = localPreset.value.video.subtitleBurn.outlineColor
   }
 }
 
 function toggleSection(section: keyof typeof expandedSections) {
-  expandedSections[section] = !expandedSections[section];
+  expandedSections[section] = !expandedSections[section]
 }
 
 function onModeChange() {
-  localPreset.value.video.subtitleBurn.externalFile = subtitleMode.value === 'external';
-  localPreset.value.video.subtitleBurn.embeddedStream = subtitleMode.value === 'embedded';
-  
+  localPreset.value.video.subtitleBurn.externalFile = subtitleMode.value === 'external'
+  localPreset.value.video.subtitleBurn.embeddedStream = subtitleMode.value === 'embedded'
+
   if (subtitleMode.value === 'none') {
-    localPreset.value.video.subtitleBurn.externalFileName = '';
-    localPreset.value.video.subtitleBurn.streamIndex = '';
+    localPreset.value.video.subtitleBurn.externalFileName = ''
+    localPreset.value.video.subtitleBurn.streamIndex = ''
   }
-  
-  onSubtitleChange();
+
+  onSubtitleChange()
 }
 
 async function selectSubtitleFile() {
   try {
-    const { open } = await import('@tauri-apps/plugin-dialog');
+    const { open } = await import('@tauri-apps/plugin-dialog')
     const selected = await open({
       multiple: false,
-      filters: [{
-        name: t('page.params.subtitlePanel.subtitleFiles'),
-        extensions: ['srt', 'ass', 'ssa', 'sub']
-      }]
-    });
-    
+      filters: [
+        {
+          name: t('page.params.subtitlePanel.subtitleFiles'),
+          extensions: ['srt', 'ass', 'ssa', 'sub'],
+        },
+      ],
+    })
+
     if (selected && typeof selected === 'string') {
-      localPreset.value.video.subtitleBurn.externalFileName = selected;
-      onSubtitleChange();
+      localPreset.value.video.subtitleBurn.externalFileName = selected
+      onSubtitleChange()
     }
   } catch (error) {
-    console.error(t('page.params.subtitlePanel.selectSubtitleFailed'), error);
+    console.error(t('page.params.subtitlePanel.selectSubtitleFailed'), error)
   }
 }
 
 function onColorChange(type: 'primary' | 'outline') {
   if (type === 'primary') {
-    localPreset.value.video.subtitleBurn.primaryColor = primaryColorHex.value;
+    localPreset.value.video.subtitleBurn.primaryColor = primaryColorHex.value
   } else {
-    localPreset.value.video.subtitleBurn.outlineColor = outlineColorHex.value;
+    localPreset.value.video.subtitleBurn.outlineColor = outlineColorHex.value
   }
-  onSubtitleChange();
+  onSubtitleChange()
 }
 
 function onSubtitleChange() {
-  emit('update:preset', localPreset.value);
+  emit('update:preset', localPreset.value)
 }
 
 onMounted(() => {
-  updateSubtitleMode();
-});
+  updateSubtitleMode()
+})
 </script>
 
 <style scoped>
@@ -309,8 +384,8 @@ onMounted(() => {
 }
 
 .form-group select,
-.form-group input[type="text"],
-.form-group input[type="number"] {
+.form-group input[type='text'],
+.form-group input[type='number'] {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid var(--border-color1, #333);
@@ -359,7 +434,7 @@ onMounted(() => {
   color: var(--text-color1, #e0e0e0);
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   -webkit-appearance: checkbox;
   appearance: checkbox;
   width: 16px;
@@ -391,7 +466,7 @@ onMounted(() => {
   align-items: center;
 }
 
-.color-input-group input[type="color"] {
+.color-input-group input[type='color'] {
   width: 36px;
   height: 32px;
   padding: 2px;

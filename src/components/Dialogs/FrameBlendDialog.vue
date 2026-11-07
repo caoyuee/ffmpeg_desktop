@@ -5,34 +5,36 @@
         <div class="dialog-header">
           <span class="dialog-title">{{ t('dialog.frameBlend.title') }}</span>
         </div>
-        
+
         <div class="dialog-content">
           <div class="info-text">
             <p>{{ t('dialog.frameBlend.description1') }}</p>
             <p>{{ t('dialog.frameBlend.description2') }}</p>
           </div>
-          
+
           <div class="form-row">
             <label class="row-label">{{ t('dialog.frameBlend.reduceFrameRate') }}</label>
             <div class="row-content">
-              <input 
-                type="text" 
-                class="text-input" 
+              <input
                 v-model="settings.frameRate"
+                type="text"
+                class="text-input"
                 inputmode="decimal"
                 :class="{ invalid: validationErrors.frameRate }"
-                @input="onNumericInput('frameRate')"
                 :placeholder="t('dialog.frameBlend.frameRatePlaceholder')"
+                @input="onNumericInput('frameRate')"
               />
               <span class="hint">{{ t('dialog.frameBlend.optional') }}</span>
-              <span v-if="validationErrors.frameRate" class="validation-error">{{ t('validation.invalidNumber') }}</span>
+              <span v-if="validationErrors.frameRate" class="validation-error">{{
+                t('validation.invalidNumber')
+              }}</span>
             </div>
           </div>
-          
+
           <div class="form-row">
             <label class="row-label">{{ t('dialog.frameBlend.blendMode') }}</label>
             <div class="row-content">
-              <select class="select-input" v-model="settings.blendMode">
+              <select v-model="settings.blendMode" class="select-input">
                 <option value="">{{ t('dialog.frameBlend.doNotUse') }}</option>
                 <option value="average">{{ t('dialog.frameBlend.averagePreviousFrame') }}</option>
                 <option value="blend">{{ t('dialog.frameBlend.blend') }}</option>
@@ -45,28 +47,32 @@
               <span class="hint">{{ t('dialog.frameBlend.cancelFilterHint') }}</span>
             </div>
           </div>
-          
+
           <div class="form-row">
             <label class="row-label">{{ t('dialog.frameBlend.blendRatio') }}</label>
             <div class="row-content">
-              <input 
-                type="text" 
-                class="text-input" 
+              <input
                 v-model="settings.ratio"
+                type="text"
+                class="text-input"
                 inputmode="decimal"
                 :class="{ invalid: validationErrors.ratio }"
-                @input="onNumericInput('ratio')"
                 :placeholder="t('dialog.frameBlend.ratioPlaceholder')"
+                @input="onNumericInput('ratio')"
               />
               <span class="hint">{{ t('dialog.frameBlend.mayNotWork') }}</span>
-              <span v-if="validationErrors.ratio" class="validation-error">{{ t('validation.invalidNumber') }}</span>
+              <span v-if="validationErrors.ratio" class="validation-error">{{
+                t('validation.invalidNumber')
+              }}</span>
             </div>
           </div>
         </div>
-        
+
         <div class="dialog-footer">
           <button class="app-btn" @click="close">{{ t('common.cancel') }}</button>
-          <button class="app-btn app-btn--primary" :disabled="hasValidationErrors" @click="confirm">{{ t('common.ok') }}</button>
+          <button class="app-btn app-btn--primary" :disabled="hasValidationErrors" @click="confirm">
+            {{ t('common.ok') }}
+          </button>
         </div>
       </div>
     </div>
@@ -74,101 +80,104 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { isNonNegativeDecimal, isPositiveDecimal } from '@/utils/numericValidation';
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { isNonNegativeDecimal, isPositiveDecimal } from '@/utils/numericValidation'
 
 interface FrameBlendSettings {
-  frameRate: string;
-  blendMode: string;
-  ratio: string;
+  frameRate: string
+  blendMode: string
+  ratio: string
 }
 
 const props = defineProps<{
-  visible: boolean;
-  modelValue: FrameBlendSettings;
-}>();
+  visible: boolean
+  modelValue: FrameBlendSettings
+}>()
 
 const emit = defineEmits<{
-  (e: 'update:visible', value: boolean): void;
-  (e: 'update:modelValue', value: FrameBlendSettings): void;
-}>();
+  (e: 'update:visible', value: boolean): void
+  (e: 'update:modelValue', value: FrameBlendSettings): void
+}>()
 
-const { t } = useI18n();
+const { t } = useI18n()
 
 const settings = ref<FrameBlendSettings>({
   frameRate: '',
   blendMode: '',
   ratio: '',
-});
+})
 const validationErrors = ref({
   frameRate: false,
   ratio: false,
-});
-const hasValidationErrors = computed(() => Object.values(validationErrors.value).some(Boolean));
+})
+const hasValidationErrors = computed(() => Object.values(validationErrors.value).some(Boolean))
 
-watch(() => props.modelValue, (newVal) => {
-  settings.value = { ...newVal };
-  validationErrors.value = {
-    frameRate: false,
-    ratio: false,
-  };
-}, { immediate: true });
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    settings.value = { ...newVal }
+    validationErrors.value = {
+      frameRate: false,
+      ratio: false,
+    }
+  },
+  { immediate: true },
+)
 
 function close() {
-  emit('update:visible', false);
+  emit('update:visible', false)
 }
 
 function confirm() {
-  if (hasValidationErrors.value) return;
-  emit('update:modelValue', { ...settings.value });
-  close();
+  if (hasValidationErrors.value) return
+  emit('update:modelValue', { ...settings.value })
+  close()
 }
 
 function onNumericInput(field: keyof typeof validationErrors.value) {
-  const value = settings.value[field];
-  validationErrors.value[field] = field === 'ratio'
-    ? !isNonNegativeDecimal(value)
-    : !isPositiveDecimal(value);
+  const value = settings.value[field]
+  validationErrors.value[field] =
+    field === 'ratio' ? !isNonNegativeDecimal(value) : !isPositiveDecimal(value)
 
   if (!validationErrors.value[field]) {
-    emit('update:modelValue', { ...settings.value });
+    emit('update:modelValue', { ...settings.value })
   }
 }
 
 function getFFmpegFilter(): string {
-  if (!settings.value.blendMode) return '';
-  
+  if (!settings.value.blendMode) return ''
+
   const modeMap: Record<string, string> = {
-    'average': 'average',
-    'blend': 'blend',
-    'and': 'and',
-    'or': 'or',
-    'xor': 'xor',
-    'add': 'add',
-    'multiply': 'multiply',
-  };
-  
-  let filter = 'tblend';
-  
+    average: 'average',
+    blend: 'blend',
+    and: 'and',
+    or: 'or',
+    xor: 'xor',
+    add: 'add',
+    multiply: 'multiply',
+  }
+
+  let filter = 'tblend'
+
   if (settings.value.blendMode) {
-    filter += `=all_mode=${modeMap[settings.value.blendMode] || settings.value.blendMode}`;
+    filter += `=all_mode=${modeMap[settings.value.blendMode] || settings.value.blendMode}`
   }
-  
+
   if (settings.value.ratio) {
-    filter += `:c0_opacity=${settings.value.ratio}`;
+    filter += `:c0_opacity=${settings.value.ratio}`
   }
-  
+
   if (settings.value.frameRate) {
-    filter = `fps=${settings.value.frameRate},${filter}`;
+    filter = `fps=${settings.value.frameRate},${filter}`
   }
-  
-  return filter;
+
+  return filter
 }
 
 defineExpose({
   getFFmpegFilter,
-});
+})
 </script>
 
 <style scoped>
@@ -299,5 +308,4 @@ defineExpose({
   padding: 15px 20px;
   border-top: 1px solid var(--bg-color3, #242424);
 }
-
 </style>

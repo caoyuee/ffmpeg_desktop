@@ -1,37 +1,37 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia'
 
 // FFmpeg 工具信息接口
 interface FFmpegToolInfo {
-  installed: boolean;
-  path: string;
-  version: string;
+  installed: boolean
+  path: string
+  version: string
 }
 
 // FFmpeg 工具集接口
 interface FFmpegToolsInfo {
-  ffmpeg: FFmpegToolInfo;
-  ffprobe: FFmpegToolInfo;
-  ffplay: FFmpegToolInfo;
+  ffmpeg: FFmpegToolInfo
+  ffprobe: FFmpegToolInfo
+  ffplay: FFmpegToolInfo
 }
 
-export const useSoftwareInfoStore = defineStore("software_info", {
+export const useSoftwareInfoStore = defineStore('software_info', {
   state: () => ({
     // FFmpeg 工具集信息
     ffmpegTools: {
       ffmpeg: {
         installed: false,
-        path: "",
-        version: "",
+        path: '',
+        version: '',
       },
       ffprobe: {
         installed: false,
-        path: "",
-        version: "",
+        path: '',
+        version: '',
       },
       ffplay: {
         installed: false,
-        path: "",
-        version: "",
+        path: '',
+        version: '',
       },
     } as FFmpegToolsInfo,
   }),
@@ -62,20 +62,20 @@ export const useSoftwareInfoStore = defineStore("software_info", {
   actions: {
     // 更新所有 FFmpeg 工具信息
     updateFFmpegTools(tools: FFmpegToolsInfo) {
-      this.ffmpegTools = tools;
+      this.ffmpegTools = tools
     },
 
     // 更新单个工具信息
     updateFFmpegInfo(info: FFmpegToolInfo) {
-      this.ffmpegTools.ffmpeg = info;
+      this.ffmpegTools.ffmpeg = info
     },
 
     updateFFprobeInfo(info: FFmpegToolInfo) {
-      this.ffmpegTools.ffprobe = info;
+      this.ffmpegTools.ffprobe = info
     },
 
     updateFFplayInfo(info: FFmpegToolInfo) {
-      this.ffmpegTools.ffplay = info;
+      this.ffmpegTools.ffplay = info
     },
   },
-});
+})

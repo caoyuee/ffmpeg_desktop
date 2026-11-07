@@ -80,7 +80,7 @@
     </div>
 
     <div class="version-info">
-      <span>{{ t('page.home.version') }}: 0.1.0</span>
+      <span>{{ t('page.home.version') }}: {{ appVersion }}</span>
       <span>|</span>
       <span>Tauri 2.x + Vue 3</span>
     </div>
@@ -88,39 +88,41 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-import { useI18n } from 'vue-i18n';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
+import { APP_VERSION } from '@/config/appVersion'
 
-const router = useRouter();
-const { t } = useI18n();
+const router = useRouter()
+const { t } = useI18n()
+const appVersion = APP_VERSION
 
 function goToQueue() {
-  router.push('/queue');
+  router.push('/queue')
 }
 
 function goToParams() {
-  router.push('/params');
+  router.push('/params')
 }
 
 function goToMediaInfo() {
-  router.push('/mediainfo');
+  router.push('/mediainfo')
 }
 
 function goToSettings() {
-  router.push('/settings');
+  router.push('/settings')
 }
 
 function openFFmpegDocs() {
-  window.open('https://ffmpeg.org/documentation.html', '_blank');
+  window.open('https://ffmpeg.org/documentation.html', '_blank')
 }
 
 function openFFmpegDownload() {
-  window.open('https://ffmpeg.org/download.html', '_blank');
+  window.open('https://ffmpeg.org/download.html', '_blank')
 }
 
 function openGitHub() {
-  window.open('https://github.com', '_blank');
+  window.open('https://github.com', '_blank')
 }
 </script>
 

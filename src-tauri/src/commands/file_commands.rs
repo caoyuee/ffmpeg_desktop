@@ -80,3 +80,116 @@ pub fn read_video_file(path: String) -> Result<String, String> {
 
     Ok(general_purpose::STANDARD.encode(&data))
 }
+
+/// R1-9：递归枚举目录中的视频文件，供"添加文件夹"使用。
+/// 只跟随真实目录、跳过符号链接，避免目录环导致无限递归；深度上限作为第二道保护。
+const VIDEO_EXTENSIONS: &[&str] = &[
+    "mp4", "mkv", "avi", "mov", "flv", "webm", "wmv", "m4v", "mpg", "mpeg", "ts", "m2ts", "mts",
+    "vob", "3gp", "ogv", "ogm", "rmvb", "asf", "divx",
+];
+
+fn is_video_file(path: &std::path::Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| VIDEO_EXTENSIONS.contains(&ext.to_ascii_lowercase().as_str()))
+        .unwrap_or(false)
+}
+
+fn collect_media_files(
+    dir: &std::path::Path,
+    out: &mut Vec<std::path::PathBuf>,
+    depth: usize,
+) -> Result<(), String> {
+    const MAX_DEPTH: usize = 32;
+    if depth > MAX_DEPTH {
+        return Ok(());
+    }
+
+    let entries =
+        std::fs::read_dir(dir).map_err(|e| format!("Failed to read {}: {}", dir.display(), e))?;
+
+    for entry in entries {
+        let entry = entry.map_err(|e| format!("Failed to read dir entry: {}", e))?;
+        let file_type = entry
+            .file_type()
+            .map_err(|e| format!("Failed to inspect {}: {}", entry.path().display(), e))?;
+        let path = entry.path();
+
+        if file_type.is_dir() {
+            collect_media_files(&path, out, depth + 1)?;
+        } else if file_type.is_file() && is_video_file(&path) {
+            out.push(path);
+        }
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn list_media_files(dir: String) -> Result<Vec<String>, String> {
+    let root = std::path::PathBuf::from(&dir);
+    if !root.is_dir() {
+        return Err(format!("Not a directory: {}", dir));
+    }
+
+    let mut files = Vec::new();
+    collect_media_files(&root, &mut files, 0)?;
+    files.sort();
+
+    Ok(files
+        .into_iter()
+        .map(|path| path.to_string_lossy().to_string())
+        .collect())
+}
+
+/// R3.2：通用文件体积查询。只返回与入参等长的字节数序列，
+/// 不认识任务/历史 schema，也不持久化结果；文件不存在或无权限一律返回 None。
+const MAX_FILE_SIZE_PATHS: usize = 400;
+
+fn metadata_sizes(paths: &[String]) -> Vec<Option<u64>> {
+    paths
+        .iter()
+        .take(MAX_FILE_SIZE_PATHS)
+        .map(|path| std::fs::metadata(path).ok().map(|meta| meta.len()))
+        .collect()
+}
+
+#[tauri::command]
+pub fn get_file_sizes(paths: Vec<String>) -> Vec<Option<u64>> {
+    metadata_sizes(&paths)
+}
+
+#[cfg(test)]
+mod media_file_tests {
+    use super::*;
+
+    #[test]
+    fn accepts_video_extensions_case_insensitively() {
+        assert!(is_video_file(std::path::Path::new("clip.MP4")));
+        assert!(is_video_file(std::path::Path::new("clip.mkv")));
+        assert!(is_video_file(std::path::Path::new("nested/clip.MTS")));
+        assert!(!is_video_file(std::path::Path::new("notes.txt")));
+        assert!(!is_video_file(std::path::Path::new("README")));
+    }
+
+    #[test]
+    fn r32_missing_files_are_none() {
+        let sizes = metadata_sizes(&["/definitely/not/here.mp4".to_string()]);
+        assert_eq!(sizes, vec![None]);
+    }
+
+    #[test]
+    fn r32_real_length_is_reported_and_batch_is_capped() {
+        let path = std::env::temp_dir().join(format!("ffd-r32-{}.bin", std::process::id()));
+        std::fs::write(&path, b"12345").expect("write temp file");
+        let p = path.to_string_lossy().to_string();
+        assert_eq!(
+            metadata_sizes(&[p.clone(), p.clone()]),
+            vec![Some(5), Some(5)]
+        );
+        let _ = std::fs::remove_file(&path);
+
+        let many = vec!["/missing".to_string(); MAX_FILE_SIZE_PATHS + 10];
+        assert_eq!(metadata_sizes(&many).len(), MAX_FILE_SIZE_PATHS);
+    }
+}

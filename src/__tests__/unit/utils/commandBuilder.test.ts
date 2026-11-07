@@ -1,6 +1,7 @@
 import { beforeEach, describe, it, expect } from 'vitest'
 import { FFmpegCommandBuilder } from '@/utils/commandBuilder'
 import { DEFAULT_PRESET, type PresetData } from '@/types/preset'
+import { DEFAULT_APP_SETTINGS, saveSettings } from '@/config/settings'
 
 describe('FFmpegCommandBuilder', () => {
   beforeEach(() => {
@@ -13,11 +14,7 @@ describe('FFmpegCommandBuilder', () => {
 
   describe('basic command', () => {
     it('should generate a basic transcode command', () => {
-      const cmd = FFmpegCommandBuilder.build(
-        makePreset(),
-        'input.mp4',
-        'output.mp4',
-      )
+      const cmd = FFmpegCommandBuilder.build(makePreset(), 'input.mp4', 'output.mp4')
       expect(cmd).toContain('-hide_banner')
       expect(cmd).toContain('-i "input.mp4"')
       expect(cmd).toContain('"output.mp4"')
@@ -25,15 +22,12 @@ describe('FFmpegCommandBuilder', () => {
     })
 
     it('should quote the configured Windows FFmpeg path in generated queue commands', () => {
-      localStorage.setItem('appSettings', JSON.stringify({
+      saveSettings({
+        ...DEFAULT_APP_SETTINGS,
         ffmpegPath: 'C:\\Program Files\\ffmpeg\\bin\\ffmpeg.exe',
-      }))
+      })
 
-      const cmd = FFmpegCommandBuilder.build(
-        makePreset(),
-        'input.webm',
-        'output.mp4',
-      )
+      const cmd = FFmpegCommandBuilder.build(makePreset(), 'input.webm', 'output.mp4')
 
       expect(cmd).toMatch(/^"C:\\Program Files\\ffmpeg\\bin\\ffmpeg\.exe" /)
       expect(cmd).toContain('-i "input.webm"')
@@ -42,7 +36,12 @@ describe('FFmpegCommandBuilder', () => {
 
     it('should handle full custom mode', () => {
       const cmd = FFmpegCommandBuilder.build(
-        makePreset({ custom: { ...DEFAULT_PRESET.custom, fullCustom: 'ffmpeg -i "$INPUT" -c copy "$OUTPUT".mp4' } }),
+        makePreset({
+          custom: {
+            ...DEFAULT_PRESET.custom,
+            fullCustom: 'ffmpeg -i "$INPUT" -c copy "$OUTPUT".mp4',
+          },
+        }),
         'input.mkv',
         'output',
       )
@@ -56,7 +55,8 @@ describe('FFmpegCommandBuilder', () => {
         makePreset({
           custom: {
             ...DEFAULT_PRESET.custom,
-            fullCustom: 'ffmpeg -i "<InputFile>" -metadata title="<InputFileNameWithOutExtension>" "<OutputFile>"',
+            fullCustom:
+              'ffmpeg -i "<InputFile>" -metadata title="<InputFileNameWithOutExtension>" "<OutputFile>"',
           },
         }),
         '/media/source clip.mkv',
@@ -247,6 +247,57 @@ describe('FFmpegCommandBuilder', () => {
       const cmd = FFmpegCommandBuilder.build(preset, 'in.mp4', 'out.mp4')
       expect(cmd).toContain('-map')
     })
+
+    // R1-12 / 审计验证清单 V2：显式选择流时不得追加 -vn/-an/-sn。
+    // 已有逐流 -map 时，FFmpeg 会关闭默认映射，追加 -vn 会把刚 map 进去的目标流一起禁用。
+    it('R1-12 / V2 显式选择三路流时保留全部 -map 且不追加禁用参数', () => {
+      const preset = makePreset({
+        streamControl: {
+          ...DEFAULT_PRESET.streamControl,
+          videoStreams: ['0:v:0'],
+          audioStreams: ['0:a:1'],
+          subtitleStreams: ['0:s:0'],
+          keepOtherVideo: false,
+          keepOtherAudio: false,
+          keepOtherSubtitle: false,
+        },
+      })
+
+      const cmd = FFmpegCommandBuilder.build(preset, 'in.mkv', 'out.mkv')
+
+      expect(cmd).toContain('-map 0:v:0')
+      expect(cmd).toContain('-map 0:a:1')
+      expect(cmd).toContain('-map 0:s:0')
+      expect(cmd).not.toMatch(/(?:^|\s)-vn(?:\s|$)/)
+      expect(cmd).not.toMatch(/(?:^|\s)-an(?:\s|$)/)
+      expect(cmd).not.toMatch(/(?:^|\s)-sn(?:\s|$)/)
+    })
+
+    it('R1-12 未选中流由 -map 天然丢弃，不需要额外禁用开关', () => {
+      const preset = makePreset({
+        streamControl: {
+          ...DEFAULT_PRESET.streamControl,
+          videoStreams: ['0:v:0'],
+          audioStreams: [],
+          subtitleStreams: [],
+        },
+      })
+
+      const cmd = FFmpegCommandBuilder.build(preset, 'in.mkv', 'out.mkv')
+
+      expect(cmd).toContain('-map 0:v:0')
+      expect(cmd).not.toMatch(/(?:^|\s)-vn(?:\s|$)/)
+      expect(cmd).not.toMatch(/(?:^|\s)-an(?:\s|$)/)
+    })
+
+    it('R1-12 未显式选择任何流时保持默认映射（不注入禁用参数）', () => {
+      const cmd = FFmpegCommandBuilder.build(makePreset(), 'in.mp4', 'out.mp4')
+
+      expect(cmd).not.toContain('-map ')
+      expect(cmd).not.toMatch(/(?:^|\s)-vn(?:\s|$)/)
+      expect(cmd).not.toMatch(/(?:^|\s)-an(?:\s|$)/)
+      expect(cmd).not.toMatch(/(?:^|\s)-sn(?:\s|$)/)
+    })
   })
 
   describe('custom params', () => {
@@ -291,7 +342,8 @@ describe('FFmpegCommandBuilder', () => {
       const preset = makePreset({
         custom: {
           ...DEFAULT_PRESET.custom,
-          beforeOutputParams: '-metadata title="<InputFileNameWithOutExtension>" -metadata source="<InputFilePath>"',
+          beforeOutputParams:
+            '-metadata title="<InputFileNameWithOutExtension>" -metadata source="<InputFilePath>"',
         },
       })
 

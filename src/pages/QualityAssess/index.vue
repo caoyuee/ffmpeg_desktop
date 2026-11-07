@@ -3,126 +3,153 @@
     <div class="app-page-hint">
       <span class="app-page-hint__text">{{ t('page.quality.hint') }}</span>
     </div>
-    
+
     <div class="app-toolbar">
       <div class="app-toolbar__group">
         <button class="app-btn app-btn--primary" @click="selectReference">
-          <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('page.quality.selectReference') }}
+          <AppIcon name="folder-open" :size="16" class="icon" />
+          {{ t('page.quality.selectReference') }}
         </button>
         <button class="app-btn" @click="selectDistorted">
-          <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('page.quality.selectDistorted') }}
+          <AppIcon name="folder-open" :size="16" class="icon" />
+          {{ t('page.quality.selectDistorted') }}
         </button>
         <button class="app-btn app-btn--danger" @click="clearAll">
           <AppIcon name="trash" :size="16" class="icon" /> {{ t('page.quality.clear') }}
         </button>
       </div>
     </div>
-    
+
     <div class="files-section">
       <div class="file-row">
         <label class="file-label">{{ t('page.quality.referenceVideo') }}</label>
-        <input type="text" class="file-input" v-model="referenceFile" :placeholder="t('page.quality.referenceVideoPlaceholder')" readonly />
+        <input
+          v-model="referenceFile"
+          type="text"
+          class="file-input"
+          :placeholder="t('page.quality.referenceVideoPlaceholder')"
+          readonly
+        />
       </div>
       <div class="file-row">
         <label class="file-label">{{ t('page.quality.distortedVideo') }}</label>
-        <input type="text" class="file-input" v-model="distortedFile" :placeholder="t('page.quality.distortedVideoPlaceholder')" readonly />
+        <input
+          v-model="distortedFile"
+          type="text"
+          class="file-input"
+          :placeholder="t('page.quality.distortedVideoPlaceholder')"
+          readonly
+        />
       </div>
     </div>
-    
+
     <div class="options-section">
       <div class="option-row">
         <label class="option-label">{{ t('page.quality.metrics') }}</label>
         <div class="option-content">
           <label class="checkbox-label">
-            <input class="metric-checkbox" type="checkbox" v-model="metrics.vmaf" />
+            <input v-model="metrics.vmaf" class="metric-checkbox" type="checkbox" />
             VMAF
           </label>
           <label class="checkbox-label">
-            <input class="metric-checkbox" type="checkbox" v-model="metrics.ssim" />
+            <input v-model="metrics.ssim" class="metric-checkbox" type="checkbox" />
             SSIM
           </label>
           <label class="checkbox-label">
-            <input class="metric-checkbox" type="checkbox" v-model="metrics.psnr" />
+            <input v-model="metrics.psnr" class="metric-checkbox" type="checkbox" />
             PSNR
           </label>
         </div>
       </div>
-      
+
       <div class="option-row">
         <label class="option-label">{{ t('page.quality.vmafModel') }}</label>
         <div class="option-content">
-          <select class="select-input" v-model="vmafModel">
+          <select v-model="vmafModel" class="select-input">
             <option value="model_vmaf_v0.6.1">{{ t('page.quality.defaultModel') }}</option>
             <option value="model_vmaf_4k_v0.6.1">{{ t('page.quality.model4k') }}</option>
             <option value="model_vmaf_v0.6.1neg">{{ t('page.quality.negativeModel') }}</option>
           </select>
         </div>
       </div>
-      
+
       <div class="option-row">
         <label class="option-label">{{ t('page.quality.outputReport') }}</label>
         <div class="option-content">
-          <select class="select-input" v-model="outputFormat">
+          <select v-model="outputFormat" class="select-input">
             <option value="json">JSON</option>
             <option value="xml">XML</option>
             <option value="csv">CSV</option>
           </select>
           <button class="app-btn" @click="selectOutputPath">
-            <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('page.quality.selectSaveLocation') }}
+            <AppIcon name="folder-open" :size="16" class="icon" />
+            {{ t('page.quality.selectSaveLocation') }}
           </button>
-          <input type="text" class="file-input small" v-model="outputPath" :placeholder="t('page.quality.reportPath')" />
+          <input
+            v-model="outputPath"
+            type="text"
+            class="file-input small"
+            :placeholder="t('page.quality.reportPath')"
+          />
         </div>
       </div>
     </div>
-    
+
     <div class="app-bottom-bar">
-      <button class="app-btn app-btn--primary" @click="startAssessment" :disabled="!canStart">
+      <button class="app-btn app-btn--primary" :disabled="!canStart" @click="startAssessment">
         <AppIcon name="play" :size="16" class="icon" /> {{ t('page.quality.startAssessment') }}
       </button>
-      <button class="app-btn app-btn--danger" @click="stopAssessment" :disabled="!isRunning">
+      <button class="app-btn app-btn--danger" :disabled="!isRunning" @click="stopAssessment">
         <AppIcon name="stop" :size="16" class="icon" /> {{ t('page.quality.stopAssessment') }}
       </button>
     </div>
-    
-    <div class="progress-section" v-if="isRunning">
+
+    <div v-if="isRunning" class="progress-section">
       <div class="progress-bar">
         <div class="progress-fill" :style="{ width: progress + '%' }"></div>
       </div>
       <span class="progress-text">{{ progress.toFixed(1) }}%</span>
       <span class="status-text">{{ statusText }}</span>
     </div>
-    
-    <div class="results-section" v-if="results">
+
+    <div v-if="results" class="results-section">
       <div class="results-header">
         <span class="results-title">{{ t('page.quality.results') }}</span>
       </div>
       <div class="results-grid">
-        <div class="result-card" v-if="results.vmaf">
+        <div v-if="results.vmaf" class="result-card">
           <span class="result-label">VMAF</span>
           <span class="result-value">{{ results.vmaf.mean?.toFixed(2) || 'N/A' }}</span>
           <span class="result-hint">{{ t('page.quality.mean') }}</span>
-          <span class="result-minmax">{{ t('page.quality.min') }}: {{ results.vmaf.min?.toFixed(2) }} | {{ t('page.quality.max') }}: {{ results.vmaf.max?.toFixed(2) }}</span>
+          <span class="result-minmax"
+            >{{ t('page.quality.min') }}: {{ results.vmaf.min?.toFixed(2) }} |
+            {{ t('page.quality.max') }}: {{ results.vmaf.max?.toFixed(2) }}</span
+          >
         </div>
-        <div class="result-card" v-if="results.ssim">
+        <div v-if="results.ssim" class="result-card">
           <span class="result-label">SSIM</span>
           <span class="result-value">{{ results.ssim.mean?.toFixed(4) || 'N/A' }}</span>
           <span class="result-hint">{{ t('page.quality.mean') }}</span>
-          <span class="result-minmax">{{ t('page.quality.range') }}: 0-1 (1={{ t('page.quality.identical') }})</span>
+          <span class="result-minmax"
+            >{{ t('page.quality.range') }}: 0-1 (1={{ t('page.quality.identical') }})</span
+          >
         </div>
-        <div class="result-card" v-if="results.psnr">
+        <div v-if="results.psnr" class="result-card">
           <span class="result-label">PSNR</span>
           <span class="result-value">{{ results.psnr.mean?.toFixed(2) || 'N/A' }} dB</span>
           <span class="result-hint">{{ t('page.quality.mean') }}</span>
-          <span class="result-minmax">{{ t('page.quality.range') }}: 0-∞ ({{ t('page.quality.higherBetter') }})</span>
+          <span class="result-minmax"
+            >{{ t('page.quality.range') }}: 0-∞ ({{ t('page.quality.higherBetter') }})</span
+          >
         </div>
       </div>
     </div>
-    
+
     <div class="log-section">
       <div class="log-header">
         <span>{{ t('page.quality.log') }}</span>
       </div>
-      <div class="log-content" ref="logContent">
+      <div ref="logContent" class="log-content">
         <div v-for="(line, index) in logLines" :key="index" class="log-line">{{ line }}</div>
       </div>
     </div>
@@ -130,50 +157,56 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { open, save } from '@tauri-apps/plugin-dialog';
-import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { ref, computed, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { open, save } from '@tauri-apps/plugin-dialog'
+import { invoke } from '@tauri-apps/api/core'
+import { useTransientFFmpegTask } from '@/hooks/useTransientFFmpegTask'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
 
-const { t } = useI18n();
+const { t } = useI18n()
+// R2.1：评测任务与编码队列共用 task_manager 执行路径，但保持独立 UI 与生命周期。
+const assessment = useTransientFFmpegTask()
+const { isRunning } = assessment
 
-const referenceFile = ref('');
-const distortedFile = ref('');
-const outputPath = ref('');
-const outputFormat = ref('json');
-const vmafModel = ref('model_vmaf_v0.6.1');
+const referenceFile = ref('')
+const distortedFile = ref('')
+const outputPath = ref('')
+const outputFormat = ref('json')
+const vmafModel = ref('model_vmaf_v0.6.1')
 const metrics = ref({
   vmaf: true,
   ssim: false,
   psnr: false,
-});
+})
 
-const isRunning = ref(false);
-const progress = ref(0);
-const statusText = ref('');
-const logLines = ref<string[]>([]);
-const logContent = ref<HTMLDivElement | null>(null);
-const duration = ref(0);
+const progress = ref(0)
+const statusText = ref('')
+const logLines = ref<string[]>([])
+const logContent = ref<HTMLDivElement | null>(null)
+const duration = ref(0)
 
 const results = ref<{
-  vmaf?: { mean: number; min: number; max: number };
-  ssim?: { mean: number };
-  psnr?: { mean: number };
-} | null>(null);
+  vmaf?: { mean: number; min: number; max: number }
+  ssim?: { mean: number }
+  psnr?: { mean: number }
+} | null>(null)
 
 const canStart = computed(() => {
-  return referenceFile.value && distortedFile.value && (metrics.value.vmaf || metrics.value.ssim || metrics.value.psnr);
-});
+  return (
+    referenceFile.value &&
+    distortedFile.value &&
+    (metrics.value.vmaf || metrics.value.ssim || metrics.value.psnr)
+  )
+})
 
 async function selectReference() {
   const file = await open({
     multiple: false,
     filters: [{ name: '视频文件', extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm', '*'] }],
-  });
+  })
   if (file) {
-    referenceFile.value = file as string;
+    referenceFile.value = file as string
   }
 }
 
@@ -181,159 +214,148 @@ async function selectDistorted() {
   const file = await open({
     multiple: false,
     filters: [{ name: '视频文件', extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm', '*'] }],
-  });
+  })
   if (file) {
-    distortedFile.value = file as string;
+    distortedFile.value = file as string
   }
 }
 
 async function selectOutputPath() {
   const path = await save({
     filters: [{ name: '报告文件', extensions: [outputFormat.value] }],
-  });
+  })
   if (path) {
-    outputPath.value = path;
+    outputPath.value = path
   }
 }
 
 function clearAll() {
-  referenceFile.value = '';
-  distortedFile.value = '';
-  outputPath.value = '';
-  results.value = null;
-  logLines.value = [];
-  progress.value = 0;
+  referenceFile.value = ''
+  distortedFile.value = ''
+  outputPath.value = ''
+  results.value = null
+  logLines.value = []
+  progress.value = 0
 }
 
 function addLog(line: string) {
-  logLines.value.push(`[${new Date().toLocaleTimeString()}] ${line}`);
+  logLines.value.push(`[${new Date().toLocaleTimeString()}] ${line}`)
   if (logContent.value) {
-    logContent.value.scrollTop = logContent.value.scrollHeight;
+    logContent.value.scrollTop = logContent.value.scrollHeight
   }
 }
 
 async function startAssessment() {
-  if (!canStart.value) return;
-  
-  isRunning.value = true;
-  progress.value = 0;
-  results.value = null;
-  logLines.value = [];
-  
-  addLog('开始画质评测...');
-  addLog(`参考视频: ${referenceFile.value}`);
-  addLog(`待测视频: ${distortedFile.value}`);
-  
+  if (!canStart.value) return
+
+  progress.value = 0
+  results.value = null
+  logLines.value = []
+
+  addLog(t('page.quality.assessmentStarted'))
+  addLog(t('page.quality.referenceLabel', { path: referenceFile.value }))
+  addLog(t('page.quality.distortedLabel', { path: distortedFile.value }))
+
+  // Probe reference video duration for progress calculation
   try {
-    // Probe reference video duration for progress calculation
-    try {
-      const probeResult = await invoke('probe_media_info', { path: referenceFile.value });
-      if (probeResult && typeof probeResult === 'object' && 'format' in probeResult) {
-        const fmt = probeResult.format as Record<string, unknown>;
-        if (typeof fmt.duration === 'string') {
-          duration.value = parseFloat(fmt.duration);
-        }
+    const probeResult = await invoke('probe_media_info', { path: referenceFile.value })
+    if (probeResult && typeof probeResult === 'object' && 'format' in probeResult) {
+      const fmt = probeResult.format as Record<string, unknown>
+      if (typeof fmt.duration === 'string') {
+        duration.value = parseFloat(fmt.duration)
       }
-    } catch {
-      // Duration probe is best-effort
     }
+  } catch {
+    // Duration probe is best-effort
+  }
 
-    const filterParts: { label: string; filter: string }[] = [];
+  const filterParts: { label: string; filter: string }[] = []
 
-    if (metrics.value.vmaf) {
-      filterParts.push({ label: 'vmaf', filter: `libvmaf=model_path=${vmafModel.value}.json` });
-    }
-    if (metrics.value.ssim) {
-      filterParts.push({ label: 'ssim', filter: 'ssim' });
-    }
-    if (metrics.value.psnr) {
-      filterParts.push({ label: 'psnr', filter: 'psnr' });
-    }
+  if (metrics.value.vmaf) {
+    filterParts.push({ label: 'vmaf', filter: `libvmaf=model_path=${vmafModel.value}.json` })
+  }
+  if (metrics.value.ssim) {
+    filterParts.push({ label: 'ssim', filter: 'ssim' })
+  }
+  if (metrics.value.psnr) {
+    filterParts.push({ label: 'psnr', filter: 'psnr' })
+  }
 
-    let filterComplex: string;
-    if (filterParts.length === 1) {
-      filterComplex = `[0:v][1:v]${filterParts[0]!.filter}`;
-    } else {
-      const refLabels = filterParts.map((_, i) => `[ref${i}]`).join('');
-      const distLabels = filterParts.map((_, i) => `[dist${i}]`).join('');
-      const branches = filterParts.map((fp, i) => `[ref${i}][dist${i}]${fp.filter}`).join(';');
-      filterComplex = `[0:v]split=${filterParts.length}${refLabels};[1:v]split=${filterParts.length}${distLabels};${branches}`;
-    }
+  let filterComplex: string
+  if (filterParts.length === 1) {
+    filterComplex = `[0:v][1:v]${filterParts[0]!.filter}`
+  } else {
+    const refLabels = filterParts.map((_, i) => `[ref${i}]`).join('')
+    const distLabels = filterParts.map((_, i) => `[dist${i}]`).join('')
+    const branches = filterParts.map((fp, i) => `[ref${i}][dist${i}]${fp.filter}`).join(';')
+    filterComplex = `[0:v]split=${filterParts.length}${refLabels};[1:v]split=${filterParts.length}${distLabels};${branches}`
+  }
 
-    let command = `-hide_banner -i "${referenceFile.value}" -i "${distortedFile.value}" -lavfi "${filterComplex}" -f null -`;
-    
-    if (outputPath.value) {
-      command += ` -stats_file "${outputPath.value}"`;
-    }
-    
-    addLog(`执行命令: ffmpeg ${command}`);
-    
-    await invoke('execute_ffmpeg_command', { command });
-    
-    const unlistenProgress = await listen('progress', (event: any) => {
-      const payload = event.payload;
-      if (payload && payload.line) {
-        const line = payload.line as string;
-        addLog(line);
+  let command = `-hide_banner -i "${referenceFile.value}" -i "${distortedFile.value}" -lavfi "${filterComplex}" -f null -`
 
-        const vmafMatch = line.match(/VMAF score:\s*([\d\.]+)/i);
-        if (vmafMatch) {
-          results.value = { vmaf: { mean: parseFloat(vmafMatch[1]!), min: 0, max: 0 } };
-        }
+  if (outputPath.value) {
+    command += ` -stats_file "${outputPath.value}"`
+  }
 
-        const psnrMatch = line.match(/average:\s*([\d\.]+)/);
-        if (psnrMatch) {
-          results.value = { ...results.value, psnr: { mean: parseFloat(psnrMatch[1]!) } };
-        }
+  addLog(t('page.quality.commandLabel', { command }))
 
-        const ssimAllMatch = line.match(/SSIM\s+All:\s*([\d\.]+)/i);
-        if (ssimAllMatch) {
-          results.value = { ...results.value, ssim: { mean: parseFloat(ssimAllMatch[1]!) } };
-        }
-
-        const pctMatch = line.match(/time=(\d+):(\d+):(\d+)/);
-        if (pctMatch && duration.value > 0) {
-          const h = parseInt(pctMatch[1] || '0');
-          const m = parseInt(pctMatch[2] || '0');
-          const s = parseInt(pctMatch[3] || '0');
-          const currentSec = h * 3600 + m * 60 + s;
-          progress.value = Math.min(100, Math.round((currentSec / duration.value) * 100));
-        }
-      }
-    });
-    
-    const unlistenFinish = await listen('finish', () => {
-      isRunning.value = false;
-      progress.value = 100;
-      addLog('评测完成！');
-      unlistenProgress();
-      unlistenFinish();
-    });
-    
-    const unlistenError = await listen('error', (event: any) => {
-      const payload = event.payload;
-      addLog(`错误: ${typeof payload === 'string' ? payload : JSON.stringify(payload)}`);
-      isRunning.value = false;
-      unlistenProgress();
-      unlistenFinish();
-      unlistenError();
-    });
-    
+  try {
+    // R2.1：与编码队列共用 start_ffmpeg + ffmpeg-* 事件，不再走 legacy executor。
+    await assessment.start(command, {
+      onLog(line) {
+        addLog(line)
+        parseAssessmentLine(line)
+      },
+      onFinish() {
+        progress.value = 100
+        addLog(t('page.quality.assessmentComplete'))
+      },
+      onError(message) {
+        addLog(t('page.quality.errorPrefix', { message }))
+      },
+    })
   } catch (error) {
-    addLog(`错误: ${error}`);
-    isRunning.value = false;
+    addLog(t('page.quality.errorPrefix', { message: String(error) }))
+  }
+}
+
+/** R1-6 起后端转发全量 stderr 行，评测指标与进度都从日志行解析。 */
+function parseAssessmentLine(line: string) {
+  const vmafMatch = line.match(/VMAF score:\s*([\d\.]+)/i)
+  if (vmafMatch) {
+    results.value = { vmaf: { mean: parseFloat(vmafMatch[1]!), min: 0, max: 0 } }
+  }
+
+  const psnrMatch = line.match(/average:\s*([\d\.]+)/)
+  if (psnrMatch) {
+    results.value = { ...results.value, psnr: { mean: parseFloat(psnrMatch[1]!) } }
+  }
+
+  const ssimAllMatch = line.match(/SSIM\s+All:\s*([\d\.]+)/i)
+  if (ssimAllMatch) {
+    results.value = { ...results.value, ssim: { mean: parseFloat(ssimAllMatch[1]!) } }
+  }
+
+  const pctMatch = line.match(/time=(\d+):(\d+):(\d+)/)
+  if (pctMatch && duration.value > 0) {
+    const h = parseInt(pctMatch[1] || '0')
+    const m = parseInt(pctMatch[2] || '0')
+    const s = parseInt(pctMatch[3] || '0')
+    const currentSec = h * 3600 + m * 60 + s
+    progress.value = Math.min(100, Math.round((currentSec / duration.value) * 100))
   }
 }
 
 async function stopAssessment() {
   try {
-    await invoke('stop_convert');
-    addLog('已停止评测');
+    await assessment.stop()
+    addLog(t('page.quality.assessmentStopped'))
   } catch (error) {
-    addLog(`停止失败: ${error}`);
+    addLog(t('page.quality.stopFailed', { message: String(error) }))
   }
-  isRunning.value = false;
 }
+
+onUnmounted(() => assessment.dispose())
 </script>
 
 <style scoped>
@@ -422,7 +444,7 @@ async function stopAssessment() {
   cursor: pointer;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   -webkit-appearance: checkbox;
   appearance: checkbox;
   width: 16px;

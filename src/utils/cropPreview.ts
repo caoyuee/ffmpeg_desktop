@@ -11,11 +11,7 @@ export function calculateContainSize(
     }
   }
 
-  const scale = Math.min(
-    containerWidth / contentWidth,
-    containerHeight / contentHeight,
-    1,
-  )
+  const scale = Math.min(containerWidth / contentWidth, containerHeight / contentHeight, 1)
 
   return {
     width: Math.max(1, Math.floor(contentWidth * scale)),

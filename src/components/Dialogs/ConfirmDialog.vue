@@ -25,27 +25,27 @@
 
 <script setup lang="ts">
 defineProps<{
-  modelValue: boolean;
-  title?: string;
-  message: string;
-  confirmText?: string;
-  cancelText?: string;
-}>();
+  modelValue: boolean
+  title?: string
+  message: string
+  confirmText?: string
+  cancelText?: string
+}>()
 
 const emit = defineEmits<{
-  'update:modelValue': [value: boolean];
-  'confirm': [];
-  'cancel': [];
-}>();
+  'update:modelValue': [value: boolean]
+  confirm: []
+  cancel: []
+}>()
 
 function onConfirm() {
-  emit('update:modelValue', false);
-  emit('confirm');
+  emit('update:modelValue', false)
+  emit('confirm')
 }
 
 function onCancel() {
-  emit('update:modelValue', false);
-  emit('cancel');
+  emit('update:modelValue', false)
+  emit('cancel')
 }
 </script>
 

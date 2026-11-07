@@ -8,7 +8,11 @@ export async function installTauriMock(page: Page) {
     let callbackId = 1;
 
     function resolveInvoke(command: string, args?: Record<string, unknown>) {
-      if (command === 'parse_startup_args') return {};
+      if (command === 'parse_startup_args') return [];
+      if (command === 'load_task_queue') return '';
+      if (command === 'save_task_queue') return null;
+      // R3.2：历史页体积查询；E2E 环境没有真实文件，返回空数组即可。
+      if (command === 'get_file_sizes') return [];
       if (command === 'check_ffmpeg_tools') {
         return { ffmpeg: false, ffprobe: false, ffplay: false };
       }

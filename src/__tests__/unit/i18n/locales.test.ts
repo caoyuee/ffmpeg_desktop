@@ -97,6 +97,10 @@ describe('i18n locales', () => {
       'preserveAccessTime',
       'videoCodecIncompatible',
       'audioCodecIncompatible',
+      'compatibilityHint',
+      'useRecommendedCodecs',
+      'keepCurrentCodecs',
+      'compatibilityAcknowledged',
     ])
   })
 
@@ -229,12 +233,7 @@ describe('i18n locales', () => {
   })
 
   it('should include independent panel labels in both locales', () => {
-    expectPageKeys('independentPanel', [
-      'title',
-      'fileListTitle',
-      'fileCount',
-      'confirmAndAdd',
-    ])
+    expectPageKeys('independentPanel', ['title', 'fileListTitle', 'fileCount', 'confirmAndAdd'])
   })
 
   it('should include frame blend dialog labels in both locales', () => {
@@ -436,6 +435,27 @@ describe('i18n locales', () => {
     })
   })
 
+  it('should include R3.1 preset share labels and error codes in both locales', () => {
+    const errorKeys = [
+      'invalidJson',
+      'invalidDocument',
+      'unsupportedVersion',
+      'invalidPreset',
+      'invalidText',
+      'textTooLarge',
+    ]
+    for (const locale of [zhCN, enUS]) {
+      expect(locale.preset.share).toHaveProperty('title')
+      expect(locale.preset.share).toHaveProperty('inputPlaceholder')
+      expect(locale.preset.share).toHaveProperty('outputHint')
+      for (const key of errorKeys) {
+        expect(locale.preset.share.errors).toHaveProperty(key)
+      }
+      expect(locale.page.params.presetPanel).toHaveProperty('importFromText')
+      expect(locale.page.params.presetPanel).toHaveProperty('share')
+    }
+  })
+
   it('should include subtitle panel labels in both locales', () => {
     const keys = [
       'subtitleBurn',
@@ -479,5 +499,52 @@ describe('i18n locales', () => {
       expect(zhCN.page.params.subtitlePanel).toHaveProperty(key)
       expect(enUS.page.params.subtitlePanel).toHaveProperty(key)
     })
+  })
+
+  it('R3.2 任务历史页的统计、筛选、导出与空态文案双语齐全', () => {
+    const keys = [
+      'title',
+      'subtitle',
+      'totalTasks',
+      'successRate',
+      'completed',
+      'failed',
+      'stopped',
+      'totalDuration',
+      'avgDuration',
+      'longestDuration',
+      'filterOutcome',
+      'all',
+      'searchPlaceholder',
+      'sortBy',
+      'sortCompletedAt',
+      'sortDuration',
+      'sortInputFile',
+      'columnInput',
+      'columnOutput',
+      'columnStatus',
+      'columnDuration',
+      'columnCompletedAt',
+      'columnCompression',
+      'columnSaved',
+      'compression',
+      'refreshSizes',
+      'copyCsv',
+      'copyJson',
+      'copySuccess',
+      'copyFailed',
+      'clearHistory',
+      'clearConfirmTitle',
+      'clearConfirmMessage',
+      'clearSuccess',
+      'empty',
+      'sizeUnavailable',
+    ]
+    keys.forEach((key) => {
+      expect(zhCN.page.history).toHaveProperty(key)
+      expect(enUS.page.history).toHaveProperty(key)
+    })
+    expect(zhCN.nav).toHaveProperty('history')
+    expect(enUS.nav).toHaveProperty('history')
   })
 })

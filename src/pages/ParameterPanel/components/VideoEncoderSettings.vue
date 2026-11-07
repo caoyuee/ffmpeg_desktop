@@ -32,7 +32,11 @@
           {{ t('page.params.detectingHardware') }}
         </div>
         <div v-else-if="selectedHardwareEncoderUnavailable" class="validation-error">
-          {{ t('page.params.hardwareEncoderUnsupported', { encoder: localPreset.video.encoder.codec }) }}
+          {{
+            t('page.params.hardwareEncoderUnsupported', {
+              encoder: localPreset.video.encoder.codec,
+            })
+          }}
         </div>
         <div v-else-if="hasUnavailableHardwareEncoders" class="field-hint">
           {{ t('page.params.unavailableHardwareEncodersDisabled') }}
@@ -59,7 +63,7 @@
         <label>{{ t('page.params.tune') }}</label>
         <select v-model="localPreset.video.encoder.tune" @change="onChange">
           <option value="">{{ t('common.none') }}</option>
-          <option v-for="t in codecTunes" :key="t" :value="t">{{ t }}</option>
+          <option v-for="tune in codecTunes" :key="tune" :value="tune">{{ tune }}</option>
         </select>
       </div>
 
@@ -67,28 +71,32 @@
         <div class="form-group half">
           <label>{{ t('page.params.gpuAcceleration') }}</label>
           <input
-            type="text"
             v-model="localPreset.video.encoder.gpu"
+            type="text"
             inputmode="numeric"
             pattern="[1-9][0-9]*"
             :class="{ invalid: validationErrors.gpu }"
-            @input="onPositiveIntegerInput('gpu')"
             :placeholder="t('page.params.gpuPlaceholder')"
+            @input="onPositiveIntegerInput('gpu')"
           />
-          <div v-if="validationErrors.gpu" class="validation-error">{{ t('validation.positiveInteger') }}</div>
+          <div v-if="validationErrors.gpu" class="validation-error">
+            {{ t('validation.positiveInteger') }}
+          </div>
         </div>
         <div class="form-group half">
           <label>{{ t('page.params.threads') }}</label>
           <input
-            type="text"
             v-model="localPreset.video.encoder.threads"
+            type="text"
             inputmode="numeric"
             pattern="[1-9][0-9]*"
             :class="{ invalid: validationErrors.threads }"
-            @input="onPositiveIntegerInput('threads')"
             :placeholder="t('page.params.threadsPlaceholder')"
+            @input="onPositiveIntegerInput('threads')"
           />
-          <div v-if="validationErrors.threads" class="validation-error">{{ t('validation.positiveInteger') }}</div>
+          <div v-if="validationErrors.threads" class="validation-error">
+            {{ t('validation.positiveInteger') }}
+          </div>
         </div>
       </div>
     </div>
@@ -96,27 +104,27 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { PresetData } from '@/types/preset';
-import { getCodecMeta } from '@/config/codecDatabase';
-import { useHardwareCapabilityStore } from '@/store/hardwareCapabilityStore';
+import { computed, onMounted, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { PresetData } from '@/types/preset'
+import { getCodecMeta } from '@/config/codecDatabase'
+import { useHardwareCapabilityStore } from '@/store/hardwareCapabilityStore'
 
 const props = defineProps<{
-  preset: PresetData;
-}>();
+  preset: PresetData
+}>()
 
 const emit = defineEmits<{
-  'update:preset': [preset: PresetData];
-}>();
+  'update:preset': [preset: PresetData]
+}>()
 
-const { t } = useI18n();
-const hardwareStore = useHardwareCapabilityStore();
-const localPreset = ref<PresetData>({ ...props.preset });
+const { t } = useI18n()
+const hardwareStore = useHardwareCapabilityStore()
+const localPreset = ref<PresetData>({ ...props.preset })
 const validationErrors = ref({
   gpu: false,
   threads: false,
-});
+})
 
 const encoderOptions: Record<string, { value: string; label: string }[]> = {
   h264: [
@@ -159,104 +167,102 @@ const encoderOptions: Record<string, { value: string; label: string }[]> = {
     { value: 'libvpx', label: 'libvpx (CPU)' },
     { value: 'vp8_vaapi', label: 'vp8_vaapi (VAAPI)' },
   ],
-  mpeg2: [
-    { value: 'mpeg2video', label: 'mpeg2video (CPU)' },
-  ],
-  mpeg4: [
-    { value: 'mpeg4', label: 'mpeg4' },
-  ],
+  mpeg2: [{ value: 'mpeg2video', label: 'mpeg2video (CPU)' }],
+  mpeg4: [{ value: 'mpeg4', label: 'mpeg4' }],
   prores: [
     { value: 'prores_ks', label: 'ProRes (CPU)' },
     { value: 'prores_aw', label: 'ProRes AW (Apple)' },
   ],
-  theora: [
-    { value: 'libtheora', label: 'libtheora (CPU)' },
-  ],
-};
+  theora: [{ value: 'libtheora', label: 'libtheora (CPU)' }],
+}
 
 const availableEncoders = computed(() => {
-  return encoderOptions[localPreset.value.video.encoder.category] || [];
-});
+  return encoderOptions[localPreset.value.video.encoder.category] || []
+})
 
 const hasUnavailableHardwareEncoders = computed(() => {
-  return availableEncoders.value.some((encoder) => isEncoderDisabled(encoder.value));
-});
+  return availableEncoders.value.some((encoder) => isEncoderDisabled(encoder.value))
+})
 
 const selectedHardwareEncoderUnavailable = computed(() => {
-  const codec = localPreset.value.video.encoder.codec;
-  return isHardwareEncoder(codec) && !isHardwareEncoderAvailable(codec);
-});
+  const codec = localPreset.value.video.encoder.codec
+  return isHardwareEncoder(codec) && !isHardwareEncoderAvailable(codec)
+})
 
 const codecMeta = computed(() => {
-  return getCodecMeta(localPreset.value.video.encoder.codec);
-});
+  return getCodecMeta(localPreset.value.video.encoder.codec)
+})
 
-const codecPresets = computed(() => codecMeta.value.presets);
-const codecProfiles = computed(() => codecMeta.value.profiles);
-const codecTunes = computed(() => codecMeta.value.tunes);
+const codecPresets = computed(() => codecMeta.value.presets)
+const codecProfiles = computed(() => codecMeta.value.profiles)
+const codecTunes = computed(() => codecMeta.value.tunes)
 
-watch(() => props.preset, (newVal) => {
-  if (newVal) {
-    localPreset.value = { ...newVal };
-  }
-}, { deep: true });
+watch(
+  () => props.preset,
+  (newVal) => {
+    if (newVal) {
+      localPreset.value = { ...newVal }
+    }
+  },
+  { deep: true },
+)
 
 onMounted(() => {
   if (!hardwareStore.capabilities && !hardwareStore.loading) {
-    void hardwareStore.detect();
+    void hardwareStore.detect()
   }
-});
+})
 
 function onCategoryChange() {
-  const encoders = encoderOptions[localPreset.value.video.encoder.category];
+  const encoders = encoderOptions[localPreset.value.video.encoder.category]
   if (encoders && encoders.length > 0) {
-    localPreset.value.video.encoder.codec = encoders[0]?.value || '';
+    localPreset.value.video.encoder.codec = encoders[0]?.value || ''
   }
-  localPreset.value.video.encoder.preset = '';
-  localPreset.value.video.encoder.profile = '';
-  localPreset.value.video.encoder.tune = '';
-  onChange();
+  localPreset.value.video.encoder.preset = ''
+  localPreset.value.video.encoder.profile = ''
+  localPreset.value.video.encoder.tune = ''
+  onChange()
 }
 
 function onCodecChange() {
-  localPreset.value.video.encoder.preset = '';
-  localPreset.value.video.encoder.profile = '';
-  localPreset.value.video.encoder.tune = '';
-  onChange();
+  localPreset.value.video.encoder.preset = ''
+  localPreset.value.video.encoder.profile = ''
+  localPreset.value.video.encoder.tune = ''
+  onChange()
 }
 
 function isHardwareEncoder(codec: string): boolean {
-  return /_(nvenc|qsv|amf|vaapi|videotoolbox|vulkan|d3d12va)$/.test(codec);
+  return /_(nvenc|qsv|amf|vaapi|videotoolbox|vulkan|d3d12va)$/.test(codec)
 }
 
 function isHardwareEncoderAvailable(codec: string): boolean {
   if (!isHardwareEncoder(codec)) {
-    return true;
+    return true
   }
   if (!hardwareStore.capabilities) {
-    return true;
+    return true
   }
-  return hardwareStore.hasEncoder(codec);
+  return hardwareStore.hasEncoder(codec)
 }
 
 function isEncoderDisabled(codec: string): boolean {
-  return isHardwareEncoder(codec) && !isHardwareEncoderAvailable(codec);
+  return isHardwareEncoder(codec) && !isHardwareEncoderAvailable(codec)
 }
 
 function isPositiveInteger(value: string) {
-  return value === '' || /^[1-9]\d*$/.test(value);
+  return value === '' || /^[1-9]\d*$/.test(value)
 }
 
 function onPositiveIntegerInput(field: 'gpu' | 'threads') {
-  const value = localPreset.value.video.encoder[field];
-  validationErrors.value[field] = !isPositiveInteger(value);
+  const value = localPreset.value.video.encoder[field]
+  validationErrors.value[field] = !isPositiveInteger(value)
   if (!validationErrors.value[field]) {
-    onChange();
+    onChange()
   }
 }
 
 function onChange() {
-  emit('update:preset', localPreset.value);
+  emit('update:preset', localPreset.value)
 }
 </script>
 

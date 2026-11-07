@@ -61,6 +61,25 @@
       "wix": {
         "language": "zh-CN"
       }
-    }
+    },
+    "fileAssociations": [
+      {
+        "ext": [
+          "mp4",
+          "mkv",
+          "avi",
+          "mov",
+          "flv",
+          "webm",
+          "wmv",
+          "m4v",
+          "ts"
+        ],
+        "name": "FFmpeg Desktop Media",
+        "description": "Open media file in FFmpeg Desktop",
+        "mimeType": "video/*",
+        "role": "Viewer"
+      }
+    ]
   }
 }

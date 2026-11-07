@@ -20,7 +20,7 @@ export function createMockProgress(overrides: Partial<TaskProgress> = {}): TaskP
 export function createMockTask(overrides: Partial<Task> = {}): Task {
   const timestamp = Date.now()
   const random = Math.random().toString(36).substring(2, 11)
-  
+
   return {
     id: `task_${timestamp}_${random}`,
     inputPath: '/test/input.mp4',
@@ -39,11 +39,11 @@ export function createMockTask(overrides: Partial<Task> = {}): Task {
 }
 
 export function createMockTaskList(count: number = 3): Task[] {
-  return Array.from({ length: count }, (_, index) => 
+  return Array.from({ length: count }, (_, index) =>
     createMockTask({
       id: `task_${index}_${Date.now()}`,
       inputPath: `/test/input_${index}.mp4`,
       outputPath: `/test/output_${index}.mp4`,
-    })
+    }),
   )
 }

@@ -13,10 +13,26 @@
         </select>
       </div>
 
-      <div v-if="localPreset.video.bitrateControl.mode === 'CRF' || localPreset.video.bitrateControl.mode === 'CQP'" class="form-group">
-        <label>{{ localPreset.video.bitrateControl.mode === 'CRF' ? t('page.params.crfValueLabel') : t('page.params.qpValueLabel') }}</label>
+      <div
+        v-if="
+          localPreset.video.bitrateControl.mode === 'CRF' ||
+          localPreset.video.bitrateControl.mode === 'CQP'
+        "
+        class="form-group"
+      >
+        <label>{{
+          localPreset.video.bitrateControl.mode === 'CRF'
+            ? t('page.params.crfValueLabel')
+            : t('page.params.qpValueLabel')
+        }}</label>
         <div class="slider-group">
-          <input type="range" min="0" max="51" v-model.number="qualityValueNum" @input="onQualityValueChange" />
+          <input
+            v-model.number="qualityValueNum"
+            type="range"
+            min="0"
+            max="51"
+            @input="onQualityValueChange"
+          />
           <span class="value">{{ localPreset.video.bitrateControl.qualityValue || 23 }}</span>
         </div>
         <div class="quality-hint">
@@ -26,64 +42,84 @@
         </div>
       </div>
 
-      <div v-if="localPreset.video.bitrateControl.mode !== 'CRF' && localPreset.video.bitrateControl.mode !== 'CQP'" class="form-group">
+      <div
+        v-if="
+          localPreset.video.bitrateControl.mode !== 'CRF' &&
+          localPreset.video.bitrateControl.mode !== 'CQP'
+        "
+        class="form-group"
+      >
         <label>{{ t('page.params.baseBitrateKbps') }}</label>
         <input
-          type="text"
           v-model="localPreset.video.bitrateControl.baseBitrate"
+          type="text"
           inputmode="numeric"
           pattern="[1-9][0-9]*"
           :class="{ invalid: validationErrors.baseBitrate }"
-          @input="onIntegerInput('baseBitrate')"
           :placeholder="t('page.params.baseBitratePlaceholder')"
+          @input="onIntegerInput('baseBitrate')"
         />
-        <div v-if="validationErrors.baseBitrate" class="validation-error">{{ t('validation.positiveInteger') }}</div>
+        <div v-if="validationErrors.baseBitrate" class="validation-error">
+          {{ t('validation.positiveInteger') }}
+        </div>
       </div>
     </div>
 
-    <div v-if="localPreset.video.bitrateControl.mode !== 'CRF' && localPreset.video.bitrateControl.mode !== 'CQP'" class="form-section">
+    <div
+      v-if="
+        localPreset.video.bitrateControl.mode !== 'CRF' &&
+        localPreset.video.bitrateControl.mode !== 'CQP'
+      "
+      class="form-section"
+    >
       <h4>{{ t('page.params.bitrateControl') }}</h4>
       <div class="form-row">
         <div class="form-group half">
           <label>{{ t('page.params.minBitrateKbps') }}</label>
           <input
-            type="text"
             v-model="localPreset.video.bitrateControl.minBitrate"
+            type="text"
             inputmode="numeric"
             pattern="[1-9][0-9]*"
             :class="{ invalid: validationErrors.minBitrate }"
-            @input="onIntegerInput('minBitrate')"
             :placeholder="t('page.params.optionalPlaceholder')"
+            @input="onIntegerInput('minBitrate')"
           />
-          <div v-if="validationErrors.minBitrate" class="validation-error">{{ t('validation.positiveInteger') }}</div>
+          <div v-if="validationErrors.minBitrate" class="validation-error">
+            {{ t('validation.positiveInteger') }}
+          </div>
         </div>
         <div class="form-group half">
           <label>{{ t('page.params.maxBitrateKbps') }}</label>
           <input
-            type="text"
             v-model="localPreset.video.bitrateControl.maxBitrate"
+            type="text"
             inputmode="numeric"
             pattern="[1-9][0-9]*"
             :class="{ invalid: validationErrors.maxBitrate }"
-            @input="onIntegerInput('maxBitrate')"
             :placeholder="t('page.params.optionalPlaceholder')"
+            @input="onIntegerInput('maxBitrate')"
           />
-          <div v-if="validationErrors.maxBitrate" class="validation-error">{{ t('validation.positiveInteger') }}</div>
+          <div v-if="validationErrors.maxBitrate" class="validation-error">
+            {{ t('validation.positiveInteger') }}
+          </div>
         </div>
       </div>
       <div class="form-row">
         <div class="form-group half">
           <label>{{ t('page.params.bufferSizeKbps') }}</label>
           <input
-            type="text"
             v-model="localPreset.video.bitrateControl.bufferSize"
+            type="text"
             inputmode="numeric"
             pattern="[1-9][0-9]*"
             :class="{ invalid: validationErrors.bufferSize }"
-            @input="onIntegerInput('bufferSize')"
             :placeholder="t('page.params.optionalPlaceholder')"
+            @input="onIntegerInput('bufferSize')"
           />
-          <div v-if="validationErrors.bufferSize" class="validation-error">{{ t('validation.positiveInteger') }}</div>
+          <div v-if="validationErrors.bufferSize" class="validation-error">
+            {{ t('validation.positiveInteger') }}
+          </div>
         </div>
       </div>
     </div>
@@ -91,78 +127,82 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { PresetData } from '@/types/preset';
-import { isPositiveInteger } from '@/utils/numericValidation';
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { PresetData } from '@/types/preset'
+import { isPositiveInteger } from '@/utils/numericValidation'
 
 const props = defineProps<{
-  preset: PresetData;
-}>();
+  preset: PresetData
+}>()
 
 const emit = defineEmits<{
-  'update:preset': [preset: PresetData];
-}>();
+  'update:preset': [preset: PresetData]
+}>()
 
-const { t } = useI18n();
-const localPreset = ref<PresetData>({ ...props.preset });
+const { t } = useI18n()
+const localPreset = ref<PresetData>({ ...props.preset })
 
 const qualityValueNum = computed({
   get: () => parseInt(localPreset.value.video.bitrateControl.qualityValue) || 23,
-  set: () => {}
-});
+  set: () => {},
+})
 const validationErrors = ref({
   baseBitrate: false,
   minBitrate: false,
   maxBitrate: false,
   bufferSize: false,
-});
+})
 
-watch(() => props.preset, (newVal) => {
-  if (newVal) {
-    localPreset.value = { ...newVal };
-    validationErrors.value = {
-      baseBitrate: false,
-      minBitrate: false,
-      maxBitrate: false,
-      bufferSize: false,
-    };
-  }
-}, { deep: true });
+watch(
+  () => props.preset,
+  (newVal) => {
+    if (newVal) {
+      localPreset.value = { ...newVal }
+      validationErrors.value = {
+        baseBitrate: false,
+        minBitrate: false,
+        maxBitrate: false,
+        bufferSize: false,
+      }
+    }
+  },
+  { deep: true },
+)
 
 function onQualityValueChange(event: Event) {
-  const target = event.target as HTMLInputElement;
-  localPreset.value.video.bitrateControl.qualityValue = target.value;
-  onChange();
+  const target = event.target as HTMLInputElement
+  localPreset.value.video.bitrateControl.qualityValue = target.value
+  onChange()
 }
 
 function onModeChange() {
   if (localPreset.value.video.bitrateControl.mode === 'CRF') {
-    localPreset.value.video.bitrateControl.qualityValue = '23';
-    localPreset.value.video.bitrateControl.qualityParam = 'crf';
-    localPreset.value.video.bitrateControl.baseBitrate = '';
+    localPreset.value.video.bitrateControl.qualityValue = '23'
+    localPreset.value.video.bitrateControl.qualityParam = 'crf'
+    localPreset.value.video.bitrateControl.baseBitrate = ''
   } else if (localPreset.value.video.bitrateControl.mode === 'CQP') {
-    localPreset.value.video.bitrateControl.qualityValue = '20';
-    localPreset.value.video.bitrateControl.qualityParam = 'qp';
-    localPreset.value.video.bitrateControl.baseBitrate = '';
+    localPreset.value.video.bitrateControl.qualityValue = '20'
+    localPreset.value.video.bitrateControl.qualityParam = 'qp'
+    localPreset.value.video.bitrateControl.baseBitrate = ''
   } else {
-    localPreset.value.video.bitrateControl.baseBitrate = '5000';
-    localPreset.value.video.bitrateControl.qualityValue = '';
-    localPreset.value.video.bitrateControl.qualityParam = '';
+    localPreset.value.video.bitrateControl.baseBitrate = '5000'
+    localPreset.value.video.bitrateControl.qualityValue = ''
+    localPreset.value.video.bitrateControl.qualityParam = ''
   }
-  onChange();
+  onChange()
 }
 
 function onIntegerInput(field: keyof typeof validationErrors.value) {
-  const value = localPreset.value.video.bitrateControl[field];
-  validationErrors.value[field] = !isPositiveInteger(value);
+  const value = localPreset.value.video.bitrateControl[field]
+  validationErrors.value[field] = !isPositiveInteger(value)
   if (!validationErrors.value[field]) {
-    onChange();
+    onChange()
   }
 }
 
 function onChange() {
-  emit('update:preset', localPreset.value);
+  emit('update:preset', localPreset.value)
 }
 </script>
 
@@ -230,7 +270,7 @@ function onChange() {
   gap: 12px;
 }
 
-.slider-group input[type="range"] {
+.slider-group input[type='range'] {
   flex: 1;
 }
 

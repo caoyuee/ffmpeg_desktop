@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { invoke } from '@tauri-apps/api/core'
 
 export class InitFFmpegConfigApi {
   /**
@@ -15,7 +15,7 @@ export class InitFFmpegConfigApi {
    * }>}
    */
   public static async check_ffmpeg_tools() {
-    return await invoke("check_ffmpeg_tools");
+    return await invoke('check_ffmpeg_tools')
   }
 
   /**
@@ -27,6 +27,6 @@ export class InitFFmpegConfigApi {
    * @returns {unknown}
    */
   public static async install_ffmpeg_command() {
-    return await invoke("install_ffmpeg_command");
+    return await invoke('install_ffmpeg_command')
   }
 }

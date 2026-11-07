@@ -20,28 +20,32 @@
         <div class="form-group half">
           <label>{{ t('page.params.width') }}</label>
           <input
-            type="text"
             v-model="localPreset.video.resolution.autoWidth"
+            type="text"
             inputmode="numeric"
             pattern="[1-9][0-9]*"
             :class="{ invalid: validationErrors.autoWidth }"
-            @input="onDimensionInput('autoWidth')"
             :placeholder="t('page.params.widthPlaceholder')"
+            @input="onDimensionInput('autoWidth')"
           />
-          <div v-if="validationErrors.autoWidth" class="validation-error">{{ t('validation.positiveInteger') }}</div>
+          <div v-if="validationErrors.autoWidth" class="validation-error">
+            {{ t('validation.positiveInteger') }}
+          </div>
         </div>
         <div class="form-group half">
           <label>{{ t('page.params.height') }}</label>
           <input
-            type="text"
             v-model="localPreset.video.resolution.autoHeight"
+            type="text"
             inputmode="numeric"
             pattern="[1-9][0-9]*"
             :class="{ invalid: validationErrors.autoHeight }"
-            @input="onDimensionInput('autoHeight')"
             :placeholder="t('page.params.heightPlaceholder')"
+            @input="onDimensionInput('autoHeight')"
           />
-          <div v-if="validationErrors.autoHeight" class="validation-error">{{ t('validation.positiveInteger') }}</div>
+          <div v-if="validationErrors.autoHeight" class="validation-error">
+            {{ t('validation.positiveInteger') }}
+          </div>
         </div>
       </div>
 
@@ -49,12 +53,14 @@
         <label>{{ t('page.params.cropFilter') }}</label>
         <div class="input-row">
           <input
-            type="text"
             v-model="localPreset.video.resolution.cropFilter"
-            @input="onChange"
+            type="text"
             :placeholder="t('page.params.cropFilterPlaceholder')"
+            @input="onChange"
           />
-          <button class="app-btn" @click="showCrop = true">{{ t('page.params.cropWindow') }}</button>
+          <button class="app-btn" @click="showCrop = true">
+            {{ t('page.params.cropWindow') }}
+          </button>
         </div>
       </div>
     </div>
@@ -81,106 +87,116 @@
     <div class="form-section">
       <h4>{{ t('page.params.advancedFeatures') }}</h4>
       <div class="form-row">
-        <button class="app-btn advanced-btn" @click="showInterpolation = true">{{ t('page.params.interpolationParams') }}</button>
-        <button class="app-btn advanced-btn" @click="showSuperResolution = true">{{ t('page.params.superResolutionParams') }}</button>
-        <button class="app-btn advanced-btn" @click="showFrameBlend = true">{{ t('page.params.frameBlend') }}</button>
+        <button class="app-btn advanced-btn" @click="showInterpolation = true">
+          {{ t('page.params.interpolationParams') }}
+        </button>
+        <button class="app-btn advanced-btn" @click="showSuperResolution = true">
+          {{ t('page.params.superResolutionParams') }}
+        </button>
+        <button class="app-btn advanced-btn" @click="showFrameBlend = true">
+          {{ t('page.params.frameBlend') }}
+        </button>
       </div>
     </div>
 
     <CropDialog
       v-model="showCrop"
-      :initialCrop="localPreset.video.resolution.cropFilter"
+      :initial-crop="localPreset.video.resolution.cropFilter"
       @confirm="onCropConfirm"
     />
     <InterpolationDialog
       :visible="showInterpolation"
-      :modelValue="localPreset.video.filters.interpolation"
+      :model-value="localPreset.video.filters.interpolation"
       @update:visible="showInterpolation = $event"
-      @update:modelValue="onInterpolationUpdate"
+      @update:model-value="onInterpolationUpdate"
     />
     <SuperResolutionDialog
       :visible="showSuperResolution"
-      :modelValue="localPreset.video.filters.superResolution"
+      :model-value="localPreset.video.filters.superResolution"
       @update:visible="showSuperResolution = $event"
-      @update:modelValue="onSuperResolutionUpdate"
+      @update:model-value="onSuperResolutionUpdate"
     />
     <FrameBlendDialog
       :visible="showFrameBlend"
-      :modelValue="localPreset.video.filters.frameBlend"
+      :model-value="localPreset.video.filters.frameBlend"
       @update:visible="showFrameBlend = $event"
-      @update:modelValue="onFrameBlendUpdate"
+      @update:model-value="onFrameBlendUpdate"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { PresetData } from '@/types/preset';
-import CropDialog from '@/components/Dialogs/CropDialog.vue';
-import InterpolationDialog from '@/components/Dialogs/InterpolationDialog.vue';
-import SuperResolutionDialog from '@/components/Dialogs/SuperResolutionDialog.vue';
-import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue';
-import { isPositiveInteger } from '@/utils/numericValidation';
-
-const { t } = useI18n();
+import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { PresetData } from '@/types/preset'
+import CropDialog from '@/components/Dialogs/CropDialog.vue'
+import InterpolationDialog from '@/components/Dialogs/InterpolationDialog.vue'
+import SuperResolutionDialog from '@/components/Dialogs/SuperResolutionDialog.vue'
+import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue'
+import { isPositiveInteger } from '@/utils/numericValidation'
 
 const props = defineProps<{
-  preset: PresetData;
-}>();
+  preset: PresetData
+}>()
 
 const emit = defineEmits<{
-  'update:preset': [preset: PresetData];
-}>();
+  'update:preset': [preset: PresetData]
+}>()
 
-const localPreset = ref<PresetData>({ ...props.preset });
-const showCrop = ref(false);
-const showInterpolation = ref(false);
-const showSuperResolution = ref(false);
-const showFrameBlend = ref(false);
+const { t } = useI18n()
+
+const localPreset = ref<PresetData>({ ...props.preset })
+const showCrop = ref(false)
+const showInterpolation = ref(false)
+const showSuperResolution = ref(false)
+const showFrameBlend = ref(false)
 const validationErrors = ref({
   autoWidth: false,
   autoHeight: false,
-});
+})
 
-watch(() => props.preset, (newVal) => {
-  if (newVal) {
-    localPreset.value = { ...newVal };
-    validationErrors.value.autoWidth = false;
-    validationErrors.value.autoHeight = false;
-  }
-}, { deep: true });
+watch(
+  () => props.preset,
+  (newVal) => {
+    if (newVal) {
+      localPreset.value = { ...newVal }
+      validationErrors.value.autoWidth = false
+      validationErrors.value.autoHeight = false
+    }
+  },
+  { deep: true },
+)
 
 function onChange() {
-  emit('update:preset', localPreset.value);
+  emit('update:preset', localPreset.value)
 }
 
 function onDimensionInput(field: 'autoWidth' | 'autoHeight') {
-  const value = localPreset.value.video.resolution[field];
-  validationErrors.value[field] = !isPositiveInteger(value);
+  const value = localPreset.value.video.resolution[field]
+  validationErrors.value[field] = !isPositiveInteger(value)
   if (!validationErrors.value[field]) {
-    onChange();
+    onChange()
   }
 }
 
 function onCropConfirm(cropValue: string) {
-  localPreset.value.video.resolution.cropFilter = cropValue;
-  emit('update:preset', localPreset.value);
+  localPreset.value.video.resolution.cropFilter = cropValue
+  emit('update:preset', localPreset.value)
 }
 
 function onInterpolationUpdate(settings: PresetData['video']['filters']['interpolation']) {
-  localPreset.value.video.filters.interpolation = settings;
-  emit('update:preset', localPreset.value);
+  localPreset.value.video.filters.interpolation = settings
+  emit('update:preset', localPreset.value)
 }
 
 function onSuperResolutionUpdate(settings: PresetData['video']['filters']['superResolution']) {
-  localPreset.value.video.filters.superResolution = settings;
-  emit('update:preset', localPreset.value);
+  localPreset.value.video.filters.superResolution = settings
+  emit('update:preset', localPreset.value)
 }
 
 function onFrameBlendUpdate(settings: PresetData['video']['filters']['frameBlend']) {
-  localPreset.value.video.filters.frameBlend = settings;
-  emit('update:preset', localPreset.value);
+  localPreset.value.video.filters.frameBlend = settings
+  emit('update:preset', localPreset.value)
 }
 </script>
 

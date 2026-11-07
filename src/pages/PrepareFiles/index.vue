@@ -64,133 +64,145 @@
       <div class="file-count">
         {{ t('page.prepare.selectedCount', { count: selectedFiles.length, total: files.length }) }}
       </div>
-      <button class="app-btn app-btn--primary add-to-queue-btn" @click="addToQueue" :disabled="selectedFiles.length === 0">
+      <button
+        class="app-btn app-btn--primary add-to-queue-btn"
+        :disabled="selectedFiles.length === 0"
+        @click="addToQueue"
+      >
         <AppIcon name="queue" :size="16" />
         {{ t('page.prepare.addToQueue') }}
       </button>
     </div>
+
+    <Toast v-model="showToast" :message="toastMessage" :type="toastType" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { storeToRefs } from 'pinia';
-import { useRouter } from 'vue-router';
-import { useI18n } from 'vue-i18n';
-import { useTaskStore } from '@/store/taskStore';
-import { usePresetStore } from '@/store/presetStore';
-import { useFileListStore } from '@/store/fileListStore';
-import { FFmpegCommandBuilder } from '@/utils/commandBuilder';
-import { generateOutputPath } from '@/hooks/useFormatters';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { ref } from 'vue'
+import { storeToRefs } from 'pinia'
+import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { invoke } from '@tauri-apps/api/core'
+import { useTaskStore } from '@/store/taskStore'
+import { usePresetStore } from '@/store/presetStore'
+import { useFileListStore } from '@/store/fileListStore'
+import { createTaskDraft } from '@/config/taskDraft'
+import { useSettingsStore } from '@/store/settingsStore'
+import { getFileName } from '@/utils/pathUtils'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
+import Toast from '@/components/Dialogs/Toast.vue'
 
-const { t } = useI18n();
-const router = useRouter();
-const taskStore = useTaskStore();
-const presetStore = usePresetStore();
-const fileListStore = useFileListStore();
+const { t } = useI18n()
+const router = useRouter()
+const taskStore = useTaskStore()
+const presetStore = usePresetStore()
+// R1-7：输出目录设置唯一决策值，入队时统一注入。
+const settingsStore = useSettingsStore()
+const fileListStore = useFileListStore()
 
-const { files, selectedIndices: selectedFiles } = storeToRefs(fileListStore);
+const { files, selectedIndices: selectedFiles } = storeToRefs(fileListStore)
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('error')
 
 async function addFiles() {
-  const { open } = await import('@tauri-apps/plugin-dialog');
+  const { open } = await import('@tauri-apps/plugin-dialog')
   const selected = await open({
     multiple: true,
     filters: [
-      { name: t('page.prepare.videoFiles'), extensions: ['mp4', 'mkv', 'avi', 'mov', 'flv', 'webm', 'wmv', 'm4v'] },
+      {
+        name: t('page.prepare.videoFiles'),
+        extensions: ['mp4', 'mkv', 'avi', 'mov', 'flv', 'webm', 'wmv', 'm4v'],
+      },
       { name: t('common.allFiles'), extensions: ['*'] },
     ],
-  });
+  })
 
   if (selected) {
-    const newFiles = Array.isArray(selected) ? selected : [selected];
-    fileListStore.addFiles(newFiles);
+    const newFiles = Array.isArray(selected) ? selected : [selected]
+    fileListStore.addFiles(newFiles)
   }
 }
 
 async function addFolder() {
-  const { open } = await import('@tauri-apps/plugin-dialog');
-  const selected = await open({ directory: true });
+  const { open } = await import('@tauri-apps/plugin-dialog')
+  const selected = await open({ directory: true })
 
   if (selected && typeof selected === 'string') {
-    fileListStore.addFiles([selected]);
+    // R1-9：交给 Rust 递归枚举并过滤视频扩展名，不再把目录本身当文件塞进队列。
+    try {
+      const mediaFiles = await invoke<string[]>('list_media_files', { dir: selected })
+      if (mediaFiles.length > 0) {
+        fileListStore.addFiles(mediaFiles)
+      }
+    } catch (error) {
+      console.error(t('page.prepare.folderScanFailed'), error)
+      toastMessage.value = t('page.prepare.folderScanFailed')
+      toastType.value = 'error'
+      showToast.value = true
+    }
   }
 }
 
 function sortFiles() {
-  fileListStore.sortByName();
+  fileListStore.sortByName()
 }
 
 function removeSelected() {
-  fileListStore.removeSelected();
+  fileListStore.removeSelected()
 }
 
 function toggleSelect(index: number, event: MouseEvent) {
   if (event.ctrlKey || event.metaKey) {
-    const pos = selectedFiles.value.indexOf(index);
+    const pos = selectedFiles.value.indexOf(index)
     if (pos === -1) {
-      selectedFiles.value.push(index);
+      selectedFiles.value.push(index)
     } else {
-      selectedFiles.value.splice(pos, 1);
+      selectedFiles.value.splice(pos, 1)
     }
   } else if (event.shiftKey && selectedFiles.value.length > 0) {
-    const last = selectedFiles.value[selectedFiles.value.length - 1] ?? 0;
-    const start = Math.min(last ?? 0, index);
-    const end = Math.max(last ?? 0, index);
+    const last = selectedFiles.value[selectedFiles.value.length - 1] ?? 0
+    const start = Math.min(last ?? 0, index)
+    const end = Math.max(last ?? 0, index)
     for (let i = start; i <= end; i++) {
       if (!selectedFiles.value.includes(i)) {
-        selectedFiles.value.push(i);
+        selectedFiles.value.push(i)
       }
     }
   } else {
     if (selectedFiles.value.length === 1 && selectedFiles.value[0] === index) {
-      selectedFiles.value = [];
+      selectedFiles.value = []
     } else {
-      selectedFiles.value = [index];
+      selectedFiles.value = [index]
     }
   }
 }
 
 function removeFile(index: number) {
-  fileListStore.removeFile(index);
+  fileListStore.removeFile(index)
 }
 
-function previewFile(file: string) {
-  console.log('Preview:', file);
-}
-
-function getFileName(path: string) {
-  return path.split('/').pop() || path;
+async function previewFile(file: string) {
+  // P2-6：调用系统默认程序打开，替代只打日志的空实现。
+  const { openPath } = await import('@tauri-apps/plugin-opener')
+  openPath(file).catch((error) => {
+    console.error('[prepare] 打开文件失败:', file, error)
+  })
 }
 
 function addToQueue() {
-  const selectedPaths = selectedFiles.value.map(i => files.value[i]);
-  const preset = presetStore.currentPreset;
+  const selectedPaths = selectedFiles.value.map((i) => files.value[i])
+  const preset = presetStore.currentPreset
 
-  selectedPaths.forEach(path => {
-    const outputFile = generateOutputPath(path!, preset.output);
-    const commandLine = FFmpegCommandBuilder.build(
-      { ...preset },
-      path!,
-      outputFile,
-    );
+  selectedPaths.forEach((path) => {
+    // R3：命令构建与任务字段统一经唯一草稿层，避免与队列拖拽/监控/A-B/CLI 漂移。
+    taskStore.addTask(createTaskDraft(preset, path!, undefined, settingsStore.taskOutputDir), false)
+  })
 
-    taskStore.addTask({
-      inputFile: path!,
-      outputFile,
-      commandLine,
-      presetId: preset?.id,
-      cpuAffinity: preset?.decode.cpuAffinity || undefined,
-      preserveFileTimes: {
-        creation: preset.output.naming.preserveCreationTime,
-        modification: preset.output.naming.preserveModifyTime,
-        access: preset.output.naming.preserveAccessTime,
-      },
-    }, false);
-  });
-
-  fileListStore.clear();
-  router.push('/queue');
+  // R1-10：只移除已入队（选中）的文件，未选中的文件继续留在列表里。
+  fileListStore.removeSelected()
+  router.push('/queue')
 }
 </script>
 

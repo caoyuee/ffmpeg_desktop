@@ -1,348 +1,98 @@
-# FFmpeg Desktop - 跨平台视频处理工具
+# FFmpeg Desktop
 
-基于 Tauri 2.x + Vue 3 开发的跨平台 FFmpeg 图形化界面工具，复刻自 FFmpegFreeUI 项目。
+跨平台 FFmpeg 图形化桌面工具。基于 Tauri 2 + Vue 3 + Rust，支持 Windows / Linux（macOS 配置就绪，暂无 CI 构建）。
 
-## ✨ 功能特性
+> 本项目复刻自开源项目 FFmpegFreeUI，并在此基础上独立演进。
 
-### 🎬 视频处理
-- 支持多种视频编码器（H.264, H.265, AV1, VP9 等）
-- 支持硬件加速编码（NVIDIA NVENC, Intel QSV, AMD AMF）
-- 灵活的质量控制（CRF, VBR, CQP, CBR）
-- 自定义分辨率和帧率
-- 视频滤镜（降噪、锐化、插帧、超分辨率等）
+## 功能
 
-### 🎵 音频处理
-- 支持多种音频编码器（AAC, MP3, Opus, FLAC 等）
-- 音频比特率和采样率设置
-- 响度标准化
+- **批量转码**：多文件队列、并发控制、暂停/恢复/停止、实时进度（fps / speed / ETA / 已写大小）
+- **编码参数**：软/硬件编码器（libx264/x265、NVENC、QSV、AMF 等 20 种），CRF/VBR/CQP/CBR 质量模式，滤镜、剪辑、色彩管理、字幕烧录、流选择
+- **预设系统**：保存/加载/导入/导出编码预设（JSON blob + `schemaVersion` 1，前端唯一 schema 与迁移层），独立参数面板可为不同文件指定不同参数
+- **队列持久化**：任务元数据经 Rust 原子写入 `tasks.json`，重启后恢复队列；运行中任务标记为中断、恢复后不自动开工，日志与进度有意不落盘
+- **工具箱**：视频合并（concat）、混流（多文件流映射）、画质评测（VMAF/SSIM/PSNR）、媒体信息（ffprobe）、性能监控（CPU/内存/进程）
+- **跨平台**：Linux（deb/rpm/AppImage）、Windows（msi/nsis），带签名自动更新（GitHub 渠道）
 
-### 📋 任务队列
-- 批量任务管理
-- 任务暂停/恢复/停止
-- 实时进度显示
-- 并发任务控制
+## 环境要求
 
-### 💾 预设管理
-- 保存和加载编码预设
-- 预设导入/导出
-- 预设编辑器
+| 依赖             | 版本                                         |
+| ---------------- | -------------------------------------------- |
+| Node.js          | ≥ 22（CI 使用 22）                           |
+| pnpm             | ≥ 10.27（`packageManager` 强制锁定 10.27.0） |
+| Rust             | stable（≥ 1.70）                             |
+| FFmpeg / FFprobe | 系统安装，或在应用设置中指定路径             |
 
-### ⚙️ 系统设置
-- FFmpeg 工具配置
-- 临时文件路径设置
-- 并发任务数设置
-- 主题切换
-
-## 🚀 快速开始
-
-### 前置要求
-
-1. **Node.js** >= 18.x
-2. **pnpm** >= 8.x
-3. **Rust** >= 1.70
-4. **FFmpeg** - 系统已安装或通过应用自动安装
-
-### 安装依赖
+## 快速开始
 
 ```bash
-# 安装前端依赖
 pnpm install
-
-# Rust 依赖会在首次运行时自动安装
+pnpm tauri dev        # 桌面应用开发模式
+pnpm dev              # 纯浏览器模式（Tauri API 已 mock，调试 UI 用）
 ```
 
-### 开发模式
+## 构建与测试
 
 ```bash
-# 启动开发服务器
-pnpm tauri dev
+pnpm build                    # 类型检查 + 前端构建
+pnpm typecheck                # vue-tsc --noEmit
+pnpm test:run                 # Vitest 单次运行
+pnpm test:coverage            # 覆盖率报告（阈值与实测基线见质量保障文档）
+cd src-tauri && cargo test    # Rust 单元测试
+bash scripts/preflight.sh     # 发布前全量预检（构建 + CSP 断言 + 测试）
 ```
 
-### 构建生产版本
+测试口径说明：前端单元测试在 mock 层运行（不依赖真实 Tauri 后端）；E2E 为浏览器 + Tauri mock。桌面端真实转码验证请参见 `.agents/docs/质量保障与发布.md`。
+
+## 发布
+
+正式发布依赖 GitHub Actions（推送 `v*` tag 触发）：
 
 ```bash
-# 构建应用
-pnpm tauri build
+RELEASE_DRY_RUN=1 pnpm release:patch   # 演练（自动回滚）
+pnpm release:patch                     # 正式：版本号同步 → commit/tag → 推送 → CI 构建签名产物
 ```
 
-## 📖 使用方法
+- CI 自动构建 Linux（deb/rpm/AppImage）与 Windows（msi/nsis）安装包，生成更新器 manifest（`latest.json`）并发布到 GitHub Release。
+- 签名密钥通过仓库 Secrets（`TAURI_SIGNING_PRIVATE_KEY` 等）注入，本地无需持有。
+- macOS 构建当前无 CI 支持，需本机 `pnpm tauri build`（`tauri.macos.conf.json` 已配置 dmg 目标）。
 
-### 1. 添加文件
+发布细节与已知风险见 `.agents/docs/质量保障与发布.md`。
 
-**方式一：拖拽上传**
-- 直接将视频文件拖拽到文件列表区域
-
-**方式二：点击上传**
-- 点击"上传"按钮，选择要处理的文件
-
-### 2. 配置参数
-
-#### 视频编码器
-1. 选择编码器类别（软件编码/硬件加速）
-2. 选择具体的编码器（如 libx265, h264_nvenc 等）
-3. 设置编码预设（可选）
-
-#### 质量控制
-1. 选择质量控制模式：
-   - **CRF**：恒定质量，适合大多数场景
-   - **VBR**：动态码率，适合文件大小有要求的场景
-   - **CQP**：恒定量化参数，适合专业场景
-   - **CBR**：恒定码率，适合直播等场景
-2. 调整质量值（CRF 推荐 18-28，值越小质量越好）
-
-#### 分辨率
-- **原始分辨率**：保持原始分辨率
-- **预设分辨率**：选择常用分辨率（1080p, 720p 等）
-- **自定义**：手动输入宽度和高度
-
-#### 帧率
-- 保持原始帧率或选择目标帧率
-
-### 3. 添加到队列
-
-配置完成后，点击"添加到队列"按钮，任务将自动添加到右侧任务队列。
-
-### 4. 管理任务
-
-- **暂停**：点击暂停按钮暂停正在进行的任务
-- **恢复**：点击恢复按钮继续暂停的任务
-- **停止**：点击停止按钮终止任务
-- **移除**：点击移除按钮从队列中删除任务
-
-### 5. 使用预设
-
-#### 保存预设
-1. 配置好参数后，点击"新建预设"
-2. 输入预设名称
-3. 点击"保存"
-
-#### 加载预设
-- 在预设列表中点击要使用的预设
-
-#### 导入/导出预设
-- 点击"导入"按钮导入预设文件
-- 点击预设项的"导出"按钮导出预设
-
-## 🛠️ 技术栈
-
-### 前端
-- **Vue 3.5** - 渐进式 JavaScript 框架
-- **TypeScript 5.9** - 类型安全
-- **Pinia 3.0** - 状态管理
-- **Vue Router 4.5** - 路由管理
-- **Vite 7.3** - 构建工具
-
-### 后端
-- **Rust** - 系统编程语言
-- **Tauri 2.9** - 跨平台桌面应用框架
-
-### 核心依赖
-- **regex** - 正则表达式
-- **serde** - 序列化/反序列化
-- **chrono** - 时间处理
-- **uuid** - UUID 生成
-
-## 📁 项目结构
+## 项目结构
 
 ```
-./
-├── src/                  # Vue 前端
-│   ├── components/       # 可复用组件
-│   ├── pages/            # 路由页面
-│   ├── store/            # Pinia 状态管理
-│   ├── hooks/            # 组合式函数
-│   ├── types/            # TypeScript 类型
-│   ├── utils/            # 命令构建、格式化、校验等工具
-│   └── i18n/             # 中英文语言包
-├── src-tauri/            # Rust/Tauri 后端
-│   ├── src/
-│   │   ├── modules/      # 任务、预设、窗口等功能模块
-│   │   ├── library/      # FFmpeg、探测、进程、文件等基础库
-│   │   └── utility/      # legacy 执行器和常量
-│   ├── config/           # 打包资源配置
-│   └── Cargo.toml
-├── scripts/              # 发布、版本、预检脚本
-├── e2e/                  # Playwright E2E 测试
-├── .agents/              # Agent 规范、技能、项目文档
-├── package.json
-└── pnpm-lock.yaml
+├── src/                  # Vue 前端（pages / components / store / hooks / utils / i18n）
+├── src-tauri/            # Rust 后端（modules: 任务管理与预设；commands: 工具命令；library: 基础库）
+│   └── tauri.*.conf.json # 主配置 + 平台覆盖（linux/macos/windows/no-updater）
+├── scripts/              # 预检、版本、发布、更新器 manifest、CSP 断言脚本
+├── e2e/                  # Playwright E2E（Tauri mock 层）
+└── .agents/docs/         # 项目文档体系（审计、架构、路线图、规范、手册）
 ```
 
-## 🔧 配置
+## 文档
 
-### FFmpeg 路径配置
+完整文档位于 `.agents/docs/`：
 
-如果系统未安装 FFmpeg，可以通过以下方式配置：
+| 文档                  | 内容                                                               |
+| --------------------- | ------------------------------------------------------------------ |
+| `项目现状审计报告.md` | 当前状态、已验证问题清单（P0/P1/P2 分级）                          |
+| `架构与数据流.md`     | 前后端架构、单一执行路径、事件契约、状态版图、预设与队列单一事实源 |
+| `重构路线图.md`       | 分阶段改造方案（治理 → 修复 → 收敛 → 进化）                        |
+| `UI-UX重设计规范.md`  | 设计 token、信息架构重设计方向                                     |
+| `质量保障与发布.md`   | 测试策略、发布矩阵与流程                                           |
+| `接力开发手册.md`     | 新人/AI 接手上手指南与陷阱清单                                     |
+| `前端结构规范.md`     | 前端编码硬性规范                                                   |
+| `业务操作手册.md`     | 最终用户使用指南                                                   |
+| `archive/`            | 历史文档（复刻期分析与旧审查报告）                                 |
 
-1. **自动安装**：首次运行时，应用会提示安装 FFmpeg
-2. **手动配置**：在设置页面手动指定 FFmpeg 路径
+## 许可证
 
-### 临时文件路径
+MIT
 
-在"设置 > 高级设置"中可以配置临时文件存储路径。
+## 致谢
 
-### 并发任务数
-
-在"设置 > 高级设置"中可以调整同时处理的最大任务数（1-8个）。
-
-## 🐛 故障排除
-
-### FFmpeg 未找到
-- 确认 FFmpeg 已正确安装
-- 在设置中手动配置 FFmpeg 路径
-- 检查系统 PATH 环境变量
-
-### 任务失败
-- 查看日志页面的错误信息
-- 检查输入文件是否损坏
-- 确认输出路径有写入权限
-
-### 性能问题
-- 降低并发任务数
-- 使用硬件加速编码
-- 调整编码预设为 faster 或 veryfast
-
-## 📝 开发
-
-### 环境要求
-- Node.js >= 18
-- Rust >= 1.70
-- pnpm >= 8
-
-### 本地开发
-```bash
-# 克隆项目
-git clone <repository-url>
-cd <repo-dir>
-
-# 安装依赖
-pnpm install
-
-# 启动开发服务器
-pnpm tauri dev
-```
-
-### 构建
-```bash
-# 构建生产版本
-pnpm tauri build
-```
-
-### Gitee 发布自动化
-
-项目提供 Gitee-only 发布脚本。脚本只推送 `origin`，并要求远端地址指向 `gitee.com`。
-
-```bash
-# 试跑：创建本地 release commit/tag 后自动回滚，不推送
-RELEASE_DRY_RUN=1 pnpm release:patch
-
-# 发布 patch/minor/major 版本
-pnpm release:patch
-pnpm release:minor
-pnpm release:major
-```
-
-发布流程：
-
-1. 运行 `pnpm verify`，执行类型检查、Vitest、Playwright 和 Rust 测试。
-2. 同步更新 `package.json`、`src-tauri/Cargo.toml`、`src-tauri/tauri.conf.json` 版本号。
-3. 创建 `chore: release vX.Y.Z` 提交和 `vX.Y.Z` tag。
-4. 推送当前分支和 tag 到 Gitee `origin`。
-5. 如果设置了 `GITEE_TOKEN`，调用 Gitee Release API 创建发行版记录。
-6. 如果 `src-tauri/target/release/bundle/` 下存在 `.deb`、`.rpm`、`.AppImage`、`.exe` 或 `.msi`，自动上传为 Gitee Release 附件。
-
-Gitee Release 页面默认会显示 tag 对应的源码包。Windows/Linux 安装包需要先由 Tauri 构建生成，再上传为 Release 附件：
-
-```bash
-# Linux 本机生成 deb 包
-pnpm tauri build --bundles deb
-
-# Windows 本机生成 exe 安装包
-pnpm tauri build --bundles nsis
-
-# 上传已有安装包到当前 tag 对应的 Gitee Release
-bash scripts/upload-gitee-assets.sh v0.1.3
-```
-
-`.gitee/workflows/release.yml` 会在推送 `v*` tag 后尝试自动构建并上传：
-
-- Linux runner 构建 `.deb`
-- Windows runner 构建 `.exe`
-
-如果 Gitee Go 没有可用的 Windows runner，需要配置自托管 Windows runner，或在 Windows 本机执行 `pnpm tauri build --bundles nsis` 后再运行上传脚本。
-
-常用环境变量：
-
-```bash
-# 跳过较慢的检查，仅建议临时本地调试使用
-SKIP_E2E=1 pnpm verify
-SKIP_RUST_TESTS=1 pnpm verify
-SKIP_PREFLIGHT=1 pnpm release:patch
-
-# 创建 Gitee 发行版记录
-GITEE_TOKEN=<your-token> pnpm release:patch
-
-# 只上传当前已有的打包产物
-GITEE_TOKEN=<your-token> bash scripts/upload-gitee-assets.sh v0.1.3
-```
-
-## 🧪 测试
-
-### 测试框架
-
-- **前端**: Vitest + @vue/test-utils + happy-dom
-- **后端**: Rust 内置测试框架 + cargo-tarpaulin
-
-### 运行测试
-
-```bash
-# 运行前端测试（监听模式）
-pnpm test
-
-# 运行前端测试（单次）
-pnpm test:run
-
-# 运行前端测试并生成覆盖率
-pnpm test:coverage
-
-# 运行后端测试
-cd src-tauri && cargo test
-
-# 运行后端测试并生成覆盖率
-cd src-tauri && cargo tarpaulin
-
-# 运行所有测试并生成报告
-pnpm test:all
-
-# 完整发布前验证
-pnpm verify
-```
-
-### 测试覆盖率目标
-
-- **前端**: ≥ 85%
-- **后端**: ≥ 80%
-
-### 查看测试报告
-
-测试完成后，可以在以下位置查看详细报告：
-
-- 前端覆盖率: `test-reports/frontend/coverage/index.html`
-- 后端覆盖率: `test-reports/backend/tarpaulin-report.html`
-- 综合报告: `test-reports/TEST_REPORT.md`
-
-## 📄 许可证
-
-MIT License
-
-## 🙏 致谢
-
-- [FFmpeg](https://ffmpeg.org/) - 强大的多媒体处理工具
-- [FFmpegFreeUI](https://github.com/...) - 原始项目灵感来源
-- [Tauri](https://tauri.app/) - 跨平台桌面应用框架
-- [Vue.js](https://vuejs.org/) - 渐进式 JavaScript 框架
-
-## 📚 相关链接
-
+- [FFmpeg](https://ffmpeg.org/)
+- [Tauri](https://tauri.app/)
+- [Vue.js](https://vuejs.org/)
+- FFmpegFreeUI（原始项目灵感来源）
 - [开发教程：【Tauri】大家一起來做一個簡單的影片轉檔工具吧](https://william-weng.github.io/2025/07/tauri大家一起來做一個簡單的影片轉檔工具吧/)
-- [更多 Rust 相关内容](https://caoyuee.github.io/tags/rust/)

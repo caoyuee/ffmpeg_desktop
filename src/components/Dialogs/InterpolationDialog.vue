@@ -5,123 +5,149 @@
         <div class="dialog-header">
           <span class="dialog-title">{{ t('dialog.interpolation.title') }}</span>
         </div>
-        
+
         <div class="dialog-content">
           <div class="info-text">
             <p>{{ t('dialog.interpolation.description1') }}</p>
             <p>{{ t('dialog.interpolation.description2') }}</p>
           </div>
-          
+
           <div class="form-row">
             <label class="row-label">{{ t('dialog.interpolation.targetFrameRate') }}</label>
             <div class="row-content">
-              <input 
-                type="text" 
-                class="text-input" 
+              <input
                 v-model="settings.targetFps"
+                type="text"
+                class="text-input"
                 inputmode="decimal"
                 :class="{ invalid: validationErrors.targetFps }"
-                @input="onNumericInput('targetFps')"
                 :placeholder="t('dialog.interpolation.targetFrameRatePlaceholder')"
+                @input="onNumericInput('targetFps')"
               />
               <span class="hint">{{ t('dialog.interpolation.cancelFilterHint') }}</span>
-              <span v-if="validationErrors.targetFps" class="validation-error">{{ t('validation.invalidNumber') }}</span>
+              <span v-if="validationErrors.targetFps" class="validation-error">{{
+                t('validation.invalidNumber')
+              }}</span>
             </div>
           </div>
-          
+
           <div class="form-row">
             <label class="row-label">{{ t('dialog.interpolation.algorithmMode') }}</label>
             <div class="row-content">
-              <select class="select-input" v-model="settings.interpolationMode">
+              <select v-model="settings.interpolationMode" class="select-input">
                 <option value="">{{ t('dialog.interpolation.interpolationMode') }}</option>
                 <option value="2">{{ t('dialog.interpolation.twoFrameWeightedAverage') }}</option>
-                <option value="mci">{{ t('dialog.interpolation.motionCompensatedInterpolation') }}</option>
+                <option value="mci">
+                  {{ t('dialog.interpolation.motionCompensatedInterpolation') }}
+                </option>
               </select>
-              <select class="select-input" v-model="settings.meMode">
+              <select v-model="settings.meMode" class="select-input">
                 <option value="">{{ t('dialog.interpolation.motionEstimationMode') }}</option>
-                <option value="bidir">{{ t('dialog.interpolation.bidirectionalMotionEstimation') }}</option>
-                <option value="bilat">{{ t('dialog.interpolation.bilateralMotionEstimation') }}</option>
+                <option value="bidir">
+                  {{ t('dialog.interpolation.bidirectionalMotionEstimation') }}
+                </option>
+                <option value="bilat">
+                  {{ t('dialog.interpolation.bilateralMotionEstimation') }}
+                </option>
               </select>
-              <select class="select-input" v-model="settings.meAlgorithm">
+              <select v-model="settings.meAlgorithm" class="select-input">
                 <option value="">{{ t('dialog.interpolation.motionEstimationAlgorithm') }}</option>
                 <option value="esa">{{ t('dialog.interpolation.exhaustiveSearch') }}</option>
                 <option value="tss">{{ t('dialog.interpolation.threeStepSearch') }}</option>
-                <option value="tdls">{{ t('dialog.interpolation.twoDimensionalLogSearch') }}</option>
+                <option value="tdls">
+                  {{ t('dialog.interpolation.twoDimensionalLogSearch') }}
+                </option>
                 <option value="ntss">{{ t('dialog.interpolation.newThreeStepSearch') }}</option>
                 <option value="fss">{{ t('dialog.interpolation.fourStepSearch') }}</option>
                 <option value="ds">{{ t('dialog.interpolation.diamondSearch') }}</option>
                 <option value="hexbs">{{ t('dialog.interpolation.hexagonBasedSearch') }}</option>
-                <option value="epzs">{{ t('dialog.interpolation.enhancedPredictiveZonalSearch') }}</option>
-                <option value="umh">{{ t('dialog.interpolation.unevenMultiHexagonSearch') }}</option>
+                <option value="epzs">
+                  {{ t('dialog.interpolation.enhancedPredictiveZonalSearch') }}
+                </option>
+                <option value="umh">
+                  {{ t('dialog.interpolation.unevenMultiHexagonSearch') }}
+                </option>
               </select>
             </div>
           </div>
-          
+
           <div class="form-row">
             <label class="row-label">{{ t('dialog.interpolation.compensationMode') }}</label>
             <div class="row-content">
-              <select class="select-input" v-model="settings.mcMode">
+              <select v-model="settings.mcMode" class="select-input">
                 <option value="">{{ t('dialog.interpolation.motionCompensationMode') }}</option>
-                <option value="obmc">{{ t('dialog.interpolation.overlappedBlockMotionCompensation') }}</option>
-                <option value="aobmc">{{ t('dialog.interpolation.adaptiveOverlappedBlockMotionCompensation') }}</option>
+                <option value="obmc">
+                  {{ t('dialog.interpolation.overlappedBlockMotionCompensation') }}
+                </option>
+                <option value="aobmc">
+                  {{ t('dialog.interpolation.adaptiveOverlappedBlockMotionCompensation') }}
+                </option>
               </select>
               <label class="checkbox-label">
-                <input type="checkbox" v-model="settings.vsmb" />
+                <input v-model="settings.vsmb" type="checkbox" />
                 {{ t('dialog.interpolation.variableSizeMotionCompensation') }}
               </label>
             </div>
           </div>
-          
+
           <div class="form-row">
             <label class="row-label">{{ t('dialog.interpolation.detection') }}</label>
             <div class="row-content column">
               <div class="input-row">
-                <input 
-                  type="text" 
-                  class="text-input small" 
+                <input
                   v-model="settings.blockSize"
+                  type="text"
+                  class="text-input small"
                   inputmode="numeric"
                   :class="{ invalid: validationErrors.blockSize }"
-                  @input="onNumericInput('blockSize')"
                   :placeholder="t('dialog.interpolation.default16')"
+                  @input="onNumericInput('blockSize')"
                 />
                 <span class="input-label">{{ t('dialog.interpolation.blockSize') }}</span>
-                <input 
-                  type="text" 
-                  class="text-input small" 
+                <input
                   v-model="settings.searchRange"
+                  type="text"
+                  class="text-input small"
                   inputmode="numeric"
                   :class="{ invalid: validationErrors.searchRange }"
-                  @input="onNumericInput('searchRange')"
                   :placeholder="t('dialog.interpolation.default32')"
+                  @input="onNumericInput('searchRange')"
                 />
                 <span class="input-label">{{ t('dialog.interpolation.searchRangePixels') }}</span>
-                <span v-if="validationErrors.blockSize || validationErrors.searchRange" class="validation-error">{{ t('validation.positiveInteger') }}</span>
+                <span
+                  v-if="validationErrors.blockSize || validationErrors.searchRange"
+                  class="validation-error"
+                  >{{ t('validation.positiveInteger') }}</span
+                >
               </div>
             </div>
           </div>
-          
+
           <div class="form-row">
             <label class="row-label">{{ t('dialog.interpolation.sceneChange') }}</label>
             <div class="row-content">
-              <input 
-                type="text" 
-                class="text-input" 
+              <input
                 v-model="settings.scThreshold"
+                type="text"
+                class="text-input"
                 inputmode="decimal"
                 :class="{ invalid: validationErrors.scThreshold }"
-                @input="onNumericInput('scThreshold')"
                 :placeholder="t('dialog.interpolation.default10')"
+                @input="onNumericInput('scThreshold')"
               />
               <span class="hint">{{ t('dialog.interpolation.cancelParamHint') }}</span>
-              <span v-if="validationErrors.scThreshold" class="validation-error">{{ t('validation.invalidNumber') }}</span>
+              <span v-if="validationErrors.scThreshold" class="validation-error">{{
+                t('validation.invalidNumber')
+              }}</span>
             </div>
           </div>
         </div>
-        
+
         <div class="dialog-footer">
           <button class="app-btn" @click="close">{{ t('common.cancel') }}</button>
-          <button class="app-btn app-btn--primary" :disabled="hasValidationErrors" @click="confirm">{{ t('common.ok') }}</button>
+          <button class="app-btn app-btn--primary" :disabled="hasValidationErrors" @click="confirm">
+            {{ t('common.ok') }}
+          </button>
         </div>
       </div>
     </div>
@@ -129,33 +155,33 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { isPositiveDecimal, isPositiveInteger } from '@/utils/numericValidation';
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { isPositiveDecimal, isPositiveInteger } from '@/utils/numericValidation'
 
 interface InterpolationSettings {
-  targetFps: string;
-  interpolationMode: string;
-  meMode: string;
-  meAlgorithm: string;
-  mcMode: string;
-  vsmb: boolean;
-  blockSize: string;
-  searchRange: string;
-  scThreshold: string;
+  targetFps: string
+  interpolationMode: string
+  meMode: string
+  meAlgorithm: string
+  mcMode: string
+  vsmb: boolean
+  blockSize: string
+  searchRange: string
+  scThreshold: string
 }
 
 const props = defineProps<{
-  visible: boolean;
-  modelValue: InterpolationSettings;
-}>();
+  visible: boolean
+  modelValue: InterpolationSettings
+}>()
 
 const emit = defineEmits<{
-  (e: 'update:visible', value: boolean): void;
-  (e: 'update:modelValue', value: InterpolationSettings): void;
-}>();
+  (e: 'update:visible', value: boolean): void
+  (e: 'update:modelValue', value: InterpolationSettings): void
+}>()
 
-const { t } = useI18n();
+const { t } = useI18n()
 
 const settings = ref<InterpolationSettings>({
   targetFps: '',
@@ -167,98 +193,102 @@ const settings = ref<InterpolationSettings>({
   blockSize: '',
   searchRange: '',
   scThreshold: '',
-});
+})
 const validationErrors = ref({
   targetFps: false,
   blockSize: false,
   searchRange: false,
   scThreshold: false,
-});
-const hasValidationErrors = computed(() => Object.values(validationErrors.value).some(Boolean));
+})
+const hasValidationErrors = computed(() => Object.values(validationErrors.value).some(Boolean))
 
-watch(() => props.modelValue, (newVal) => {
-  settings.value = { ...newVal };
-  validationErrors.value = {
-    targetFps: false,
-    blockSize: false,
-    searchRange: false,
-    scThreshold: false,
-  };
-}, { immediate: true });
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    settings.value = { ...newVal }
+    validationErrors.value = {
+      targetFps: false,
+      blockSize: false,
+      searchRange: false,
+      scThreshold: false,
+    }
+  },
+  { immediate: true },
+)
 
 function close() {
-  emit('update:visible', false);
+  emit('update:visible', false)
 }
 
 function confirm() {
-  if (hasValidationErrors.value) return;
-  emit('update:modelValue', { ...settings.value });
-  close();
+  if (hasValidationErrors.value) return
+  emit('update:modelValue', { ...settings.value })
+  close()
 }
 
 function onNumericInput(field: keyof typeof validationErrors.value) {
-  const value = settings.value[field];
+  const value = settings.value[field]
 
   if (field === 'blockSize' || field === 'searchRange') {
-    validationErrors.value[field] = !isPositiveInteger(value);
+    validationErrors.value[field] = !isPositiveInteger(value)
   } else {
-    validationErrors.value[field] = !isPositiveDecimal(value);
+    validationErrors.value[field] = !isPositiveDecimal(value)
   }
 
   if (!validationErrors.value[field]) {
-    emit('update:modelValue', { ...settings.value });
+    emit('update:modelValue', { ...settings.value })
   }
 }
 
 function getFFmpegFilter(): string {
-  if (!settings.value.targetFps && !settings.value.interpolationMode) return '';
-  
-  const params: string[] = [];
-  
+  if (!settings.value.targetFps && !settings.value.interpolationMode) return ''
+
+  const params: string[] = []
+
   if (settings.value.targetFps) {
-    params.push(`fps=${settings.value.targetFps}`);
+    params.push(`fps=${settings.value.targetFps}`)
   }
-  
+
   if (settings.value.interpolationMode) {
-    params.push(`mi_mode=${settings.value.interpolationMode}`);
+    params.push(`mi_mode=${settings.value.interpolationMode}`)
   }
-  
+
   if (settings.value.meMode) {
-    params.push(`me_mode=${settings.value.meMode}`);
+    params.push(`me_mode=${settings.value.meMode}`)
   }
-  
+
   if (settings.value.meAlgorithm) {
-    params.push(`me=${settings.value.meAlgorithm}`);
+    params.push(`me=${settings.value.meAlgorithm}`)
   }
-  
+
   if (settings.value.mcMode) {
-    params.push(`mc_mode=${settings.value.mcMode}`);
+    params.push(`mc_mode=${settings.value.mcMode}`)
   }
-  
+
   if (settings.value.vsmb) {
-    params.push('vsmb=1');
+    params.push('vsmb=1')
   }
-  
+
   if (settings.value.blockSize) {
-    params.push(`mb_size=${settings.value.blockSize}`);
+    params.push(`mb_size=${settings.value.blockSize}`)
   }
-  
+
   if (settings.value.searchRange) {
-    params.push(`search_param=${settings.value.searchRange}`);
+    params.push(`search_param=${settings.value.searchRange}`)
   }
-  
+
   if (settings.value.scThreshold) {
-    params.push(`scd_threshold=${settings.value.scThreshold}`);
+    params.push(`scd_threshold=${settings.value.scThreshold}`)
   }
-  
-  if (params.length === 0) return '';
-  
-  return `minterpolate=${params.join(':')}`;
+
+  if (params.length === 0) return ''
+
+  return `minterpolate=${params.join(':')}`
 }
 
 defineExpose({
   getFFmpegFilter,
-});
+})
 </script>
 
 <style scoped>
@@ -412,7 +442,7 @@ defineExpose({
   cursor: pointer;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   -webkit-appearance: checkbox;
   appearance: checkbox;
   width: 16px;
@@ -432,5 +462,4 @@ defineExpose({
   padding: 15px 20px;
   border-top: 1px solid var(--bg-color3, #242424);
 }
-
 </style>

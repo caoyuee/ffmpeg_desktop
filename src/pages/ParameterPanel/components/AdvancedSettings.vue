@@ -4,13 +4,23 @@
       <h4>{{ t('page.params.fullCustomMode') }}</h4>
       <div class="form-group">
         <label class="checkbox-label">
-          <input class="full-custom-checkbox" type="checkbox" v-model="useFullCustom" @change="onFullCustomToggle" />
+          <input
+            v-model="useFullCustom"
+            class="full-custom-checkbox"
+            type="checkbox"
+            @change="onFullCustomToggle"
+          />
           <span>{{ t('page.params.enableFullCustom') }}</span>
         </label>
       </div>
       <div v-if="useFullCustom" class="form-group">
         <label>{{ t('page.params.customCommand') }}</label>
-        <textarea v-model="localPreset.custom.fullCustom" @input="onChange" rows="4" placeholder="ffmpeg -i &quot;$INPUT&quot; -c:v libx264 -crf 23 -c:a aac &quot;$OUTPUT.mp4&quot;"></textarea>
+        <textarea
+          v-model="localPreset.custom.fullCustom"
+          rows="4"
+          placeholder='ffmpeg -i "$INPUT" -c:v libx264 -crf 23 -c:a aac "$OUTPUT.mp4"'
+          @input="onChange"
+        ></textarea>
         <div class="hint">{{ t('page.params.placeholderHint') }}</div>
       </div>
     </div>
@@ -39,37 +49,46 @@
 
       <div class="form-group">
         <label>{{ t('page.params.hwAccelParam') }}</label>
-        <input type="text" v-model="localPreset.decode.hwAccelParam" @input="onChange" :placeholder="t('page.params.hwAccelParamPlaceholder')" />
+        <input
+          v-model="localPreset.decode.hwAccelParam"
+          type="text"
+          :placeholder="t('page.params.hwAccelParamPlaceholder')"
+          @input="onChange"
+        />
       </div>
 
       <div class="form-group">
         <label>{{ t('page.params.cpuThreads') }}</label>
         <input
+          v-model="localPreset.decode.cpuThreads"
           class="cpu-threads-input"
           type="text"
-          v-model="localPreset.decode.cpuThreads"
           inputmode="numeric"
           pattern="[1-9][0-9]*"
           :class="{ invalid: validationErrors.cpuThreads }"
-          @input="onCpuThreadsInput"
           :placeholder="t('page.params.cpuThreadsPlaceholder')"
+          @input="onCpuThreadsInput"
         />
-        <div v-if="validationErrors.cpuThreads" class="validation-error">{{ t('validation.positiveInteger') }}</div>
+        <div v-if="validationErrors.cpuThreads" class="validation-error">
+          {{ t('validation.positiveInteger') }}
+        </div>
       </div>
 
       <div class="form-group">
         <label>{{ t('page.params.cpuAffinity') }}</label>
         <input
+          v-model="localPreset.decode.cpuAffinity"
           class="cpu-affinity-input"
           type="text"
-          v-model="localPreset.decode.cpuAffinity"
           inputmode="numeric"
           pattern="[0-9]+(,[0-9]+)*"
           :class="{ invalid: validationErrors.cpuAffinity }"
-          @input="onCpuAffinityInput"
           :placeholder="t('page.params.cpuAffinityPlaceholder')"
+          @input="onCpuAffinityInput"
         />
-        <div v-if="validationErrors.cpuAffinity" class="validation-error">{{ t('validation.cpuAffinityList') }}</div>
+        <div v-if="validationErrors.cpuAffinity" class="validation-error">
+          {{ t('validation.cpuAffinityList') }}
+        </div>
       </div>
     </div>
 
@@ -77,47 +96,92 @@
       <h4>{{ t('page.params.customParams') }}</h4>
       <div class="form-group">
         <label>{{ t('page.params.videoFilter') }}</label>
-        <textarea v-model="localPreset.custom.videoFilter" @input="onChange" rows="2" :placeholder="t('page.params.videoFilterPlaceholder')"></textarea>
+        <textarea
+          v-model="localPreset.custom.videoFilter"
+          rows="2"
+          :placeholder="t('page.params.videoFilterPlaceholder')"
+          @input="onChange"
+        ></textarea>
       </div>
 
       <div class="form-group">
         <label>{{ t('page.params.audioFilter') }}</label>
-        <textarea v-model="localPreset.custom.audioFilter" @input="onChange" rows="2" :placeholder="t('page.params.audioFilterPlaceholder')"></textarea>
+        <textarea
+          v-model="localPreset.custom.audioFilter"
+          rows="2"
+          :placeholder="t('page.params.audioFilterPlaceholder')"
+          @input="onChange"
+        ></textarea>
       </div>
 
       <div class="form-group">
         <label>{{ t('page.params.filterComplex') }}</label>
-        <textarea v-model="localPreset.custom.filterComplex" @input="onChange" rows="2" :placeholder="t('page.params.filterComplexPlaceholder')"></textarea>
+        <textarea
+          v-model="localPreset.custom.filterComplex"
+          rows="2"
+          :placeholder="t('page.params.filterComplexPlaceholder')"
+          @input="onChange"
+        ></textarea>
       </div>
 
       <div class="form-group">
         <label>{{ t('page.params.videoParams') }}</label>
-        <textarea v-model="localPreset.custom.videoParams" @input="onChange" rows="2" :placeholder="t('page.params.videoParamsPlaceholder')"></textarea>
+        <textarea
+          v-model="localPreset.custom.videoParams"
+          rows="2"
+          :placeholder="t('page.params.videoParamsPlaceholder')"
+          @input="onChange"
+        ></textarea>
       </div>
 
       <div class="form-group">
         <label>{{ t('page.params.audioParams') }}</label>
-        <textarea v-model="localPreset.custom.audioParams" @input="onChange" rows="2" :placeholder="t('page.params.audioParamsPlaceholder')"></textarea>
+        <textarea
+          v-model="localPreset.custom.audioParams"
+          rows="2"
+          :placeholder="t('page.params.audioParamsPlaceholder')"
+          @input="onChange"
+        ></textarea>
       </div>
 
       <div class="form-group">
         <label>{{ t('page.params.startParams') }}</label>
-        <textarea v-model="localPreset.custom.startParams" @input="onChange" rows="2" :placeholder="t('page.params.startParamsPlaceholder')"></textarea>
+        <textarea
+          v-model="localPreset.custom.startParams"
+          rows="2"
+          :placeholder="t('page.params.startParamsPlaceholder')"
+          @input="onChange"
+        ></textarea>
       </div>
 
       <div class="form-group">
         <label>{{ t('page.params.beforeOutputParams') }}</label>
-        <textarea v-model="localPreset.custom.beforeOutputParams" @input="onChange" rows="2" :placeholder="t('page.params.beforeOutputParamsPlaceholder')"></textarea>
+        <textarea
+          v-model="localPreset.custom.beforeOutputParams"
+          rows="2"
+          :placeholder="t('page.params.beforeOutputParamsPlaceholder')"
+          @input="onChange"
+        ></textarea>
       </div>
 
       <div class="form-group">
         <label>{{ t('page.params.afterOutputParams') }}</label>
-        <textarea v-model="localPreset.custom.afterOutputParams" @input="onChange" rows="2" :placeholder="t('page.params.afterOutputParamsPlaceholder')"></textarea>
+        <textarea
+          v-model="localPreset.custom.afterOutputParams"
+          rows="2"
+          :placeholder="t('page.params.afterOutputParamsPlaceholder')"
+          @input="onChange"
+        ></textarea>
       </div>
 
       <div class="form-group">
         <label>{{ t('page.params.endParams') }}</label>
-        <textarea v-model="localPreset.custom.endParams" @input="onChange" rows="2" :placeholder="t('page.params.endParamsPlaceholder')"></textarea>
+        <textarea
+          v-model="localPreset.custom.endParams"
+          rows="2"
+          :placeholder="t('page.params.endParamsPlaceholder')"
+          @input="onChange"
+        ></textarea>
       </div>
     </div>
 
@@ -169,77 +233,89 @@
           <option value="hdr">HDR (Radiance RGBE)</option>
         </select>
       </div>
-      <div v-if="localPreset.image.encoder && localPreset.image.encoder !== 'bmp'" class="form-group">
+      <div
+        v-if="localPreset.image.encoder && localPreset.image.encoder !== 'bmp'"
+        class="form-group"
+      >
         <label>{{ t('page.params.imageQuality') }}</label>
-        <input type="text" v-model="localPreset.image.quality" @input="onChange" :placeholder="t('page.params.imageQualityPlaceholder')" />
+        <input
+          v-model="localPreset.image.quality"
+          type="text"
+          :placeholder="t('page.params.imageQualityPlaceholder')"
+          @input="onChange"
+        />
       </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { PresetData } from '@/types/preset';
+import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { PresetData } from '@/types/preset'
 
 const props = defineProps<{
-  preset: PresetData;
-}>();
+  preset: PresetData
+}>()
 
 const emit = defineEmits<{
-  'update:preset': [preset: PresetData];
-}>();
+  'update:preset': [preset: PresetData]
+}>()
 
-const { t } = useI18n();
-const localPreset = ref<PresetData>({ ...props.preset });
+const { t } = useI18n()
+const localPreset = ref<PresetData>({ ...props.preset })
 const validationErrors = ref({
   cpuThreads: false,
   cpuAffinity: false,
-});
+})
 
-const useFullCustom = ref(!!localPreset.value.custom.fullCustom);
+const useFullCustom = ref(!!localPreset.value.custom.fullCustom)
 
 function onFullCustomToggle() {
   if (!useFullCustom.value) {
-    localPreset.value.custom.fullCustom = '';
+    localPreset.value.custom.fullCustom = ''
   }
-  onChange();
+  onChange()
 }
 
-watch(() => props.preset, (newVal) => {
-  if (newVal) {
-    localPreset.value = { ...newVal };
-  }
-}, { deep: true });
+watch(
+  () => props.preset,
+  (newVal) => {
+    if (newVal) {
+      localPreset.value = { ...newVal }
+    }
+  },
+  { deep: true },
+)
 
 function isPositiveInteger(value: string) {
-  return value === '' || /^[1-9]\d*$/.test(value);
+  return value === '' || /^[1-9]\d*$/.test(value)
 }
 
 function isCpuAffinityList(value: string) {
-  return value === '' || /^\d+(,\d+)*$/.test(value);
+  return value === '' || /^\d+(,\d+)*$/.test(value)
 }
 
 function onCpuThreadsInput(event: Event) {
-  const input = event.target as HTMLInputElement;
-  localPreset.value.decode.cpuThreads = input.value;
-  validationErrors.value.cpuThreads = !isPositiveInteger(input.value);
+  const input = event.target as HTMLInputElement
+  localPreset.value.decode.cpuThreads = input.value
+  validationErrors.value.cpuThreads = !isPositiveInteger(input.value)
   if (!validationErrors.value.cpuThreads) {
-    onChange();
+    onChange()
   }
 }
 
 function onCpuAffinityInput(event: Event) {
-  const input = event.target as HTMLInputElement;
-  localPreset.value.decode.cpuAffinity = input.value;
-  validationErrors.value.cpuAffinity = !isCpuAffinityList(input.value);
+  const input = event.target as HTMLInputElement
+  localPreset.value.decode.cpuAffinity = input.value
+  validationErrors.value.cpuAffinity = !isCpuAffinityList(input.value)
   if (!validationErrors.value.cpuAffinity) {
-    onChange();
+    onChange()
   }
 }
 
 function onChange() {
-  emit('update:preset', localPreset.value);
+  emit('update:preset', localPreset.value)
 }
 </script>
 
@@ -321,7 +397,7 @@ function onChange() {
   cursor: pointer;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   -webkit-appearance: checkbox;
   appearance: checkbox;
   width: 16px;

@@ -3,13 +3,17 @@
     <div class="preset-header">
       <h3>{{ t('page.params.presetPanel.title') }}</h3>
       <div class="preset-actions">
-        <button @click="createNewPreset" class="app-btn app-btn--primary">
+        <button class="app-btn app-btn--primary" @click="createNewPreset">
           <AppIcon name="add" :size="16" />
           {{ t('page.params.presetPanel.create') }}
         </button>
-        <button @click="importPreset" class="app-btn">
+        <button class="app-btn" @click="importPreset">
           <AppIcon name="folder-open" :size="16" />
           {{ t('page.params.presetPanel.import') }}
+        </button>
+        <button class="app-btn" data-testid="import-share-text" @click="openShareImport">
+          <AppIcon name="add" :size="16" />
+          {{ t('page.params.presetPanel.importFromText') }}
         </button>
       </div>
     </div>
@@ -26,19 +30,24 @@
           <div class="preset-name">{{ preset.name }}</div>
           <div class="preset-meta">
             <span>{{ preset.output.container }}</span>
-            <span v-if="preset.video.encoder.codec">{{
-              preset.video.encoder.codec
-            }}</span>
+            <span v-if="preset.video.encoder.codec">{{ preset.video.encoder.codec }}</span>
           </div>
         </div>
         <div class="preset-item-actions">
-          <button @click.stop="editPreset(preset)" :title="t('common.edit')">
+          <button :title="t('common.edit')" @click.stop="editPreset(preset)">
             <AppIcon name="edit" :size="15" />
           </button>
-          <button @click.stop="exportPreset(preset.id)" :title="t('preset.export')">
+          <button
+            :title="t('page.params.presetPanel.share')"
+            data-testid="share-preset"
+            @click.stop="sharePreset(preset)"
+          >
+            <AppIcon name="share" :size="15" />
+          </button>
+          <button :title="t('preset.export')" @click.stop="exportPreset(preset)">
             <AppIcon name="export" :size="15" />
           </button>
-          <button @click.stop="deletePreset(preset.id)" :title="t('preset.delete')">
+          <button :title="t('preset.delete')" @click.stop="deletePreset(preset.id)">
             <AppIcon name="trash" :size="15" />
           </button>
         </div>
@@ -53,8 +62,14 @@
     <div v-if="showEditor" class="preset-editor-overlay" @click="closeEditor">
       <div class="preset-editor" @click.stop>
         <div class="editor-header">
-          <h4>{{ editorMode === "create" ? t('page.params.presetPanel.create') : t('page.params.presetPanel.edit') }}</h4>
-          <button @click="closeEditor" class="app-btn app-btn--icon">
+          <h4>
+            {{
+              editorMode === 'create'
+                ? t('page.params.presetPanel.create')
+                : t('page.params.presetPanel.edit')
+            }}
+          </h4>
+          <button class="app-btn app-btn--icon" @click="closeEditor">
             <AppIcon name="close" :size="16" />
           </button>
         </div>
@@ -90,7 +105,7 @@
             </select>
           </div>
 
-          <div class="form-group" v-if="editingPreset.video.encoder.codec">
+          <div v-if="editingPreset.video.encoder.codec" class="form-group">
             <label>{{ t('page.params.presetPanel.quality') }}</label>
             <input
               v-model="editingPreset.video.bitrateControl.qualityValue"
@@ -114,8 +129,65 @@
         </div>
 
         <div class="editor-footer">
-          <button @click="closeEditor" class="app-btn">{{ t('common.cancel') }}</button>
-          <button @click="savePreset" class="app-btn app-btn--primary">{{ t('common.save') }}</button>
+          <button class="app-btn" @click="closeEditor">{{ t('common.cancel') }}</button>
+          <button class="app-btn app-btn--primary" @click="savePreset">
+            {{ t('common.save') }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div v-if="showShareDialog" class="preset-editor-overlay" @click="closeShareDialog">
+      <div class="preset-editor share-dialog" data-testid="share-dialog" @click.stop>
+        <div class="editor-header">
+          <h4>{{ t('preset.share.title') }}</h4>
+          <button class="app-btn app-btn--icon" data-testid="share-close" @click="closeShareDialog">
+            <AppIcon name="close" :size="16" />
+          </button>
+        </div>
+
+        <div class="editor-content">
+          <div class="form-group">
+            <label>{{ t('preset.share.inputPlaceholder') }}</label>
+            <textarea
+              v-model="shareInputText"
+              rows="5"
+              :placeholder="t('preset.share.inputPlaceholder')"
+              data-testid="share-input"
+            ></textarea>
+            <small class="share-hint">{{ t('preset.share.inputHint') }}</small>
+          </div>
+
+          <div class="form-group">
+            <label>{{ t('preset.share.outputHint') }}</label>
+            <textarea
+              :value="shareOutputText"
+              rows="4"
+              readonly
+              data-testid="share-output"
+            ></textarea>
+          </div>
+
+          <p v-if="shareError" class="share-error" data-testid="share-error">{{ shareError }}</p>
+        </div>
+
+        <div class="editor-footer">
+          <button class="app-btn" @click="closeShareDialog">{{ t('common.cancel') }}</button>
+          <button
+            v-if="shareOutputText"
+            class="app-btn"
+            data-testid="share-copy"
+            @click="copyShareOutput"
+          >
+            {{ t('preset.share.copyAction') }}
+          </button>
+          <button
+            class="app-btn app-btn--primary"
+            data-testid="share-import-confirm"
+            @click="confirmShareImport"
+          >
+            {{ t('preset.share.importAction') }}
+          </button>
         </div>
       </div>
     </div>
@@ -124,8 +196,8 @@
       v-model="showDeleteConfirm"
       :title="t('page.params.presetPanel.deleteTitle')"
       :message="t('page.params.presetPanel.deleteMessage')"
-      :confirmText="t('common.confirm')"
-      :cancelText="t('common.cancel')"
+      :confirm-text="t('common.confirm')"
+      :cancel-text="t('common.cancel')"
       @confirm="confirmDelete"
     />
 
@@ -134,114 +206,118 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
-import { useI18n } from "vue-i18n";
-import { usePresetStore } from "@/store/presetStore";
-import { DEFAULT_PRESET } from "@/types/preset";
-import type { PresetData } from "@/types/preset";
-import { invoke } from "@tauri-apps/api/core";
-import { open, save } from "@tauri-apps/plugin-dialog";
-import ConfirmDialog from "@/components/Dialogs/ConfirmDialog.vue";
-import Toast from "@/components/Dialogs/Toast.vue";
-import AppIcon from "@/components/AppIcon/AppIcon.vue";
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { usePresetStore } from '@/store/presetStore'
+import { createDefaultPreset, normalizePreset } from '@/config/presetSchema'
+import type { PresetData } from '@/types/preset'
+import {
+  PresetShareError,
+  suggestShareFileName,
+  type PresetShareErrorCode,
+} from '@/config/presetShare'
+import { open, save } from '@tauri-apps/plugin-dialog'
+import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue'
+import Toast from '@/components/Dialogs/Toast.vue'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
 
-const { t } = useI18n();
-const presetStore = usePresetStore();
-const showEditor = ref(false);
-const editorMode = ref<"create" | "edit">("create");
-const editingPreset = ref<PresetData>({ ...DEFAULT_PRESET });
+const { t } = useI18n()
+const presetStore = usePresetStore()
+const showEditor = ref(false)
+const editorMode = ref<'create' | 'edit'>('create')
+const editingPreset = ref<PresetData>(createDefaultPreset())
 
-const showDeleteConfirm = ref(false);
-const showToast = ref(false);
-const toastMessage = ref("");
-const toastType = ref<"success" | "error" | "warning" | "info">("success");
-const pendingDeletePreset = ref<string | null>(null);
+const showDeleteConfirm = ref(false)
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success')
+const pendingDeletePreset = ref<string | null>(null)
+const showShareDialog = ref(false)
+const shareInputText = ref('')
+const shareOutputText = ref('')
+const shareError = ref('')
 
-presetStore.loadPresets();
+presetStore.loadPresets()
 
 function createNewPreset() {
-  editorMode.value = "create";
-  editingPreset.value = { ...presetStore.currentPreset };
-  editingPreset.value.name = t('page.params.presetPanel.newPresetName');
-  editingPreset.value.id = "";
-  showEditor.value = true;
+  editorMode.value = 'create'
+  editingPreset.value = normalizePreset(presetStore.currentPreset)
+  editingPreset.value.name = t('page.params.presetPanel.newPresetName')
+  editingPreset.value.id = ''
+  showEditor.value = true
 }
 
 function selectPreset(preset: PresetData) {
-  presetStore.setCurrentPreset(preset);
+  presetStore.setCurrentPreset(preset)
 }
 
 function editPreset(preset: PresetData) {
-  editorMode.value = "edit";
-  editingPreset.value = { ...preset };
-  showEditor.value = true;
+  editorMode.value = 'edit'
+  editingPreset.value = normalizePreset(preset)
+  showEditor.value = true
 }
 
 function closeEditor() {
-  showEditor.value = false;
+  showEditor.value = false
 }
 
 async function savePreset() {
   try {
-    await presetStore.savePreset(editingPreset.value);
-    showEditor.value = false;
-    toastMessage.value = t("page.params.presetSaveSuccess");
-    toastType.value = "success";
-    showToast.value = true;
+    await presetStore.savePreset(editingPreset.value)
+    showEditor.value = false
+    toastMessage.value = t('page.params.presetSaveSuccess')
+    toastType.value = 'success'
+    showToast.value = true
   } catch (error) {
-    console.error(t("page.params.presetPanel.saveFailed"), error);
-    toastMessage.value = t("page.params.presetSaveFailed");
-    toastType.value = "error";
-    showToast.value = true;
+    console.error(t('page.params.presetPanel.saveFailed'), error)
+    toastMessage.value = t('page.params.presetSaveFailed')
+    toastType.value = 'error'
+    showToast.value = true
   }
 }
 
 function deletePreset(presetId: string) {
-  pendingDeletePreset.value = presetId;
-  showDeleteConfirm.value = true;
+  pendingDeletePreset.value = presetId
+  showDeleteConfirm.value = true
 }
 
 async function confirmDelete() {
   if (pendingDeletePreset.value) {
     try {
-      await presetStore.deletePreset(pendingDeletePreset.value);
-      toastMessage.value = t("page.params.presetDeleteSuccess");
-      toastType.value = "success";
-      showToast.value = true;
+      await presetStore.deletePreset(pendingDeletePreset.value)
+      toastMessage.value = t('page.params.presetDeleteSuccess')
+      toastType.value = 'success'
+      showToast.value = true
     } catch (error) {
-      console.error(t("page.params.presetPanel.deleteFailed"), error);
-      toastMessage.value = t("page.params.presetDeleteFailed");
-      toastType.value = "error";
-      showToast.value = true;
+      console.error(t('page.params.presetPanel.deleteFailed'), error)
+      toastMessage.value = t('page.params.presetDeleteFailed')
+      toastType.value = 'error'
+      showToast.value = true
     }
   }
-  showDeleteConfirm.value = false;
-  pendingDeletePreset.value = null;
+  showDeleteConfirm.value = false
+  pendingDeletePreset.value = null
 }
 
-async function exportPreset(presetId: string) {
+async function exportPreset(preset: PresetData) {
   try {
     const filePath = await save({
-      defaultPath: `preset-${presetId}.json`,
+      defaultPath: suggestShareFileName(preset),
       filters: [
         {
-          name: "JSON",
-          extensions: ["json"],
+          name: 'Preset Share File',
+          extensions: ['json'],
         },
       ],
-    });
+    })
 
     if (filePath) {
-      await presetStore.exportPreset(presetId, filePath);
-      toastMessage.value = t("page.params.presetExportSuccess");
-      toastType.value = "success";
-      showToast.value = true;
+      await presetStore.exportPreset(preset, filePath)
+      showToastMessage(t('page.params.presetExportSuccess'), 'success')
     }
   } catch (error) {
-    console.error(t("page.params.presetPanel.exportFailed"), error);
-    toastMessage.value = t("page.params.presetExportFailed");
-    toastType.value = "error";
-    showToast.value = true;
+    console.error(t('page.params.presetPanel.exportFailed'), error)
+    showToastMessage(t('page.params.presetExportFailed'), 'error')
   }
 }
 
@@ -250,23 +326,92 @@ async function importPreset() {
     const filePath = await open({
       filters: [
         {
-          name: "JSON",
-          extensions: ["json"],
+          name: 'Preset Share File',
+          extensions: ['json'],
         },
       ],
-    });
+    })
 
-    if (filePath && typeof filePath === "string") {
-      await presetStore.importPreset(filePath);
-      toastMessage.value = t("page.params.presetImportSuccess");
-      toastType.value = "success";
-      showToast.value = true;
+    if (filePath && typeof filePath === 'string') {
+      await presetStore.importPreset(filePath)
+      showToastMessage(t('page.params.presetImportSuccess'), 'success')
     }
   } catch (error) {
-    console.error(t("page.params.presetPanel.importFailed"), error);
-    toastMessage.value = t("page.params.presetImportFailed");
-    toastType.value = "error";
-    showToast.value = true;
+    console.error(t('page.params.presetPanel.importFailed'), error)
+    const message =
+      error instanceof PresetShareError
+        ? shareErrorText(error)
+        : t('page.params.presetImportFailed')
+    showToastMessage(message, 'error')
+  }
+}
+
+function showToastMessage(message: string, type: 'success' | 'error' | 'warning' | 'info') {
+  toastMessage.value = message
+  toastType.value = type
+  showToast.value = true
+}
+
+function shareErrorText(error: unknown): string {
+  const code: PresetShareErrorCode = error instanceof PresetShareError ? error.code : 'invalidJson'
+  return t(`preset.share.errors.${code}`)
+}
+
+function openShareImport() {
+  shareInputText.value = ''
+  shareOutputText.value = ''
+  shareError.value = ''
+  showShareDialog.value = true
+}
+
+function closeShareDialog() {
+  showShareDialog.value = false
+  shareError.value = ''
+}
+
+async function copyToClipboard(text: string, notify = true) {
+  try {
+    const clipboard = navigator.clipboard
+    if (!clipboard || typeof clipboard.writeText !== 'function') {
+      if (notify) showToastMessage(t('preset.share.copyFailed'), 'warning')
+      return
+    }
+    await clipboard.writeText(text)
+    if (notify) showToastMessage(t('preset.share.copySuccess'), 'success')
+  } catch {
+    if (notify) showToastMessage(t('preset.share.copyFailed'), 'warning')
+  }
+}
+
+async function sharePreset(preset: PresetData) {
+  shareInputText.value = ''
+  shareError.value = ''
+  const result = presetStore.createShareText(preset)
+  if (!result.ok) {
+    shareOutputText.value = ''
+    shareError.value = t(`preset.share.errors.${result.code}`)
+    showShareDialog.value = true
+    return
+  }
+  shareOutputText.value = result.text
+  showShareDialog.value = true
+  await copyToClipboard(result.text, false)
+}
+
+async function copyShareOutput() {
+  if (shareOutputText.value) {
+    await copyToClipboard(shareOutputText.value)
+  }
+}
+
+async function confirmShareImport() {
+  shareError.value = ''
+  try {
+    await presetStore.importShareText(shareInputText.value)
+    showShareDialog.value = false
+    showToastMessage(t('preset.share.importSuccess'), 'success')
+  } catch (error) {
+    shareError.value = shareErrorText(error)
   }
 }
 </script>
@@ -446,5 +591,35 @@ async function importPreset() {
   display: flex;
   justify-content: flex-end;
   gap: 0.5rem;
+}
+.share-dialog {
+  max-width: 640px;
+}
+
+.share-content textarea,
+.editor-content textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color1, #333);
+  border-radius: 4px;
+  background: var(--bg-color2, #1e1e1e);
+  color: var(--text-color1, #e0e0e0);
+  font-size: 0.82rem;
+  resize: vertical;
+}
+
+.share-hint {
+  display: block;
+  margin-top: 0.35rem;
+  color: var(--text-color2, #999);
+  font-size: 0.78rem;
+}
+
+.share-error {
+  margin: 0;
+  padding: 0.5rem;
+  border-radius: 4px;
+  color: var(--error-color, #e74c3c);
+  font-size: 0.85rem;
 }
 </style>

@@ -19,14 +19,18 @@
             <div class="command-box">
               <pre>{{ commandPreview }}</pre>
             </div>
-            <button class="app-btn app-btn--primary" @click="copyCommand">{{ t('page.params.copyCommand') }}</button>
+            <button class="app-btn app-btn--primary" @click="copyCommand">
+              {{ t('page.params.copyCommand') }}
+            </button>
           </div>
           <div class="params-summary">
             <h4>{{ t('page.params.paramsSummary') }}</h4>
             <div class="summary-list">
               <div class="summary-item">
                 <span class="label">{{ t('page.params.videoEncoderLabel') }}</span>
-                <span class="value">{{ preset.video.encoder.codec || t('page.params.notSet') }}</span>
+                <span class="value">{{
+                  localPreset.video.encoder.codec || t('page.params.notSet')
+                }}</span>
               </div>
               <div class="summary-item">
                 <span class="label">{{ t('page.params.resolutionLabel') }}</span>
@@ -38,7 +42,7 @@
               </div>
               <div class="summary-item">
                 <span class="label">{{ t('page.params.outputFormatLabel') }}</span>
-                <span class="value">{{ preset.output.container || 'mp4' }}</span>
+                <span class="value">{{ localPreset.output.container || 'mp4' }}</span>
               </div>
             </div>
           </div>
@@ -97,38 +101,33 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { PresetData } from '@/types/preset';
-import { DEFAULT_PRESET } from '@/types/preset';
-import { FFmpegCommandBuilder } from '@/utils/commandBuilder';
-import { usePresetStore } from '@/store/presetStore';
-import ColorPanel from '@/components/ColorPanel/ColorPanel.vue';
-import FilterPanel from '@/components/FilterPanel/FilterPanel.vue';
-import TrimPanel from '@/components/TrimPanel/TrimPanel.vue';
-import SubtitlePanel from '@/components/SubtitlePanel/SubtitlePanel.vue';
-import StreamPanel from '@/components/StreamPanel/StreamPanel.vue';
-import PresetManager from '@/components/PresetManager/PresetManager.vue';
-import AudioSettings from './components/AudioSettings.vue';
-import AdvancedSettings from './components/AdvancedSettings.vue';
-import OutputSettings from './components/OutputSettings.vue';
-import VideoEncoderSettings from './components/VideoEncoderSettings.vue';
-import VideoFrameSettings from './components/VideoFrameSettings.vue';
-import QualitySettings from './components/QualitySettings.vue';
-
-const { t } = useI18n();
-const presetStore = usePresetStore();
+import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { PresetData } from '@/types/preset'
+import { normalizePreset } from '@/config/presetSchema'
+import { previewCommand } from '@/config/taskDraft'
+import { usePresetStore } from '@/store/presetStore'
+import ColorPanel from '@/components/ColorPanel/ColorPanel.vue'
+import FilterPanel from '@/components/FilterPanel/FilterPanel.vue'
+import TrimPanel from '@/components/TrimPanel/TrimPanel.vue'
+import SubtitlePanel from '@/components/SubtitlePanel/SubtitlePanel.vue'
+import StreamPanel from '@/components/StreamPanel/StreamPanel.vue'
+import PresetManager from '@/components/PresetManager/PresetManager.vue'
+import AudioSettings from './components/AudioSettings.vue'
+import AdvancedSettings from './components/AdvancedSettings.vue'
+import OutputSettings from './components/OutputSettings.vue'
+import VideoEncoderSettings from './components/VideoEncoderSettings.vue'
+import VideoFrameSettings from './components/VideoFrameSettings.vue'
+import QualitySettings from './components/QualitySettings.vue'
 
 const props = defineProps<{
-  preset?: PresetData;
-}>();
+  preset?: PresetData
+}>()
+const { t } = useI18n()
+const presetStore = usePresetStore()
 
-const emit = defineEmits<{
-  'update:preset': [preset: PresetData];
-}>();
-
-const localPreset = ref<PresetData>({ ...(props.preset || presetStore.currentPreset || DEFAULT_PRESET) } as PresetData);
-const activeTab = ref('overview');
+const localPreset = ref<PresetData>(normalizePreset(props.preset ?? presetStore.currentPreset))
+const activeTab = ref('overview')
 
 const tabs = computed(() => [
   { id: 'overview', label: t('page.params.overview') },
@@ -144,58 +143,59 @@ const tabs = computed(() => [
   { id: 'stream', label: t('page.params.stream') },
   { id: 'preset', label: t('page.params.preset') },
   { id: 'advanced', label: t('page.params.advanced') },
-]);
+])
 
-let isInternalUpdate = false;
+let isInternalUpdate = false
 
-watch(() => presetStore.currentPreset.id, (newId, oldId) => {
-  if (newId && newId !== oldId && !isInternalUpdate) {
-    isInternalUpdate = true;
-    localPreset.value = { ...presetStore.currentPreset };
-    isInternalUpdate = false;
-  }
-});
-
-const preset = computed(() => localPreset.value);
+watch(
+  () => presetStore.currentPreset.id,
+  (newId, oldId) => {
+    if (newId && newId !== oldId && !isInternalUpdate) {
+      isInternalUpdate = true
+      localPreset.value = normalizePreset(presetStore.currentPreset)
+      isInternalUpdate = false
+    }
+  },
+)
 
 const commandPreview = computed(() => {
   try {
-    return FFmpegCommandBuilder.build(localPreset.value, 'input.mp4', 'output.mp4');
+    return previewCommand(localPreset.value)
   } catch {
-    return 'ffmpeg -i input.mp4 output.mp4';
+    return 'ffmpeg -i input.mp4 output.mp4'
   }
-});
+})
 
 const resolutionSummary = computed(() => {
-  const size = localPreset.value.video.resolution.size;
-  const autoWidth = localPreset.value.video.resolution.autoWidth;
-  const autoHeight = localPreset.value.video.resolution.autoHeight;
-  if (size) return size;
-  if (autoWidth && autoHeight) return `${autoWidth}x${autoHeight}`;
-  if (autoWidth) return `${autoWidth}x${t('page.params.auto')}`;
-  if (autoHeight) return `${t('page.params.auto')}x${autoHeight}`;
-  return t('page.params.keepOriginal');
-});
+  const size = localPreset.value.video.resolution.size
+  const autoWidth = localPreset.value.video.resolution.autoWidth
+  const autoHeight = localPreset.value.video.resolution.autoHeight
+  if (size) return size
+  if (autoWidth && autoHeight) return `${autoWidth}x${autoHeight}`
+  if (autoWidth) return `${autoWidth}x${t('page.params.auto')}`
+  if (autoHeight) return `${t('page.params.auto')}x${autoHeight}`
+  return t('page.params.keepOriginal')
+})
 
 const qualitySummary = computed(() => {
-  const mode = localPreset.value.video.bitrateControl.mode;
-  const qualityValue = localPreset.value.video.bitrateControl.qualityValue;
+  const mode = localPreset.value.video.bitrateControl.mode
+  const qualityValue = localPreset.value.video.bitrateControl.qualityValue
   if (mode === 'CRF') {
-    return `CRF ${qualityValue || 23}`;
+    return `CRF ${qualityValue || 23}`
   } else if (mode === 'VBR' || mode === 'VBR_HQ' || mode === 'CBR') {
-    return `${localPreset.value.video.bitrateControl.baseBitrate || '5000'}kbps`;
+    return `${localPreset.value.video.bitrateControl.baseBitrate || '5000'}kbps`
   } else if (mode === 'CQP') {
-    return `QP ${qualityValue}`;
+    return `QP ${qualityValue}`
   }
-  return t('page.params.notSet');
-});
+  return t('page.params.notSet')
+})
 
 function onPresetUpdate(preset: PresetData) {
-  presetStore.currentPreset = { ...preset };
+  presetStore.currentPreset = normalizePreset(preset)
 }
 
 function copyCommand() {
-  navigator.clipboard.writeText(commandPreview.value);
+  navigator.clipboard.writeText(commandPreview.value)
 }
 </script>
 

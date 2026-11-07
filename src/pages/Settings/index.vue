@@ -35,21 +35,21 @@
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.autoCheckUpdate" @change="saveSettings" />
+            <input v-model="settings.autoCheckUpdate" type="checkbox" @change="saveSettings" />
             <span>{{ t('page.settings.autoCheckUpdate') }}</span>
           </label>
         </div>
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.minimizeToTray" @change="saveSettings" />
+            <input v-model="settings.minimizeToTray" type="checkbox" @change="saveSettings" />
             <span>{{ t('page.settings.minimizeToTray') }}</span>
           </label>
         </div>
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.closeToTray" @change="saveSettings" />
+            <input v-model="settings.closeToTray" type="checkbox" @change="saveSettings" />
             <span>{{ t('page.settings.closeToTray') }}</span>
           </label>
         </div>
@@ -61,7 +61,12 @@
         <div class="form-group">
           <label>{{ t('page.settings.ffmpegPath') }}</label>
           <div class="input-row">
-            <input type="text" v-model="settings.ffmpegPath" @change="saveSettings" :placeholder="t('common.browse')" />
+            <input
+              v-model="settings.ffmpegPath"
+              type="text"
+              :placeholder="t('common.browse')"
+              @change="saveSettings"
+            />
             <button class="app-btn" @click="browseFFmpeg">{{ t('common.browse') }}</button>
           </div>
         </div>
@@ -69,18 +74,32 @@
         <div class="form-group">
           <label>{{ t('page.settings.ffprobePath') }}</label>
           <div class="input-row">
-            <input type="text" v-model="settings.ffprobePath" @change="saveSettings" :placeholder="t('common.browse')" />
+            <input
+              v-model="settings.ffprobePath"
+              type="text"
+              :placeholder="t('common.browse')"
+              @change="saveSettings"
+            />
             <button class="app-btn" @click="browseFFprobe">{{ t('common.browse') }}</button>
           </div>
         </div>
 
         <div class="form-group">
           <label>{{ t('page.settings.maxConcurrentTasks') }}</label>
-          <input type="number" v-model.number="settings.maxConcurrentTasks" @change="saveSettings" min="1" max="8" />
+          <input
+            v-model.number="settings.maxConcurrentTasks"
+            type="number"
+            min="1"
+            max="8"
+            @change="saveSettings"
+          />
         </div>
 
         <div class="form-group">
-          <label>{{ t('page.settings.taskPriority') }}</label>
+          <label
+            >{{ t('page.settings.taskPriority') }}
+            <span class="setting-hint">{{ t('page.settings.taskPriorityHint') }}</span></label
+          >
           <select v-model="settings.taskPriority" @change="saveSettings">
             <option value="low">{{ t('page.settings.priorityLow') }}</option>
             <option value="normal">{{ t('page.settings.priorityNormal') }}</option>
@@ -89,8 +108,13 @@
         </div>
 
         <div class="form-group">
-          <button class="app-btn app-btn--primary" @click="testFFmpeg">{{ t('page.settings.testFFmpeg') }}</button>
-          <span v-if="ffmpegTestResult" :class="['test-result', ffmpegTestResult.success ? 'success' : 'error']">
+          <button class="app-btn app-btn--primary" @click="testFFmpeg">
+            {{ t('page.settings.testFFmpeg') }}
+          </button>
+          <span
+            v-if="ffmpegTestResult"
+            :class="['test-result', ffmpegTestResult.success ? 'success' : 'error']"
+          >
             {{ ffmpegTestResult.message }}
           </span>
         </div>
@@ -112,28 +136,31 @@
         <div v-if="settings.defaultOutputDir === 'custom'" class="form-group">
           <label>{{ t('page.settings.customDir') }}</label>
           <div class="input-row">
-            <input type="text" v-model="settings.customOutputDir" @change="saveSettings" />
+            <input v-model="settings.customOutputDir" type="text" @change="saveSettings" />
             <button class="app-btn" @click="browseOutputDir">{{ t('common.browse') }}</button>
           </div>
         </div>
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.autoOpenOutputFolder" @change="saveSettings" />
+            <input v-model="settings.autoOpenOutputFolder" type="checkbox" @change="saveSettings" />
             <span>{{ t('page.settings.autoOpenOutputFolder') }}</span>
           </label>
         </div>
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.showNotification" @change="saveSettings" />
-            <span>{{ t('page.settings.showNotification') }}</span>
+            <input v-model="settings.showNotification" type="checkbox" @change="saveSettings" />
+            <span
+              >{{ t('page.settings.showNotification') }}
+              <span class="setting-hint">{{ t('page.settings.showNotificationHint') }}</span></span
+            >
           </label>
         </div>
 
         <div class="form-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="settings.playSound" @change="saveSettings" />
+            <input v-model="settings.playSound" type="checkbox" @change="saveSettings" />
             <span>{{ t('page.settings.playSound') }}</span>
           </label>
         </div>
@@ -154,19 +181,32 @@
         <div class="form-group">
           <label>{{ t('page.settings.presetDir') }}</label>
           <div class="input-row">
-            <input type="text" v-model="settings.presetDir" @change="saveSettings" />
+            <input v-model="settings.presetDir" type="text" @change="saveSettings" />
             <button class="app-btn" @click="browsePresetDir">{{ t('common.browse') }}</button>
           </div>
         </div>
 
         <div class="form-group">
-          <label>{{ t('page.settings.logRetentionDays') }}</label>
-          <input type="number" v-model.number="settings.logRetentionDays" @change="saveSettings" min="0" max="365" />
+          <label
+            >{{ t('page.settings.logRetentionDays') }}
+            <span class="setting-hint">{{ t('page.settings.logRetentionHint') }}</span></label
+          >
+          <input
+            v-model.number="settings.logRetentionDays"
+            type="number"
+            min="0"
+            max="365"
+            @change="saveSettings"
+          />
         </div>
 
         <div class="form-group">
-          <button class="app-btn app-btn--danger" @click="showClearCacheDialog = true">{{ t('page.settings.clearCache') }}</button>
-          <button class="app-btn app-btn--danger" @click="showClearLogsDialog = true">{{ t('page.settings.clearLogs') }}</button>
+          <button class="app-btn app-btn--danger" @click="showClearCacheDialog = true">
+            {{ t('page.settings.clearCache') }}
+          </button>
+          <button class="app-btn app-btn--danger" @click="showClearLogsDialog = true">
+            {{ t('page.settings.clearLogs') }}
+          </button>
         </div>
       </div>
 
@@ -182,12 +222,21 @@
           <p class="description">{{ t('about.description') }}</p>
 
           <div class="update-section">
-            <button class="app-btn app-btn--primary" :disabled="updateState.checking" @click="checkUpdate">
+            <button
+              class="app-btn app-btn--primary"
+              :disabled="updateState.checking"
+              @click="checkUpdate"
+            >
               {{ updateState.checking ? t('about.checking') : t('about.checkUpdate') }}
             </button>
             <p v-if="updateState.hasUpdate" class="update-info success">
               {{ t('about.updateAvailable', { version: updateState.latestRelease?.version }) }}
-              <a v-if="updateState.latestRelease?.url" :href="updateState.latestRelease.url" target="_blank">{{ t('about.viewRelease') }}</a>
+              <a
+                v-if="updateState.latestRelease?.url"
+                :href="updateState.latestRelease.url"
+                target="_blank"
+                >{{ t('about.viewRelease') }}</a
+              >
             </p>
             <button
               v-if="updateState.hasUpdate"
@@ -195,12 +244,20 @@
               :disabled="updateState.installing"
               @click="installUpdate"
             >
-              {{ updateState.installing ? t('about.installingUpdate') : t('about.downloadAndInstall') }}
+              {{
+                updateState.installing ? t('about.installingUpdate') : t('about.downloadAndInstall')
+              }}
             </button>
-            <p v-if="updateState.installing && updateState.downloadProgress !== null" class="update-info">
+            <p
+              v-if="updateState.installing && updateState.downloadProgress !== null"
+              class="update-info"
+            >
               {{ t('about.downloadingUpdate', { progress: updateState.downloadProgress }) }}
             </p>
-            <p v-else-if="updateState.checked && !updateState.hasUpdate && !updateState.error" class="update-info">
+            <p
+              v-else-if="updateState.checked && !updateState.hasUpdate && !updateState.error"
+              class="update-info"
+            >
               {{ t('about.upToDate') }}
             </p>
             <p v-if="updateState.error" class="update-info error">
@@ -227,8 +284,8 @@
       v-model="showClearCacheDialog"
       :title="t('page.settings.clearCache')"
       :message="t('page.settings.clearCacheConfirm')"
-      :confirmText="t('common.confirm')"
-      :cancelText="t('common.cancel')"
+      :confirm-text="t('common.confirm')"
+      :cancel-text="t('common.cancel')"
       @confirm="clearCache"
     />
 
@@ -236,36 +293,34 @@
       v-model="showClearLogsDialog"
       :title="t('page.settings.clearLogs')"
       :message="t('page.settings.clearLogsConfirm')"
-      :confirmText="t('common.confirm')"
-      :cancelText="t('common.cancel')"
+      :confirm-text="t('common.confirm')"
+      :cancel-text="t('common.cancel')"
       @confirm="clearLogs"
     />
 
-    <Toast
-      v-model="showToast"
-      :message="toastMessage"
-      :type="toastType"
-    />
+    <Toast v-model="showToast" :message="toastMessage" :type="toastType" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { getVersion } from '@tauri-apps/api/app';
-import { invoke } from '@tauri-apps/api/core';
-import { openUrl } from '@tauri-apps/plugin-opener';
-import { setLocale, availableLanguages } from '@/i18n';
-import { useSettingStore } from '@/store/settingStore';
-import { useTaskStore } from '@/store/taskStore';
-import { useUpdateChecker } from '@/hooks/useUpdateChecker';
-import { DEFAULT_APP_SETTINGS, loadAppSettings, saveAppSettings, type AppSettings } from '@/utils/appSettings';
-import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue';
-import Toast from '@/components/Dialogs/Toast.vue';
+import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { storeToRefs } from 'pinia'
+import { getVersion } from '@tauri-apps/api/app'
+import { invoke } from '@tauri-apps/api/core'
+import { openUrl } from '@tauri-apps/plugin-opener'
+import { availableLanguages } from '@/i18n'
+import { useSettingsStore } from '@/store/settingsStore'
+import { useTaskStore } from '@/store/taskStore'
+import { useUpdateChecker } from '@/hooks/useUpdateChecker'
+import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue'
+import Toast from '@/components/Dialogs/Toast.vue'
 
-const { t } = useI18n();
-const settingStore = useSettingStore();
-const taskStore = useTaskStore();
+const { t } = useI18n()
+// R2.3：UI 直接绑定唯一 store 的 settings，不再持有本地副本（theme/language 曾在两套里重复）。
+const settingsStore = useSettingsStore()
+const { settings } = storeToRefs(settingsStore)
+const taskStore = useTaskStore()
 
 const tabs = [
   { id: 'general', label: computed(() => t('page.settings.general')) },
@@ -273,161 +328,165 @@ const tabs = [
   { id: 'output', label: computed(() => t('page.settings.output')) },
   { id: 'storage', label: computed(() => t('page.settings.storage')) },
   { id: 'about', label: computed(() => t('page.settings.about')) },
-];
+]
 
-const activeTab = ref('general');
-const settings = ref<AppSettings>({ ...DEFAULT_APP_SETTINGS });
-const appVersion = ref('');
+const activeTab = ref('general')
+const appVersion = ref('')
 
-const ffmpegTestResult = ref<{ success: boolean; message: string } | null>(null);
+const ffmpegTestResult = ref<{ success: boolean; message: string } | null>(null)
 
-const showClearCacheDialog = ref(false);
-const showClearLogsDialog = ref(false);
-const showToast = ref(false);
-const toastMessage = ref('');
-const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success');
+const showClearCacheDialog = ref(false)
+const showClearLogsDialog = ref(false)
+const showToast = ref(false)
+const toastMessage = ref('')
+const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success')
 
-const { state: updateState, checkForUpdates, downloadAndInstallUpdate } = useUpdateChecker();
-const repositoryUrl = 'https://github.com/caoyuee/ffmpeg_desktop';
+const { state: updateState, checkForUpdates, downloadAndInstallUpdate } = useUpdateChecker()
+const repositoryUrl = 'https://github.com/caoyuee/ffmpeg_desktop'
 
 onMounted(() => {
-  loadSettings();
-  loadVersion();
+  applyTraySettings()
+  loadVersion()
   if (settings.value.autoCheckUpdate) {
-    checkForUpdates();
+    checkForUpdates()
   }
-});
+})
 
-watch(() => settings.value.language, (newLang) => {
-  setLocale(newLang);
-});
-
-function loadSettings() {
-  settings.value = {
-    ...loadAppSettings(),
-    theme: settingStore.theme,
-    language: settingStore.language,
-  };
+// 语言与主题副作用由 settingsStore.commit() 统一处理，页面不再各自 watch。
+function applyTraySettings() {
   invoke('set_tray_settings', {
     minimizeToTray: settings.value.minimizeToTray,
     closeToTray: settings.value.closeToTray,
-  }).catch(() => {});
+  }).catch(() => {})
 }
 
 async function loadVersion() {
   try {
-    appVersion.value = await getVersion();
+    appVersion.value = await getVersion()
   } catch {
-    appVersion.value = '';
+    appVersion.value = ''
   }
 }
 
 function saveSettings() {
-  settings.value.maxConcurrentTasks = Math.min(Math.max(Number(settings.value.maxConcurrentTasks) || 1, 1), 8);
-  settingStore.updateLanguage(settings.value.language);
-  taskStore.maxConcurrent = settings.value.maxConcurrentTasks;
-  saveAppSettings(settings.value);
-  invoke('set_tray_settings', {
-    minimizeToTray: settings.value.minimizeToTray,
-    closeToTray: settings.value.closeToTray,
-  }).catch(() => {});
+  settings.value.maxConcurrentTasks = Math.min(
+    Math.max(Number(settings.value.maxConcurrentTasks) || 1, 1),
+    8,
+  )
+  // 规范化、持久化、i18n locale 与主题属性全部由唯一 store 完成。
+  settingsStore.commit()
+  taskStore.maxConcurrent = settings.value.maxConcurrentTasks
+  applyTraySettings()
 }
 
 function onThemeChange() {
-  settingStore.updateTheme(settings.value.theme);
-  saveSettings();
+  saveSettings()
 }
 
 async function browseFFmpeg() {
-  const { open } = await import('@tauri-apps/plugin-dialog');
+  const { open } = await import('@tauri-apps/plugin-dialog')
   const selected = await open({
     multiple: false,
     filters: [{ name: t('common.executable'), extensions: ['exe', ''] }],
-  });
+  })
   if (selected && typeof selected === 'string') {
-    settings.value.ffmpegPath = selected;
-    saveSettings();
+    settings.value.ffmpegPath = selected
+    saveSettings()
   }
 }
 
 async function browseFFprobe() {
-  const { open } = await import('@tauri-apps/plugin-dialog');
+  const { open } = await import('@tauri-apps/plugin-dialog')
   const selected = await open({
     multiple: false,
     filters: [{ name: t('common.executable'), extensions: ['exe', ''] }],
-  });
+  })
   if (selected && typeof selected === 'string') {
-    settings.value.ffprobePath = selected;
-    saveSettings();
+    settings.value.ffprobePath = selected
+    saveSettings()
   }
 }
 
 async function browseOutputDir() {
-  const { open } = await import('@tauri-apps/plugin-dialog');
-  const selected = await open({ directory: true });
+  const { open } = await import('@tauri-apps/plugin-dialog')
+  const selected = await open({ directory: true })
   if (selected && typeof selected === 'string') {
-    settings.value.customOutputDir = selected;
-    saveSettings();
+    settings.value.customOutputDir = selected
+    saveSettings()
   }
 }
 
 async function browsePresetDir() {
-  const { open } = await import('@tauri-apps/plugin-dialog');
-  const selected = await open({ directory: true });
+  const { open } = await import('@tauri-apps/plugin-dialog')
+  const selected = await open({ directory: true })
   if (selected && typeof selected === 'string') {
-    settings.value.presetDir = selected;
-    saveSettings();
+    settings.value.presetDir = selected
+    saveSettings()
   }
 }
 
 async function testFFmpeg() {
   try {
-    const { invoke } = await import('@tauri-apps/api/core');
-    const result = await invoke<string>('test_ffmpeg', { 
-      path: settings.value.ffmpegPath || '' 
-    });
-    ffmpegTestResult.value = { success: true, message: result || t('page.settings.ffmpegAvailable') };
+    const { invoke } = await import('@tauri-apps/api/core')
+    const result = await invoke<string>('test_ffmpeg', {
+      path: settings.value.ffmpegPath || '',
+    })
+    ffmpegTestResult.value = {
+      success: true,
+      message: result || t('page.settings.ffmpegAvailable'),
+    }
   } catch (error) {
-    ffmpegTestResult.value = { success: false, message: `${t('page.settings.ffmpegNotFound')}: ${String(error)}` };
+    ffmpegTestResult.value = {
+      success: false,
+      message: `${t('page.settings.ffmpegNotFound')}: ${String(error)}`,
+    }
   }
 }
 
 function clearCache() {
-  localStorage.removeItem('presetCache');
-  toastMessage.value = t('message.cacheCleared');
-  toastType.value = 'success';
-  showToast.value = true;
+  localStorage.removeItem('presetCache')
+  toastMessage.value = t('message.cacheCleared')
+  toastType.value = 'success'
+  showToast.value = true
 }
 
 function clearLogs() {
-  localStorage.removeItem('taskLogs');
-  toastMessage.value = t('message.logsCleared');
-  toastType.value = 'success';
-  showToast.value = true;
+  localStorage.removeItem('taskLogs')
+  toastMessage.value = t('message.logsCleared')
+  toastType.value = 'success'
+  showToast.value = true
 }
 
 async function openGitHub() {
-  await openUrl(repositoryUrl);
+  await openUrl(repositoryUrl)
 }
 
 async function openIssues() {
-  await openUrl(`${repositoryUrl}/issues`);
+  await openUrl(`${repositoryUrl}/issues`)
 }
 
 async function openReleases() {
-  await openUrl(`${repositoryUrl}/releases`);
+  await openUrl(`${repositoryUrl}/releases`)
 }
 
 async function checkUpdate() {
-  await checkForUpdates();
+  await checkForUpdates()
 }
 
 async function installUpdate() {
-  await downloadAndInstallUpdate();
+  await downloadAndInstallUpdate()
 }
 </script>
 
 <style scoped>
+/* P1-2 收尾：三项设置全部接入生效链路，原「暂未生效」标注改为语义提示。 */
+.setting-hint {
+  margin-left: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--text-color2, #999);
+}
+
 .settings-page {
   display: flex;
   height: 100%;
@@ -527,7 +586,7 @@ async function installUpdate() {
   color: var(--text-color1, #c0c0c0);
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   -webkit-appearance: checkbox;
   appearance: checkbox;
   width: 16px;

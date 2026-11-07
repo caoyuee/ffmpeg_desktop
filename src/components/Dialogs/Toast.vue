@@ -10,54 +10,57 @@
 </template>
 
 <script setup lang="ts">
-import { watch, onUnmounted, ref } from 'vue';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { watch, onUnmounted, ref } from 'vue'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
 
-type ToastType = 'success' | 'error' | 'warning' | 'info';
+type ToastType = 'success' | 'error' | 'warning' | 'info'
 
 const props = defineProps<{
-  modelValue: boolean;
-  message: string;
-  type?: ToastType;
-  duration?: number;
-}>();
+  modelValue: boolean
+  message: string
+  type?: ToastType
+  duration?: number
+}>()
 
 const emit = defineEmits<{
-  'update:modelValue': [value: boolean];
-}>();
+  'update:modelValue': [value: boolean]
+}>()
 
 const iconMap: Record<ToastType, 'success' | 'error' | 'warning' | 'info'> = {
   success: 'success',
   error: 'error',
   warning: 'warning',
   info: 'info',
-};
+}
 
-const timerRef = ref<ReturnType<typeof setTimeout> | null>(null);
+const timerRef = ref<ReturnType<typeof setTimeout> | null>(null)
 
-watch(() => props.modelValue, (val) => {
-  if (val) {
-    if (timerRef.value) {
-      clearTimeout(timerRef.value);
+watch(
+  () => props.modelValue,
+  (val) => {
+    if (val) {
+      if (timerRef.value) {
+        clearTimeout(timerRef.value)
+      }
+      timerRef.value = setTimeout(() => {
+        emit('update:modelValue', false)
+        timerRef.value = null
+      }, props.duration || 2000)
+    } else {
+      if (timerRef.value) {
+        clearTimeout(timerRef.value)
+        timerRef.value = null
+      }
     }
-    timerRef.value = setTimeout(() => {
-      emit('update:modelValue', false);
-      timerRef.value = null;
-    }, props.duration || 2000);
-  } else {
-    if (timerRef.value) {
-      clearTimeout(timerRef.value);
-      timerRef.value = null;
-    }
-  }
-});
+  },
+)
 
 onUnmounted(() => {
   if (timerRef.value) {
-    clearTimeout(timerRef.value);
-    timerRef.value = null;
+    clearTimeout(timerRef.value)
+    timerRef.value = null
   }
-});
+})
 </script>
 
 <style scoped>

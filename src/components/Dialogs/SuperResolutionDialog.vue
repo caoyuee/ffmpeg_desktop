@@ -5,50 +5,54 @@
         <div class="dialog-header">
           <span class="dialog-title">{{ t('dialog.superResolution.title') }}</span>
         </div>
-        
+
         <div class="dialog-content">
           <div class="info-text">
             <p>{{ t('dialog.superResolution.description1') }}</p>
             <p>{{ t('dialog.superResolution.description2') }}</p>
           </div>
-          
+
           <div class="form-row">
             <label class="row-label">{{ t('dialog.superResolution.targetResolution') }}</label>
             <div class="row-content">
-              <input 
-                type="text" 
-                class="text-input small" 
+              <input
                 v-model="settings.width"
+                type="text"
+                class="text-input small"
                 inputmode="numeric"
                 :class="{ invalid: validationErrors.width }"
-                @input="onNumericInput('width')"
                 :placeholder="t('dialog.superResolution.widthPlaceholder')"
+                @input="onNumericInput('width')"
               />
-              <input 
-                type="text" 
-                class="text-input small" 
+              <input
                 v-model="settings.height"
+                type="text"
+                class="text-input small"
                 inputmode="numeric"
                 :class="{ invalid: validationErrors.height }"
-                @input="onNumericInput('height')"
                 :placeholder="t('dialog.superResolution.heightPlaceholder')"
+                @input="onNumericInput('height')"
               />
               <span class="hint">{{ t('dialog.superResolution.cancelFilterHint') }}</span>
-              <span v-if="validationErrors.width || validationErrors.height" class="validation-error">{{ t('validation.positiveInteger') }}</span>
+              <span
+                v-if="validationErrors.width || validationErrors.height"
+                class="validation-error"
+                >{{ t('validation.positiveInteger') }}</span
+              >
             </div>
           </div>
-          
+
           <div class="form-row">
             <label class="row-label">{{ t('dialog.superResolution.samplingAlgorithm') }}</label>
             <div class="row-content">
-              <select class="select-input" v-model="settings.upscaler">
+              <select v-model="settings.upscaler" class="select-input">
                 <option value="">{{ t('dialog.superResolution.upscalerPlaceholder') }}</option>
                 <option value="ewa_lanczos">ewa_lanczos</option>
                 <option value="spline36">spline36</option>
                 <option value="mitchell">mitchell</option>
                 <option value="hermite">hermite</option>
               </select>
-              <select class="select-input" v-model="settings.downscaler">
+              <select v-model="settings.downscaler" class="select-input">
                 <option value="">{{ t('dialog.superResolution.downscalerPlaceholder') }}</option>
                 <option value="ewa_lanczos">ewa_lanczos</option>
                 <option value="spline36">spline36</option>
@@ -58,38 +62,66 @@
               <span class="hint">{{ t('dialog.superResolution.customShaderHint') }}</span>
             </div>
           </div>
-          
+
           <div class="form-row">
             <label class="row-label">{{ t('dialog.superResolution.antiRinging') }}</label>
             <div class="row-content">
-              <input 
-                type="text" 
-                class="text-input small" 
+              <input
                 v-model="settings.antiRinging"
+                type="text"
+                class="text-input small"
                 inputmode="decimal"
                 :class="{ invalid: validationErrors.antiRinging }"
-                @input="onNumericInput('antiRinging')"
                 placeholder=""
+                @input="onNumericInput('antiRinging')"
               />
               <span class="hint">{{ t('dialog.superResolution.antiRingingHint') }}</span>
-              <span v-if="validationErrors.antiRinging" class="validation-error">{{ t('validation.invalidNumber') }}</span>
+              <span v-if="validationErrors.antiRinging" class="validation-error">{{
+                t('validation.invalidNumber')
+              }}</span>
             </div>
           </div>
-          
+
           <div class="form-row shader-row">
-            <label class="row-label multiline-label">{{ t('dialog.superResolution.customShaderLabel') }}</label>
+            <label class="row-label multiline-label">{{
+              t('dialog.superResolution.customShaderLabel')
+            }}</label>
             <div class="row-content column">
               <div class="shader-toolbar">
-                <button class="app-btn btn-shader" @click="addShader">{{ t('dialog.superResolution.add') }}</button>
-                <button class="app-btn btn-shader" @click="removeShader" :disabled="selectedShaderIndex < 0">{{ t('dialog.superResolution.remove') }}</button>
-                <button class="app-btn btn-shader" @click="moveShaderUp" :disabled="selectedShaderIndex <= 0">{{ t('dialog.superResolution.moveUp') }}</button>
-                <button class="app-btn btn-shader" @click="moveShaderDown" :disabled="selectedShaderIndex >= shaders.length - 1">{{ t('dialog.superResolution.moveDown') }}</button>
-                <span class="shader-hint">{{ t('dialog.superResolution.supportedShaderFormats') }}</span>
-                <button class="app-btn btn-shader download-btn" @click="downloadShaders">{{ t('dialog.superResolution.download') }}</button>
+                <button class="app-btn btn-shader" @click="addShader">
+                  {{ t('dialog.superResolution.add') }}
+                </button>
+                <button
+                  class="app-btn btn-shader"
+                  :disabled="selectedShaderIndex < 0"
+                  @click="removeShader"
+                >
+                  {{ t('dialog.superResolution.remove') }}
+                </button>
+                <button
+                  class="app-btn btn-shader"
+                  :disabled="selectedShaderIndex <= 0"
+                  @click="moveShaderUp"
+                >
+                  {{ t('dialog.superResolution.moveUp') }}
+                </button>
+                <button
+                  class="app-btn btn-shader"
+                  :disabled="selectedShaderIndex >= shaders.length - 1"
+                  @click="moveShaderDown"
+                >
+                  {{ t('dialog.superResolution.moveDown') }}
+                </button>
+                <span class="shader-hint">{{
+                  t('dialog.superResolution.supportedShaderFormats')
+                }}</span>
+                <button class="app-btn btn-shader download-btn" @click="downloadShaders">
+                  {{ t('dialog.superResolution.download') }}
+                </button>
               </div>
               <div class="shader-list">
-                <div 
-                  v-for="(shader, index) in shaders" 
+                <div
+                  v-for="(shader, index) in shaders"
                   :key="index"
                   class="shader-item"
                   :class="{ selected: selectedShaderIndex === index }"
@@ -104,10 +136,12 @@
             </div>
           </div>
         </div>
-        
+
         <div class="dialog-footer">
           <button class="app-btn" @click="close">{{ t('common.cancel') }}</button>
-          <button class="app-btn app-btn--primary" :disabled="hasValidationErrors" @click="confirm">{{ t('common.ok') }}</button>
+          <button class="app-btn app-btn--primary" :disabled="hasValidationErrors" @click="confirm">
+            {{ t('common.ok') }}
+          </button>
         </div>
       </div>
     </div>
@@ -115,31 +149,31 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { open } from '@tauri-apps/plugin-dialog';
-import { isNonNegativeDecimal, isPositiveInteger } from '@/utils/numericValidation';
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { open } from '@tauri-apps/plugin-dialog'
+import { isNonNegativeDecimal, isPositiveInteger } from '@/utils/numericValidation'
 
 interface SuperResolutionSettings {
-  width: string;
-  height: string;
-  upscaler: string;
-  downscaler: string;
-  antiRinging: string;
-  shaders: string[];
+  width: string
+  height: string
+  upscaler: string
+  downscaler: string
+  antiRinging: string
+  shaders: string[]
 }
 
 const props = defineProps<{
-  visible: boolean;
-  modelValue: SuperResolutionSettings;
-}>();
+  visible: boolean
+  modelValue: SuperResolutionSettings
+}>()
 
 const emit = defineEmits<{
-  (e: 'update:visible', value: boolean): void;
-  (e: 'update:modelValue', value: SuperResolutionSettings): void;
-}>();
+  (e: 'update:visible', value: boolean): void
+  (e: 'update:modelValue', value: SuperResolutionSettings): void
+}>()
 
-const { t } = useI18n();
+const { t } = useI18n()
 
 const settings = ref<SuperResolutionSettings>({
   width: '',
@@ -148,48 +182,52 @@ const settings = ref<SuperResolutionSettings>({
   downscaler: '',
   antiRinging: '',
   shaders: [],
-});
+})
 
-const shaders = ref<string[]>([]);
-const selectedShaderIndex = ref(-1);
+const shaders = ref<string[]>([])
+const selectedShaderIndex = ref(-1)
 const validationErrors = ref({
   width: false,
   height: false,
   antiRinging: false,
-});
-const hasValidationErrors = computed(() => Object.values(validationErrors.value).some(Boolean));
+})
+const hasValidationErrors = computed(() => Object.values(validationErrors.value).some(Boolean))
 
-watch(() => props.modelValue, (newVal) => {
-  settings.value = { ...newVal };
-  shaders.value = [...newVal.shaders];
-  validationErrors.value = {
-    width: false,
-    height: false,
-    antiRinging: false,
-  };
-}, { immediate: true });
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    settings.value = { ...newVal }
+    shaders.value = [...newVal.shaders]
+    validationErrors.value = {
+      width: false,
+      height: false,
+      antiRinging: false,
+    }
+  },
+  { immediate: true },
+)
 
 function close() {
-  emit('update:visible', false);
+  emit('update:visible', false)
 }
 
 function confirm() {
-  if (hasValidationErrors.value) return;
-  settings.value.shaders = [...shaders.value];
-  emit('update:modelValue', { ...settings.value });
-  close();
+  if (hasValidationErrors.value) return
+  settings.value.shaders = [...shaders.value]
+  emit('update:modelValue', { ...settings.value })
+  close()
 }
 
 function onNumericInput(field: keyof typeof validationErrors.value) {
-  const value = settings.value[field];
+  const value = settings.value[field]
   if (field === 'antiRinging') {
-    validationErrors.value[field] = !isNonNegativeDecimal(value);
+    validationErrors.value[field] = !isNonNegativeDecimal(value)
   } else {
-    validationErrors.value[field] = !isPositiveInteger(value);
+    validationErrors.value[field] = !isPositiveInteger(value)
   }
 
   if (!validationErrors.value[field]) {
-    emit('update:modelValue', { ...settings.value });
+    emit('update:modelValue', { ...settings.value })
   }
 }
 
@@ -197,85 +235,83 @@ async function addShader() {
   try {
     const files = await open({
       multiple: true,
-      filters: [
-        { name: t('dialog.superResolution.shaderFiles'), extensions: ['glsl', 'hook'] },
-      ],
-    });
+      filters: [{ name: t('dialog.superResolution.shaderFiles'), extensions: ['glsl', 'hook'] }],
+    })
     if (files) {
-      const paths = Array.isArray(files) ? files : [files];
-      shaders.value.push(...paths);
+      const paths = Array.isArray(files) ? files : [files]
+      shaders.value.push(...paths)
     }
   } catch (error) {
-    console.error(t('dialog.superResolution.addShaderFailed'), error);
+    console.error(t('dialog.superResolution.addShaderFailed'), error)
   }
 }
 
 function removeShader() {
   if (selectedShaderIndex.value >= 0) {
-    shaders.value.splice(selectedShaderIndex.value, 1);
-    selectedShaderIndex.value = -1;
+    shaders.value.splice(selectedShaderIndex.value, 1)
+    selectedShaderIndex.value = -1
   }
 }
 
 function moveShaderUp() {
   if (selectedShaderIndex.value > 0) {
-    const temp = shaders.value[selectedShaderIndex.value];
-    shaders.value[selectedShaderIndex.value] = shaders.value[selectedShaderIndex.value - 1]!;
-    shaders.value[selectedShaderIndex.value - 1] = temp!;
-    selectedShaderIndex.value--;
+    const temp = shaders.value[selectedShaderIndex.value]
+    shaders.value[selectedShaderIndex.value] = shaders.value[selectedShaderIndex.value - 1]!
+    shaders.value[selectedShaderIndex.value - 1] = temp!
+    selectedShaderIndex.value--
   }
 }
 
 function moveShaderDown() {
   if (selectedShaderIndex.value < shaders.value.length - 1) {
-    const temp = shaders.value[selectedShaderIndex.value];
-    shaders.value[selectedShaderIndex.value] = shaders.value[selectedShaderIndex.value + 1]!;
-    shaders.value[selectedShaderIndex.value + 1] = temp!;
-    selectedShaderIndex.value++;
+    const temp = shaders.value[selectedShaderIndex.value]
+    shaders.value[selectedShaderIndex.value] = shaders.value[selectedShaderIndex.value + 1]!
+    shaders.value[selectedShaderIndex.value + 1] = temp!
+    selectedShaderIndex.value++
   }
 }
 
 function downloadShaders() {
-  window.open('https://github.com/mpv-player/mpv/blob/master/TOOLS/vf_dlopen/glsl/', '_blank');
+  window.open('https://github.com/mpv-player/mpv/blob/master/TOOLS/vf_dlopen/glsl/', '_blank')
 }
 
 function getFFmpegFilter(): string {
-  if (!settings.value.width && !settings.value.height && shaders.value.length === 0) return '';
-  
-  const params: string[] = [];
-  
+  if (!settings.value.width && !settings.value.height && shaders.value.length === 0) return ''
+
+  const params: string[] = []
+
   if (settings.value.width) {
-    params.push(`w=${settings.value.width}`);
+    params.push(`w=${settings.value.width}`)
   }
-  
+
   if (settings.value.height) {
-    params.push(`h=${settings.value.height}`);
+    params.push(`h=${settings.value.height}`)
   }
-  
+
   if (settings.value.upscaler) {
-    params.push(`upscaler=${settings.value.upscaler}`);
+    params.push(`upscaler=${settings.value.upscaler}`)
   }
-  
+
   if (settings.value.downscaler) {
-    params.push(`downscaler=${settings.value.downscaler}`);
+    params.push(`downscaler=${settings.value.downscaler}`)
   }
-  
+
   if (settings.value.antiRinging) {
-    params.push(`sigmoid_center=${settings.value.antiRinging}`);
+    params.push(`sigmoid_center=${settings.value.antiRinging}`)
   }
-  
+
   for (const shader of shaders.value) {
-    params.push(`custom_shader_path='${shader}'`);
+    params.push(`custom_shader_path='${shader}'`)
   }
-  
-  if (params.length === 0) return '';
-  
-  return `libplacebo=${params.join(':')}`;
+
+  if (params.length === 0) return ''
+
+  return `libplacebo=${params.join(':')}`
 }
 
 defineExpose({
   getFFmpegFilter,
-});
+})
 </script>
 
 <style scoped>
@@ -475,5 +511,4 @@ defineExpose({
   padding: 15px 20px;
   border-top: 1px solid var(--bg-color3, #242424);
 }
-
 </style>

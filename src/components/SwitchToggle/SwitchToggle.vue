@@ -1,31 +1,38 @@
 <template>
   <label class="switch-toggle">
-    <span v-if="showLabels" class="switch-label" :class="{ active: !modelValue }">{{ offLabel }}</span>
+    <span v-if="showLabels" class="switch-label" :class="{ active: !modelValue }">{{
+      offLabel
+    }}</span>
     <div class="switch-track" @click="toggle">
       <div class="switch-thumb" :class="{ on: modelValue }"></div>
     </div>
-    <span v-if="showLabels" class="switch-label" :class="{ active: modelValue }">{{ onLabel }}</span>
+    <span v-if="showLabels" class="switch-label" :class="{ active: modelValue }">{{
+      onLabel
+    }}</span>
   </label>
 </template>
 
 <script setup lang="ts">
-const props = withDefaults(defineProps<{
-  modelValue: boolean;
-  offLabel?: string;
-  onLabel?: string;
-  showLabels?: boolean;
-}>(), {
-  offLabel: '关',
-  onLabel: '开',
-  showLabels: false,
-});
+const props = withDefaults(
+  defineProps<{
+    modelValue: boolean
+    offLabel?: string
+    onLabel?: string
+    showLabels?: boolean
+  }>(),
+  {
+    offLabel: '关',
+    onLabel: '开',
+    showLabels: false,
+  },
+)
 
 const emit = defineEmits<{
-  'update:modelValue': [value: boolean];
-}>();
+  'update:modelValue': [value: boolean]
+}>()
 
 function toggle() {
-  emit('update:modelValue', !props.modelValue);
+  emit('update:modelValue', !props.modelValue)
 }
 </script>
 
@@ -67,7 +74,9 @@ function toggle() {
   position: absolute;
   top: 2px;
   left: 2px;
-  transition: left 0.2s, background 0.2s;
+  transition:
+    left 0.2s,
+    background 0.2s;
 }
 
 .switch-thumb.on {

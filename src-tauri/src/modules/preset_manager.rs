@@ -1,525 +1,203 @@
+//! R2.4：预设只存 JSON blob，Rust 不再结构化建模。
+//!
+//! 原先本文件用 30 个 struct 手工镜像 TS `types/preset.ts`，但 Rust 对预设内容
+//! 没有任何业务消费，建模纯属双向同步负担，还会静默丢弃未知/未来字段。
+//! 现在 schema、默认值、类型校验、版本迁移全部由前端
+//! `config/presetSchema.ts::normalizePreset` 负责；本模块只做：
+//! 目录定位、按 id 读写 JSON 文件、生成 id/时间戳、原样透传内容。
+
+use serde_json::{Map, Value};
 use std::fs;
 use std::path::PathBuf;
 use tauri::{AppHandle, Manager};
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct PresetData {
-    pub id: String,
-    pub name: String,
-    #[serde(rename = "createdAt")]
-    pub created_at: String,
-    #[serde(rename = "updatedAt")]
-    pub updated_at: String,
-    pub output: OutputSettings,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub decode: Option<DecodeSettings>,
-    pub video: VideoSettings,
-    pub audio: AudioSettings,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub image: Option<ImageSettings>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub custom: Option<CustomSettings>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub trim: Option<TrimSettings>,
-    #[serde(rename = "streamControl", skip_serializing_if = "Option::is_none")]
-    pub stream_control: Option<StreamControlSettings>,
+const ID_FIELD: &str = "id";
+const CREATED_AT_FIELD: &str = "createdAt";
+const UPDATED_AT_FIELD: &str = "updatedAt";
+
+/// R1-7：自定义预设目录优先（前端设置 `presetDir`）；空/空白/None 回退 app data 的
+/// `presets`。纯路径计算，不碰文件系统，便于单测。
+fn resolve_preset_dir(app_dir: &std::path::Path, custom: Option<&str>) -> PathBuf {
+    match custom.map(str::trim).filter(|s| !s.is_empty()) {
+        Some(dir) => PathBuf::from(dir),
+        None => app_dir.join("presets"),
+    }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct OutputSettings {
-    pub container: String,
-    pub naming: NamingSettings,
-    pub location: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct NamingSettings {
-    #[serde(rename = "useAutoNaming")]
-    pub use_auto_naming: bool,
-    #[serde(rename = "autoNamingOption")]
-    pub auto_naming_option: i32,
-    #[serde(rename = "noOutputFileParam")]
-    pub no_output_file_param: bool,
-    #[serde(rename = "prefixText")]
-    pub prefix_text: String,
-    #[serde(rename = "replaceText")]
-    pub replace_text: String,
-    #[serde(rename = "suffixText")]
-    pub suffix_text: String,
-    #[serde(rename = "preserveCreationTime")]
-    pub preserve_creation_time: bool,
-    #[serde(rename = "preserveModifyTime")]
-    pub preserve_modify_time: bool,
-    #[serde(rename = "preserveAccessTime")]
-    pub preserve_access_time: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DecodeSettings {
-    pub decoder: String,
-    #[serde(rename = "cpuThreads")]
-    pub cpu_threads: String,
-    #[serde(rename = "cpuAffinity")]
-    pub cpu_affinity: String,
-    #[serde(rename = "outputFormat")]
-    pub output_format: String,
-    #[serde(rename = "hwAccelParamName")]
-    pub hw_accel_param_name: String,
-    #[serde(rename = "hwAccelParam")]
-    pub hw_accel_param: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct VideoSettings {
-    pub encoder: EncoderSettings,
-    pub resolution: ResolutionSettings,
-    #[serde(rename = "frameRate")]
-    pub frame_rate: FrameRateSettings,
-    #[serde(rename = "bitrateControl")]
-    pub bitrate_control: BitrateControlSettings,
-    #[serde(rename = "colorManagement", skip_serializing_if = "Option::is_none")]
-    pub color_management: Option<ColorManagementSettings>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub filters: Option<FilterSettings>,
-    #[serde(rename = "subtitleBurn", skip_serializing_if = "Option::is_none")]
-    pub subtitle_burn: Option<SubtitleBurnSettings>,
-    #[serde(rename = "frameServer", skip_serializing_if = "Option::is_none")]
-    pub frame_server: Option<FrameServerSettings>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct EncoderSettings {
-    pub category: String,
-    pub codec: String,
-    pub preset: String,
-    pub profile: String,
-    pub tune: String,
-    pub gpu: String,
-    pub threads: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ResolutionSettings {
-    pub size: String,
-    #[serde(rename = "autoWidth")]
-    pub auto_width: String,
-    #[serde(rename = "autoHeight")]
-    pub auto_height: String,
-    #[serde(rename = "cropFilter")]
-    pub crop_filter: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FrameRateSettings {
-    pub fps: String,
-    #[serde(rename = "decimateMax")]
-    pub decimate_max: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct BitrateControlSettings {
-    pub mode: String,
-    #[serde(rename = "qualityParam")]
-    pub quality_param: String,
-    #[serde(rename = "qualityValue")]
-    pub quality_value: String,
-    #[serde(rename = "baseBitrate")]
-    pub base_bitrate: String,
-    #[serde(rename = "minBitrate")]
-    pub min_bitrate: String,
-    #[serde(rename = "maxBitrate")]
-    pub max_bitrate: String,
-    #[serde(rename = "bufferSize")]
-    pub buffer_size: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub advanced_params: Option<Vec<String>>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ColorManagementSettings {
-    #[serde(rename = "pixelFormat")]
-    pub pixel_format: String,
-    pub filter: String,
-    #[serde(rename = "colorSpace")]
-    pub color_space: String,
-    #[serde(rename = "colorPrimaries")]
-    pub color_primaries: String,
-    #[serde(rename = "colorTRC")]
-    pub color_trc: String,
-    #[serde(rename = "colorRange")]
-    pub color_range: String,
-    #[serde(rename = "tonemapAlgo")]
-    pub tonemap_algo: String,
-    #[serde(rename = "processMode")]
-    pub process_mode: i32,
-    pub brightness: String,
-    pub contrast: String,
-    pub saturation: String,
-    pub gamma: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FrameBlendSettings {
-    #[serde(rename = "frameRate")]
-    pub frame_rate: String,
-    #[serde(rename = "blendMode")]
-    pub blend_mode: String,
-    pub ratio: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FilterSettings {
-    pub deinterlace: i32,
-    #[serde(rename = "frameBlend", skip_serializing_if = "Option::is_none")]
-    pub frame_blend: Option<FrameBlendSettings>,
-    pub denoise: DenoiseSettings,
-    pub sharpen: SharpenSettings,
-    pub interpolation: InterpolationSettings,
-    #[serde(rename = "superResolution")]
-    pub super_resolution: SuperResolutionSettings,
-    pub rotation: i32,
-    pub flip: i32,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct DenoiseSettings {
-    pub method: String,
-    pub param1: String,
-    pub param2: String,
-    pub param3: String,
-    pub param4: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SharpenSettings {
-    #[serde(rename = "lumaMsizeX")]
-    pub luma_msize_x: String,
-    #[serde(rename = "lumaMsizeY")]
-    pub luma_msize_y: String,
-    #[serde(rename = "lumaAmount")]
-    pub luma_amount: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct InterpolationSettings {
-    #[serde(rename = "targetFps")]
-    pub target_fps: String,
-    pub mode: String,
-    #[serde(rename = "meMode")]
-    pub me_mode: String,
-    #[serde(rename = "meAlgo")]
-    pub me_algo: String,
-    #[serde(rename = "mcMode")]
-    pub mc_mode: String,
-    pub vsbmc: bool,
-    #[serde(rename = "blockSize")]
-    pub block_size: String,
-    #[serde(rename = "searchRange")]
-    pub search_range: String,
-    #[serde(rename = "scdThreshold")]
-    pub scd_threshold: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SuperResolutionSettings {
-    #[serde(rename = "targetWidth")]
-    pub target_width: String,
-    #[serde(rename = "targetHeight")]
-    pub target_height: String,
-    pub upscaler: String,
-    pub downscaler: String,
-    pub antiringing: String,
-    pub shaders: Vec<String>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SubtitleBurnSettings {
-    pub filter: String,
-    #[serde(rename = "formatPriority")]
-    pub format_priority: Vec<i32>,
-    #[serde(rename = "externalFile")]
-    pub external_file: bool,
-    #[serde(rename = "externalFileName")]
-    pub external_file_name: String,
-    #[serde(rename = "externalFolder")]
-    pub external_folder: String,
-    #[serde(rename = "embeddedStream")]
-    pub embedded_stream: bool,
-    #[serde(rename = "streamIndex")]
-    pub stream_index: String,
-    #[serde(rename = "fontsDir")]
-    pub fonts_dir: String,
-    pub style: SubtitleStyle,
-    #[serde(rename = "borderStyle")]
-    pub border_style: i32,
-    #[serde(rename = "outlineWidth")]
-    pub outline_width: String,
-    #[serde(rename = "shadowDistance")]
-    pub shadow_distance: String,
-    #[serde(rename = "primaryColor")]
-    pub primary_color: String,
-    #[serde(rename = "primaryAlpha")]
-    pub primary_alpha: String,
-    #[serde(rename = "secondaryColor")]
-    pub secondary_color: String,
-    #[serde(rename = "secondaryAlpha")]
-    pub secondary_alpha: String,
-    #[serde(rename = "outlineColor")]
-    pub outline_color: String,
-    #[serde(rename = "outlineAlpha")]
-    pub outline_alpha: String,
-    #[serde(rename = "backColor")]
-    pub back_color: String,
-    #[serde(rename = "backAlpha")]
-    pub back_alpha: String,
-    pub alignment: i32,
-    #[serde(rename = "marginV")]
-    pub margin_v: String,
-    #[serde(rename = "marginL")]
-    pub margin_l: String,
-    #[serde(rename = "marginR")]
-    pub margin_r: String,
-    pub spacing: String,
-    #[serde(rename = "lineSpacing")]
-    pub line_spacing: String,
-    #[serde(rename = "customStyle")]
-    pub custom_style: String,
-    #[serde(rename = "customFilterParam")]
-    pub custom_filter_param: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SubtitleStyle {
-    #[serde(rename = "fontName")]
-    pub font_name: String,
-    #[serde(rename = "fontSize")]
-    pub font_size: i32,
-    pub bold: bool,
-    pub italic: bool,
-    pub underline: bool,
-    pub strikeout: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FrameServerSettings {
-    #[serde(rename = "useAviSynth")]
-    pub use_avi_synth: bool,
-    #[serde(rename = "avsScript")]
-    pub avs_script: String,
-    #[serde(rename = "useVapourSynth")]
-    pub use_vapour_synth: bool,
-    #[serde(rename = "vpyScript")]
-    pub vpy_script: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AudioSettings {
-    pub encoder: String,
-    pub bitrate: String,
-    #[serde(rename = "qualityParam")]
-    pub quality_param: String,
-    #[serde(rename = "qualityValue")]
-    pub quality_value: String,
-    #[serde(rename = "channelLayout")]
-    pub channel_layout: String,
-    #[serde(rename = "sampleRate")]
-    pub sample_rate: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub loudnorm: Option<LoudnormSettings>,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct LoudnormSettings {
-    #[serde(rename = "targetLoudness")]
-    pub target_loudness: String,
-    #[serde(rename = "dynamicRange")]
-    pub dynamic_range: String,
-    #[serde(rename = "peakLevel")]
-    pub peak_level: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ImageSettings {
-    pub encoder: String,
-    pub quality: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CustomSettings {
-    #[serde(rename = "videoFilter")]
-    pub video_filter: String,
-    #[serde(rename = "audioFilter")]
-    pub audio_filter: String,
-    #[serde(rename = "filterComplex")]
-    pub filter_complex: String,
-    #[serde(rename = "videoParams")]
-    pub video_params: String,
-    #[serde(rename = "audioParams")]
-    pub audio_params: String,
-    #[serde(rename = "startParams")]
-    pub start_params: String,
-    #[serde(rename = "beforeOutputParams")]
-    pub before_output_params: String,
-    #[serde(rename = "afterOutputParams")]
-    pub after_output_params: String,
-    #[serde(rename = "endParams")]
-    pub end_params: String,
-    #[serde(rename = "fullCustom")]
-    pub full_custom: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct TrimSettings {
-    pub method: i32,
-    #[serde(rename = "inPoint")]
-    pub in_point: String,
-    #[serde(rename = "outPoint")]
-    pub out_point: String,
-    #[serde(rename = "seekBackward")]
-    pub seek_backward: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct StreamControlSettings {
-    #[serde(rename = "videoStreams")]
-    pub video_streams: Vec<String>,
-    #[serde(rename = "keepOtherVideo")]
-    pub keep_other_video: bool,
-    #[serde(rename = "audioStreams")]
-    pub audio_streams: Vec<String>,
-    #[serde(rename = "keepOtherAudio")]
-    pub keep_other_audio: bool,
-    #[serde(rename = "subtitleStreams")]
-    pub subtitle_streams: Vec<String>,
-    #[serde(rename = "subtitleOperation")]
-    pub subtitle_operation: i32,
-    #[serde(rename = "keepOtherSubtitle")]
-    pub keep_other_subtitle: bool,
-    #[serde(rename = "autoMuxSRT")]
-    pub auto_mux_srt: bool,
-    #[serde(rename = "autoMuxASS")]
-    pub auto_mux_ass: bool,
-    #[serde(rename = "autoMuxSSA")]
-    pub auto_mux_ssa: bool,
-    #[serde(rename = "convertSubtitleToMovText")]
-    pub convert_subtitle_to_mov_text: bool,
-    #[serde(rename = "metadataOption")]
-    pub metadata_option: i32,
-    #[serde(rename = "chapterOption")]
-    pub chapter_option: i32,
-    #[serde(rename = "attachmentOption")]
-    pub attachment_option: i32,
-}
-
-fn get_preset_dir(app: &AppHandle) -> Result<PathBuf, String> {
-    let app_dir = app.path().app_data_dir()
+fn get_preset_dir(app: &AppHandle, custom: Option<&str>) -> Result<PathBuf, String> {
+    let app_dir = app
+        .path()
+        .app_data_dir()
         .map_err(|e| format!("Failed to get app data dir: {}", e))?;
 
-    let preset_dir = app_dir.join("presets");
-
+    let preset_dir = resolve_preset_dir(&app_dir, custom);
     if !preset_dir.exists() {
         fs::create_dir_all(&preset_dir)
             .map_err(|e| format!("Failed to create preset directory: {}", e))?;
     }
-
     Ok(preset_dir)
 }
 
+/// 文件名由 id 拼出，必须限制字符集，防止 `../` 之类的路径穿越。
+fn is_safe_preset_id(id: &str) -> bool {
+    !id.is_empty()
+        && id.len() <= 128
+        && id
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_')
+}
+
+fn preset_path(app: &AppHandle, id: &str, custom: Option<&str>) -> Result<PathBuf, String> {
+    if !is_safe_preset_id(id) {
+        return Err("Invalid preset id".to_string());
+    }
+    Ok(get_preset_dir(app, custom)?.join(format!("{}.json", id)))
+}
+
+fn as_object(value: Value) -> Result<Map<String, Value>, String> {
+    match value {
+        Value::Object(map) => Ok(map),
+        _ => Err("Preset must be a JSON object".to_string()),
+    }
+}
+
 #[tauri::command]
-pub fn load_presets(app: AppHandle) -> Result<Vec<PresetData>, String> {
-    let preset_dir = get_preset_dir(&app)?;
+pub fn load_presets(app: AppHandle, dir: Option<String>) -> Result<Vec<Value>, String> {
+    let preset_dir = get_preset_dir(&app, dir.as_deref())?;
     let mut presets = Vec::new();
 
     if let Ok(entries) = fs::read_dir(&preset_dir) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                let path = entry.path();
-                if path.extension().map_or(false, |ext| ext == "json") {
-                    if let Ok(content) = fs::read_to_string(&path) {
-                        if let Ok(preset) = serde_json::from_str::<PresetData>(&content) {
-                            presets.push(preset);
-                        }
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|ext| ext.to_str()) != Some("json") {
+                continue;
+            }
+            if let Ok(content) = fs::read_to_string(&path) {
+                // 保留完整 JSON（含未知/未来字段），是否可用由前端 normalizePreset 判定。
+                if let Ok(value) = serde_json::from_str::<Value>(&content) {
+                    if value.is_object() {
+                        presets.push(value);
                     }
                 }
             }
         }
     }
-
     Ok(presets)
 }
 
 #[tauri::command]
-pub fn save_preset(app: AppHandle, preset: PresetData) -> Result<PresetData, String> {
-    let preset_dir = get_preset_dir(&app)?;
+pub fn save_preset(app: AppHandle, preset: Value, dir: Option<String>) -> Result<Value, String> {
+    let mut object = as_object(preset)?;
 
-    let preset_id = if preset.id.is_empty() {
-        uuid::Uuid::new_v4().to_string()
-    } else {
-        preset.id.clone()
+    // 空 id 或非法 id 都重新生成，避免覆盖已有预设或写出目录之外。
+    let id = match object.get(ID_FIELD).and_then(Value::as_str) {
+        Some(id) if is_safe_preset_id(id) => id.to_string(),
+        _ => uuid::Uuid::new_v4().to_string(),
     };
 
     let now = chrono::Utc::now().to_rfc3339();
+    let created_at = object
+        .get(CREATED_AT_FIELD)
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+        .map(|value| value.to_string())
+        .unwrap_or_else(|| now.clone());
 
-    let mut preset = preset;
-    preset.id = preset_id.clone();
+    object.insert(ID_FIELD.to_string(), Value::String(id.clone()));
+    object.insert(CREATED_AT_FIELD.to_string(), Value::String(created_at));
+    object.insert(UPDATED_AT_FIELD.to_string(), Value::String(now));
 
-    if preset.created_at.is_empty() {
-        preset.created_at = now.clone();
-    }
-    preset.updated_at = now;
-
-    let file_path = preset_dir.join(format!("{}.json", preset_id));
-
+    let preset = Value::Object(object);
     let content = serde_json::to_string_pretty(&preset)
         .map_err(|e| format!("Failed to serialize preset: {}", e))?;
-
-    fs::write(&file_path, content)
+    fs::write(preset_path(&app, &id, dir.as_deref())?, content)
         .map_err(|e| format!("Failed to write preset file: {}", e))?;
-
     Ok(preset)
 }
 
 #[tauri::command]
-pub fn delete_preset(app: AppHandle, preset_id: String) -> Result<(), String> {
-    let preset_dir = get_preset_dir(&app)?;
-    let file_path = preset_dir.join(format!("{}.json", preset_id));
-
+pub fn delete_preset(app: AppHandle, preset_id: String, dir: Option<String>) -> Result<(), String> {
+    let file_path = preset_path(&app, &preset_id, dir.as_deref())?;
     if file_path.exists() {
-        fs::remove_file(&file_path)
-            .map_err(|e| format!("Failed to delete preset file: {}", e))?;
+        fs::remove_file(&file_path).map_err(|e| format!("Failed to delete preset file: {}", e))?;
     }
-
     Ok(())
 }
 
+/// R3.1：分享文件的格式/版本/校验全部在前端 config/presetShare.ts。
+/// 这里只把调用方给出的文本原样写盘，连 JSON 都不解析。
 #[tauri::command]
-pub fn export_preset(app: AppHandle, preset_id: String, file_path: String) -> Result<(), String> {
-    let preset_dir = get_preset_dir(&app)?;
-    let source_path = preset_dir.join(format!("{}.json", preset_id));
-
-    if !source_path.exists() {
-        return Err("Preset not found".to_string());
-    }
-
-    let content = fs::read_to_string(&source_path)
-        .map_err(|e| format!("Failed to read preset: {}", e))?;
-
-    fs::write(&file_path, content)
-        .map_err(|e| format!("Failed to export preset: {}", e))?;
-
+pub fn export_preset(file_path: String, content: String) -> Result<(), String> {
+    fs::write(&file_path, content).map_err(|e| format!("Failed to export preset: {}", e))?;
     Ok(())
 }
 
+/// R3.1：只读回原始文本，由前端 parsePresetShare 判定格式与版本。
 #[tauri::command]
-pub fn import_preset(app: AppHandle, file_path: String) -> Result<PresetData, String> {
-    let content = fs::read_to_string(&file_path)
-        .map_err(|e| format!("Failed to read preset file: {}", e))?;
+pub fn import_preset(file_path: String) -> Result<String, String> {
+    fs::read_to_string(&file_path).map_err(|e| format!("Failed to read preset file: {}", e))
+}
 
-    let mut preset: PresetData = serde_json::from_str(&content)
-        .map_err(|e| format!("Failed to parse preset: {}", e))?;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-    preset.id = String::new();
+    #[test]
+    fn safe_preset_id_accepts_generated_ids() {
+        assert!(is_safe_preset_id("550e8400-e29b-41d4-a716-446655440000"));
+        assert!(is_safe_preset_id("preset_1"));
+    }
 
-    save_preset(app, preset)
+    #[test]
+    fn safe_preset_id_rejects_traversal_and_oversized_ids() {
+        for bad in ["", "../evil", "a/b", "a\\b", "..", "has space"] {
+            assert!(!is_safe_preset_id(bad), "should reject {bad}");
+        }
+        assert!(!is_safe_preset_id(&"x".repeat(129)));
+    }
+
+    #[test]
+    fn as_object_only_accepts_json_objects() {
+        assert!(as_object(serde_json::json!({ "name": "x" })).is_ok());
+        assert!(as_object(serde_json::json!([1, 2])).is_err());
+        assert!(as_object(serde_json::json!("text")).is_err());
+    }
+
+    #[test]
+    fn r17_custom_preset_dir_takes_precedence() {
+        let app_dir = std::path::Path::new("/app/data");
+        assert_eq!(
+            resolve_preset_dir(app_dir, Some("/my/presets".into())),
+            PathBuf::from("/my/presets")
+        );
+        assert_eq!(
+            resolve_preset_dir(app_dir, Some("  /my/presets  ".into())),
+            PathBuf::from("/my/presets")
+        );
+    }
+
+    #[test]
+    fn r17_blank_or_missing_custom_falls_back_to_default() {
+        let app_dir = std::path::Path::new("/app/data");
+        let default = PathBuf::from("/app/data").join("presets");
+        assert_eq!(resolve_preset_dir(app_dir, None), default);
+        assert_eq!(resolve_preset_dir(app_dir, Some("".into())), default);
+        assert_eq!(resolve_preset_dir(app_dir, Some("   ".into())), default);
+    }
+
+    #[test]
+    fn share_export_and_import_are_plain_text_io() {
+        let dir = std::env::temp_dir().join(format!("ffd-share-{}", uuid::Uuid::new_v4()));
+        fs::create_dir_all(&dir).expect("create temp dir");
+        let path = dir.join("sample.ffpreset.json");
+        // 故意写成损坏的 JSON：证明 Rust 不解析分享格式，校验完全在前端。
+        let content = "{\"format\":\"foreign\",broken";
+        export_preset(path.to_string_lossy().into_owned(), content.to_string())
+            .expect("write share file");
+        assert_eq!(
+            import_preset(path.to_string_lossy().into_owned()).expect("read share file"),
+            content
+        );
+        fs::remove_dir_all(&dir).expect("cleanup temp dir");
+    }
 }

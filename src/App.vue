@@ -2,53 +2,49 @@
   <router-view></router-view>
 </template>
 <script setup lang="ts">
-import { onMounted, onUnmounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { setLocale, getLocale } from '@/i18n';
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { onMounted, onUnmounted } from 'vue'
+import { setLocale, getLocale } from '@/i18n'
+import { getCurrentWindow } from '@tauri-apps/api/window'
+import { useSettingsStore } from '@/store/settingsStore'
+import { SETTINGS_STORAGE_KEY } from '@/config/settings'
 
-const { locale } = useI18n();
-let destroyed = false;
+const settingsStore = useSettingsStore()
+let destroyed = false
 
 function onVisibilityChange() {
-  if (document.hidden && !destroyed) {
-    try {
-      const saved = localStorage.getItem('appSettings');
-      if (saved) {
-        const settings = JSON.parse(saved);
-        if (settings.minimizeToTray) {
-          getCurrentWindow().hide().catch(() => {});
-        }
-      }
-    } catch (_) {}
+  // R2.3：托盘行为直接读唯一设置 store，不再自行解析 localStorage。
+  if (document.hidden && !destroyed && settingsStore.settings.minimizeToTray) {
+    getCurrentWindow()
+      .hide()
+      .catch(() => {})
   }
 }
 
 onMounted(() => {
-  destroyed = false;
-  const savedLang = localStorage.getItem('language') || 'zh-CN';
-  setLocale(savedLang as any);
+  destroyed = false
+  setLocale(settingsStore.language)
 
-  const handleLangChange = () => {
-    const currentLang = localStorage.getItem('language') || 'zh-CN';
-    if (currentLang !== getLocale()) {
-      setLocale(currentLang as any);
+  const handleSettingsChange = (event: StorageEvent) => {
+    if (event.key !== SETTINGS_STORAGE_KEY) return
+    settingsStore.reload()
+    if (settingsStore.language !== getLocale()) {
+      setLocale(settingsStore.language)
     }
-  };
+  }
 
-  window.addEventListener('storage', handleLangChange);
-  document.addEventListener('visibilitychange', onVisibilityChange);
+  window.addEventListener('storage', handleSettingsChange)
+  document.addEventListener('visibilitychange', onVisibilityChange)
 
   onUnmounted(() => {
-    destroyed = true;
-    window.removeEventListener('storage', handleLangChange);
-    document.removeEventListener('visibilitychange', onVisibilityChange);
-  });
-});
+    destroyed = true
+    window.removeEventListener('storage', handleSettingsChange)
+    document.removeEventListener('visibilitychange', onVisibilityChange)
+  })
+})
 
 window.addEventListener('beforeunload', () => {
-  destroyed = true;
-});
+  destroyed = true
+})
 </script>
 
 <style scoped></style>

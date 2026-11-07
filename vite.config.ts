@@ -1,7 +1,13 @@
-import { defineConfig } from "vite";
-import vue from "@vitejs/plugin-vue";
-import path from 'path';
-const host = process.env.TAURI_DEV_HOST;
+import { defineConfig } from 'vite'
+import vue from '@vitejs/plugin-vue'
+import path from 'path'
+import { readFileSync } from 'node:fs'
+const host = process.env.TAURI_DEV_HOST
+
+// 单一版本源（重构路线图 R0-1）：构建期从 package.json 注入，禁止在 UI 里硬编码。
+const packageJson = JSON.parse(
+  readFileSync(new URL('./package.json', import.meta.url), 'utf8'),
+) as { version: string }
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
@@ -14,6 +20,7 @@ export default defineConfig(async () => ({
   define: {
     __VUE_I18N_LEGACY_API__: false,
     __INTLIFY_JIT_COMPILATION__: true,
+    __APP_VERSION__: JSON.stringify(packageJson.version),
   },
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`
   //
@@ -26,14 +33,14 @@ export default defineConfig(async () => ({
     host: host || false,
     hmr: host
       ? {
-        protocol: "ws",
-        host,
-        port: 1421,
-      }
+          protocol: 'ws',
+          host,
+          port: 1421,
+        }
       : undefined,
     watch: {
       // 3. tell Vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+      ignored: ['**/src-tauri/**'],
     },
   },
-}));
+}))

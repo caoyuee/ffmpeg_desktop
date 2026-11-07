@@ -8,11 +8,11 @@
 
     <div
       class="app-drop-zone player-container"
+      :class="{ 'app-drop-zone--over': isDragOver }"
       @dragenter.prevent="onDragEnter"
       @dragover.prevent
       @dragleave="onDragLeave"
       @drop.prevent="onDrop"
-      :class="{ 'app-drop-zone--over': isDragOver }"
     >
       <VideoPlayer
         v-if="videoSrc"
@@ -28,8 +28,12 @@
     </div>
 
     <div class="app-bottom-bar control-bar">
-      <button class="app-btn app-btn--primary" @click="openFile">{{ t('page.player.open') }}</button>
-      <button class="app-btn" @click="closeVideo" :disabled="!currentFile">{{ t('page.player.close') }}</button>
+      <button class="app-btn app-btn--primary" @click="openFile">
+        {{ t('page.player.open') }}
+      </button>
+      <button class="app-btn" :disabled="!currentFile" @click="closeVideo">
+        {{ t('page.player.close') }}
+      </button>
     </div>
   </div>
 </template>
@@ -57,7 +61,12 @@ async function openFile() {
   try {
     const file = await open({
       multiple: false,
-      filters: [{ name: t('page.player.videoFiles'), extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', 'wmv', '*'] }],
+      filters: [
+        {
+          name: t('page.player.videoFiles'),
+          extensions: ['mp4', 'mkv', 'avi', 'mov', 'webm', 'flv', 'wmv', '*'],
+        },
+      ],
     })
     if (file) {
       await playFile(file as string)
@@ -80,7 +89,17 @@ async function playFile(filePath: string) {
     }
     const ext = filePath.split('.').pop()?.toLowerCase() || 'mp4'
     const mimeType =
-      { mp4: 'video/mp4', webm: 'video/webm', ogv: 'video/ogg', ogg: 'video/ogg', mkv: 'video/x-matroska', avi: 'video/x-msvideo', mov: 'video/quicktime', flv: 'video/x-flv', wmv: 'video/x-ms-wmv' }[ext] || 'video/mp4'
+      {
+        mp4: 'video/mp4',
+        webm: 'video/webm',
+        ogv: 'video/ogg',
+        ogg: 'video/ogg',
+        mkv: 'video/x-matroska',
+        avi: 'video/x-msvideo',
+        mov: 'video/quicktime',
+        flv: 'video/x-flv',
+        wmv: 'video/x-ms-wmv',
+      }[ext] || 'video/mp4'
 
     const blob = new Blob([bytes], { type: mimeType })
     currentBlobUrl = URL.createObjectURL(blob)
@@ -100,8 +119,7 @@ function closeVideo() {
   currentFile.value = ''
 }
 
-function onVideoEnded() {
-}
+function onVideoEnded() {}
 
 function onVideoError(event: Event) {
   console.error('视频播放错误:', event)

@@ -2,7 +2,7 @@
   <div class="trim-panel">
     <div class="panel-section">
       <h4>剪辑设置</h4>
-      
+
       <div class="form-group">
         <label>剪辑方式</label>
         <select v-model="localPreset.trim.method" @change="onTrimMethodChange">
@@ -15,25 +15,21 @@
       <div v-if="localPreset.trim.method > 0" class="trim-controls">
         <div class="form-group">
           <label>入点时间</label>
-          <TimeInput v-model="localPreset.trim.inPoint" @update:modelValue="onTimeChange" />
+          <TimeInput v-model="localPreset.trim.inPoint" @update:model-value="onTimeChange" />
         </div>
 
         <div class="form-group">
           <label>{{ localPreset.trim.method === 1 ? '出点时间' : '持续时长' }}</label>
-          <TimeInput v-model="localPreset.trim.outPoint" @update:modelValue="onTimeChange" />
+          <TimeInput v-model="localPreset.trim.outPoint" @update:model-value="onTimeChange" />
         </div>
 
-        <div class="form-group" v-if="localPreset.trim.method === 1">
+        <div v-if="localPreset.trim.method === 1" class="form-group">
           <label>向前搜索</label>
-          <input
-            type="text"
-            v-model="localPreset.trim.seekBackward"
-            placeholder="可选，如 5s"
-          />
+          <input v-model="localPreset.trim.seekBackward" type="text" placeholder="可选，如 5s" />
           <small>在某些格式下可以提高精度</small>
         </div>
 
-        <div class="trim-info" v-if="duration > 0">
+        <div v-if="duration > 0" class="trim-info">
           <div class="info-item">
             <span class="label">剪辑时长:</span>
             <span class="value">{{ formatDuration(duration) }}</span>
@@ -43,111 +39,121 @@
     </div>
 
     <div class="panel-section">
-      <button class="app-btn tool-btn" @click="showCropDialog = true">{{ t('page.params.cropWindow') }}</button>
+      <button class="app-btn tool-btn" @click="showCropDialog = true">
+        {{ t('page.params.cropWindow') }}
+      </button>
     </div>
 
     <CropDialog
       v-model="showCropDialog"
-      :initialCrop="localPreset.video.resolution.cropFilter"
+      :initial-crop="localPreset.video.resolution.cropFilter"
       @confirm="onCropUpdated"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { PresetData } from '@/types/preset';
-import TimeInput from './TimeInput.vue';
-import CropDialog from '@/components/Dialogs/CropDialog.vue';
+import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { PresetData } from '@/types/preset'
+import TimeInput from './TimeInput.vue'
+import CropDialog from '@/components/Dialogs/CropDialog.vue'
 
 const props = defineProps<{
-  preset: PresetData;
-}>();
+  preset: PresetData
+}>()
 
 const emit = defineEmits<{
-  'update:preset': [preset: PresetData];
-}>();
+  'update:preset': [preset: PresetData]
+}>()
 
-const { t } = useI18n();
+const { t } = useI18n()
 
-const localPreset = ref<PresetData>({ ...props.preset });
-const showCropDialog = ref(false);
+const localPreset = ref<PresetData>({ ...props.preset })
+const showCropDialog = ref(false)
 
-watch(() => props.preset, (newVal) => {
-  localPreset.value = { ...newVal };
-}, { deep: true });
+watch(
+  () => props.preset,
+  (newVal) => {
+    localPreset.value = { ...newVal }
+  },
+  { deep: true },
+)
 
 const duration = computed(() => {
-  if (localPreset.value.trim.method === 0) return 0;
-  
-  const inSeconds = parseTimeToSeconds(localPreset.value.trim.inPoint);
-  const outSeconds = parseTimeToSeconds(localPreset.value.trim.outPoint);
-  
-  if (inSeconds === null || outSeconds === null) return 0;
-  
+  if (localPreset.value.trim.method === 0) return 0
+
+  const inSeconds = parseTimeToSeconds(localPreset.value.trim.inPoint)
+  const outSeconds = parseTimeToSeconds(localPreset.value.trim.outPoint)
+
+  if (inSeconds === null || outSeconds === null) return 0
+
   if (localPreset.value.trim.method === 1) {
-    return Math.max(0, outSeconds - inSeconds);
+    return Math.max(0, outSeconds - inSeconds)
   } else {
-    return outSeconds;
+    return outSeconds
   }
-});
+})
 
 function parseTimeToSeconds(timeStr: string): number | null {
-  if (!timeStr) return null;
-  
+  if (!timeStr) return null
+
   const patterns = [
     /^(\d+):(\d{2}):(\d{2}(?:\.\d+)?)$/,
     /^(\d+):(\d{2}(?:\.\d+)?)$/,
-    /^(\d+(?:\.\d+)?)$/
-  ];
+    /^(\d+(?:\.\d+)?)$/,
+  ]
 
   for (let i = 0; i < patterns.length; i++) {
-    const pattern = patterns[i];
-    if (!pattern) continue;
-    const match = timeStr.match(pattern);
+    const pattern = patterns[i]
+    if (!pattern) continue
+    const match = timeStr.match(pattern)
     if (match) {
       if (i === 0) {
-        return parseInt(match[1] || '0') * 3600 + parseInt(match[2] || '0') * 60 + parseFloat(match[3] || '0');
+        return (
+          parseInt(match[1] || '0') * 3600 +
+          parseInt(match[2] || '0') * 60 +
+          parseFloat(match[3] || '0')
+        )
       } else if (i === 1) {
-        return parseInt(match[1] || '0') * 60 + parseFloat(match[2] || '0');
+        return parseInt(match[1] || '0') * 60 + parseFloat(match[2] || '0')
       } else {
-        return parseFloat(match[1] || '0');
+        return parseFloat(match[1] || '0')
       }
     }
   }
-  return null;
+  return null
 }
 
 function formatDuration(seconds: number): string {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = Math.floor(seconds % 60);
-  
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const secs = Math.floor(seconds % 60)
+
   if (hours > 0) {
-    return `${hours}小时${minutes}分${secs}秒`;
+    return `${hours}小时${minutes}分${secs}秒`
   } else if (minutes > 0) {
-    return `${minutes}分${secs}秒`;
+    return `${minutes}分${secs}秒`
   } else {
-    return `${secs}秒`;
+    return `${secs}秒`
   }
 }
 
 function onTrimMethodChange() {
   if (localPreset.value.trim.method === 0) {
-    localPreset.value.trim.inPoint = '';
-    localPreset.value.trim.outPoint = '';
-    localPreset.value.trim.seekBackward = '';
+    localPreset.value.trim.inPoint = ''
+    localPreset.value.trim.outPoint = ''
+    localPreset.value.trim.seekBackward = ''
   }
 }
 
 function onTimeChange() {
-  emit('update:preset', localPreset.value);
+  emit('update:preset', localPreset.value)
 }
 
 function onCropUpdated(cropFilter: string) {
-  localPreset.value.video.resolution.cropFilter = cropFilter;
-  emit('update:preset', localPreset.value);
+  localPreset.value.video.resolution.cropFilter = cropFilter
+  emit('update:preset', localPreset.value)
 }
 </script>
 

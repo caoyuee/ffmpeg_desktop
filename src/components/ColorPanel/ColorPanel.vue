@@ -3,23 +3,41 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('basic')">
         <h4>{{ t('page.params.colorPanel.basicAdjustments') }}</h4>
-        <AppIcon :name="expandedSections.basic ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.basic ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.basic" class="section-content">
         <div class="form-group">
           <label>{{ t('page.params.colorPanel.brightness') }}</label>
           <div class="slider-group">
-            <input type="range" min="-1" max="1" step="0.05"
-              v-model="localPreset.video.colorManagement.brightness" @input="onColorChange" />
-            <span class="param-value">{{ localPreset.video.colorManagement.brightness || '0' }}</span>
+            <input
+              v-model="localPreset.video.colorManagement.brightness"
+              type="range"
+              min="-1"
+              max="1"
+              step="0.05"
+              @input="onColorChange"
+            />
+            <span class="param-value">{{
+              localPreset.video.colorManagement.brightness || '0'
+            }}</span>
           </div>
         </div>
 
         <div class="form-group">
           <label>{{ t('page.params.colorPanel.contrast') }}</label>
           <div class="slider-group">
-            <input type="range" min="0" max="2" step="0.05"
-              v-model="localPreset.video.colorManagement.contrast" @input="onColorChange" />
+            <input
+              v-model="localPreset.video.colorManagement.contrast"
+              type="range"
+              min="0"
+              max="2"
+              step="0.05"
+              @input="onColorChange"
+            />
             <span class="param-value">{{ localPreset.video.colorManagement.contrast || '1' }}</span>
           </div>
         </div>
@@ -27,29 +45,49 @@
         <div class="form-group">
           <label>{{ t('page.params.colorPanel.saturation') }}</label>
           <div class="slider-group">
-            <input type="range" min="0" max="3" step="0.05"
-              v-model="localPreset.video.colorManagement.saturation" @input="onColorChange" />
-            <span class="param-value">{{ localPreset.video.colorManagement.saturation || '1' }}</span>
+            <input
+              v-model="localPreset.video.colorManagement.saturation"
+              type="range"
+              min="0"
+              max="3"
+              step="0.05"
+              @input="onColorChange"
+            />
+            <span class="param-value">{{
+              localPreset.video.colorManagement.saturation || '1'
+            }}</span>
           </div>
         </div>
 
         <div class="form-group">
           <label>{{ t('page.params.colorPanel.gamma') }}</label>
           <div class="slider-group">
-            <input type="range" min="0.1" max="10" step="0.1"
-              :value="gammaSliderValue" @input="onGammaInput" />
+            <input
+              type="range"
+              min="0.1"
+              max="10"
+              step="0.1"
+              :value="gammaSliderValue"
+              @input="onGammaInput"
+            />
             <span class="param-value">{{ gammaSliderValue }}</span>
           </div>
         </div>
 
-        <button class="app-btn reset-btn" @click="resetBasic">{{ t('page.params.colorPanel.resetBasicAdjustments') }}</button>
+        <button class="app-btn reset-btn" @click="resetBasic">
+          {{ t('page.params.colorPanel.resetBasicAdjustments') }}
+        </button>
       </div>
     </div>
 
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('format')">
         <h4>{{ t('page.params.colorPanel.pixelFormat') }}</h4>
-        <AppIcon :name="expandedSections.format ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.format ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.format" class="section-content">
         <div class="form-group">
@@ -74,12 +112,19 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('space')">
         <h4>{{ t('page.params.colorPanel.colorSpace') }}</h4>
-        <AppIcon :name="expandedSections.space ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.space ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.space" class="section-content">
         <div class="form-group">
           <label>{{ t('page.params.colorPanel.colorPrimaries') }}</label>
-          <select v-model="localPreset.video.colorManagement.colorPrimaries" @change="onColorChange">
+          <select
+            v-model="localPreset.video.colorManagement.colorPrimaries"
+            @change="onColorChange"
+          >
             <option value="">{{ t('page.params.colorPanel.automatic') }}</option>
             <option value="bt709">BT.709 (SDR)</option>
             <option value="bt2020">BT.2020 (HDR)</option>
@@ -123,7 +168,11 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('tonemap')">
         <h4>{{ t('page.params.colorPanel.toneMapping') }}</h4>
-        <AppIcon :name="expandedSections.tonemap ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.tonemap ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.tonemap" class="section-content">
         <div class="form-group">
@@ -145,56 +194,60 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, reactive, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { PresetData } from '@/types/preset';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { computed, ref, reactive, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { PresetData } from '@/types/preset'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
 
 const props = defineProps<{
-  preset: PresetData;
-}>();
+  preset: PresetData
+}>()
 
 const emit = defineEmits<{
-  'update:preset': [preset: PresetData];
-}>();
+  'update:preset': [preset: PresetData]
+}>()
 
-const { t } = useI18n();
+const { t } = useI18n()
 
-const localPreset = ref<PresetData>({ ...props.preset });
+const localPreset = ref<PresetData>({ ...props.preset })
 
 const expandedSections = reactive({
   basic: false,
   format: false,
   space: false,
   tonemap: false,
-});
+})
 
-const gammaSliderValue = computed(() => localPreset.value.video.colorManagement.gamma || '1');
+const gammaSliderValue = computed(() => localPreset.value.video.colorManagement.gamma || '1')
 
-watch(() => props.preset, (newVal) => {
-  localPreset.value = { ...newVal };
-}, { deep: true });
+watch(
+  () => props.preset,
+  (newVal) => {
+    localPreset.value = { ...newVal }
+  },
+  { deep: true },
+)
 
 function toggleSection(section: keyof typeof expandedSections) {
-  expandedSections[section] = !expandedSections[section];
+  expandedSections[section] = !expandedSections[section]
 }
 
 function onColorChange() {
-  emit('update:preset', localPreset.value);
+  emit('update:preset', localPreset.value)
 }
 
 function onGammaInput(event: Event) {
-  const input = event.target as HTMLInputElement;
-  localPreset.value.video.colorManagement.gamma = input.value;
-  onColorChange();
+  const input = event.target as HTMLInputElement
+  localPreset.value.video.colorManagement.gamma = input.value
+  onColorChange()
 }
 
 function resetBasic() {
-  localPreset.value.video.colorManagement.brightness = '';
-  localPreset.value.video.colorManagement.contrast = '';
-  localPreset.value.video.colorManagement.saturation = '';
-  localPreset.value.video.colorManagement.gamma = '';
-  onColorChange();
+  localPreset.value.video.colorManagement.brightness = ''
+  localPreset.value.video.colorManagement.contrast = ''
+  localPreset.value.video.colorManagement.saturation = ''
+  localPreset.value.video.colorManagement.gamma = ''
+  onColorChange()
 }
 </script>
 
@@ -271,7 +324,7 @@ function resetBasic() {
   gap: 0.75rem;
 }
 
-.slider-group input[type="range"] {
+.slider-group input[type='range'] {
   flex: 1;
   height: 6px;
   cursor: pointer;

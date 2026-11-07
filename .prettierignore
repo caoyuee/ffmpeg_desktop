@@ -1,0 +1,13 @@
+dist
+dist-ssr
+node_modules
+.agents
+.Trash-*
+coverage
+playwright-report
+test-reports
+test-results
+src-tauri
+pnpm-lock.yaml
+*.local
+*.min.*

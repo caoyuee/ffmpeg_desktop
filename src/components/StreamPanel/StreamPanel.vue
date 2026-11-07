@@ -3,19 +3,30 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('video')">
         <h4>{{ t('page.params.streamPanel.videoStream') }}</h4>
-        <AppIcon :name="expandedSections.video ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.video ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.video" class="section-content">
         <div class="form-group">
           <label>{{ t('page.params.streamPanel.videoStreamIndex') }}</label>
-          <input type="text" v-model="videoStreamsText" @input="onVideoStreamsChange"
-            :placeholder="t('page.params.streamPanel.videoStreamPlaceholder')" />
+          <input
+            v-model="videoStreamsText"
+            type="text"
+            :placeholder="t('page.params.streamPanel.videoStreamPlaceholder')"
+            @input="onVideoStreamsChange"
+          />
           <small>{{ t('page.params.streamPanel.defaultVideoStreamHint') }}</small>
         </div>
         <div class="form-group checkbox-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="localPreset.streamControl.keepOtherVideo" 
-              @change="onStreamChange" />
+            <input
+              v-model="localPreset.streamControl.keepOtherVideo"
+              type="checkbox"
+              @change="onStreamChange"
+            />
             <span>{{ t('page.params.streamPanel.keepOtherVideo') }}</span>
           </label>
         </div>
@@ -25,19 +36,30 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('audio')">
         <h4>{{ t('page.params.streamPanel.audioStream') }}</h4>
-        <AppIcon :name="expandedSections.audio ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.audio ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.audio" class="section-content">
         <div class="form-group">
           <label>{{ t('page.params.streamPanel.audioStreamIndex') }}</label>
-          <input type="text" v-model="audioStreamsText" @input="onAudioStreamsChange"
-            :placeholder="t('page.params.streamPanel.audioStreamPlaceholder')" />
+          <input
+            v-model="audioStreamsText"
+            type="text"
+            :placeholder="t('page.params.streamPanel.audioStreamPlaceholder')"
+            @input="onAudioStreamsChange"
+          />
           <small>{{ t('page.params.streamPanel.defaultAudioStreamHint') }}</small>
         </div>
         <div class="form-group checkbox-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="localPreset.streamControl.keepOtherAudio" 
-              @change="onStreamChange" />
+            <input
+              v-model="localPreset.streamControl.keepOtherAudio"
+              type="checkbox"
+              @change="onStreamChange"
+            />
             <span>{{ t('page.params.streamPanel.keepOtherAudio') }}</span>
           </label>
         </div>
@@ -47,12 +69,19 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('subtitle')">
         <h4>{{ t('page.params.streamPanel.subtitleStream') }}</h4>
-        <AppIcon :name="expandedSections.subtitle ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.subtitle ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.subtitle" class="section-content">
         <div class="form-group">
           <label>{{ t('page.params.streamPanel.subtitleOperation') }}</label>
-          <select v-model.number="localPreset.streamControl.subtitleOperation" @change="onStreamChange">
+          <select
+            v-model.number="localPreset.streamControl.subtitleOperation"
+            @change="onStreamChange"
+          >
             <option :value="0">{{ t('page.params.streamPanel.noProcessing') }}</option>
             <option :value="1">{{ t('page.params.streamPanel.burnToVideo') }}</option>
             <option :value="2">{{ t('page.params.streamPanel.muxToOutput') }}</option>
@@ -61,30 +90,46 @@
         </div>
         <div class="form-group">
           <label>{{ t('page.params.streamPanel.subtitleStreamIndex') }}</label>
-          <input type="text" v-model="subtitleStreamsText" @input="onSubtitleStreamsChange"
-            :placeholder="t('page.params.streamPanel.subtitleStreamPlaceholder')" />
+          <input
+            v-model="subtitleStreamsText"
+            type="text"
+            :placeholder="t('page.params.streamPanel.subtitleStreamPlaceholder')"
+            @input="onSubtitleStreamsChange"
+          />
         </div>
         <div class="form-group checkbox-group">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="localPreset.streamControl.keepOtherSubtitle" 
-              @change="onStreamChange" />
+            <input
+              v-model="localPreset.streamControl.keepOtherSubtitle"
+              type="checkbox"
+              @change="onStreamChange"
+            />
             <span>{{ t('page.params.streamPanel.keepOtherSubtitle') }}</span>
           </label>
         </div>
         <div class="form-row">
           <label class="checkbox-label">
-            <input type="checkbox" v-model="localPreset.streamControl.autoMuxSRT" 
-              @change="onStreamChange" />
+            <input
+              v-model="localPreset.streamControl.autoMuxSRT"
+              type="checkbox"
+              @change="onStreamChange"
+            />
             <span>{{ t('page.params.streamPanel.autoMuxSrt') }}</span>
           </label>
           <label class="checkbox-label">
-            <input type="checkbox" v-model="localPreset.streamControl.autoMuxASS" 
-              @change="onStreamChange" />
+            <input
+              v-model="localPreset.streamControl.autoMuxASS"
+              type="checkbox"
+              @change="onStreamChange"
+            />
             <span>{{ t('page.params.streamPanel.autoMuxAss') }}</span>
           </label>
           <label class="checkbox-label">
-            <input type="checkbox" v-model="localPreset.streamControl.autoMuxSSA" 
-              @change="onStreamChange" />
+            <input
+              v-model="localPreset.streamControl.autoMuxSSA"
+              type="checkbox"
+              @change="onStreamChange"
+            />
             <span>{{ t('page.params.streamPanel.autoMuxSsa') }}</span>
           </label>
         </div>
@@ -94,12 +139,19 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('metadata')">
         <h4>{{ t('page.params.streamPanel.metadataAndChapter') }}</h4>
-        <AppIcon :name="expandedSections.metadata ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.metadata ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.metadata" class="section-content">
         <div class="form-group">
           <label>{{ t('page.params.streamPanel.metadataOption') }}</label>
-          <select v-model.number="localPreset.streamControl.metadataOption" @change="onStreamChange">
+          <select
+            v-model.number="localPreset.streamControl.metadataOption"
+            @change="onStreamChange"
+          >
             <option :value="0">{{ t('page.params.streamPanel.keepMetadata') }}</option>
             <option :value="1">{{ t('page.params.streamPanel.removeMetadata') }}</option>
           </select>
@@ -113,7 +165,10 @@
         </div>
         <div class="form-group">
           <label>{{ t('page.params.streamPanel.attachmentOption') }}</label>
-          <select v-model.number="localPreset.streamControl.attachmentOption" @change="onStreamChange">
+          <select
+            v-model.number="localPreset.streamControl.attachmentOption"
+            @change="onStreamChange"
+          >
             <option :value="0">{{ t('page.params.streamPanel.keepAttachments') }}</option>
             <option :value="1">{{ t('page.params.streamPanel.removeAttachments') }}</option>
           </select>
@@ -124,79 +179,84 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch, computed } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { PresetData } from '@/types/preset';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { ref, reactive, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { PresetData } from '@/types/preset'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
 
 const props = defineProps<{
-  preset: PresetData;
-}>();
+  preset: PresetData
+}>()
 
 const emit = defineEmits<{
-  'update:preset': [preset: PresetData];
-}>();
+  'update:preset': [preset: PresetData]
+}>()
 
-const { t } = useI18n();
+const { t } = useI18n()
 
-const localPreset = ref<PresetData>({ ...props.preset });
+const localPreset = ref<PresetData>({ ...props.preset })
 
 const expandedSections = reactive({
   video: false,
   audio: false,
   subtitle: false,
   metadata: false,
-});
+})
 
 const videoStreamsText = computed({
   get: () => localPreset.value.streamControl.videoStreams.join(','),
-  set: () => {}
-});
+  set: () => {},
+})
 
 const audioStreamsText = computed({
   get: () => localPreset.value.streamControl.audioStreams.join(','),
-  set: () => {}
-});
+  set: () => {},
+})
 
 const subtitleStreamsText = computed({
   get: () => localPreset.value.streamControl.subtitleStreams.join(','),
-  set: () => {}
-});
+  set: () => {},
+})
 
-watch(() => props.preset, (newVal) => {
-  localPreset.value = { ...newVal };
-}, { deep: true });
+watch(
+  () => props.preset,
+  (newVal) => {
+    localPreset.value = { ...newVal }
+  },
+  { deep: true },
+)
 
 function toggleSection(section: keyof typeof expandedSections) {
-  expandedSections[section] = !expandedSections[section];
+  expandedSections[section] = !expandedSections[section]
 }
 
 function parseStreams(text: string): string[] {
-  return text.split(',')
-    .map(s => s.trim())
-    .filter(s => s !== '');
+  return text
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s !== '')
 }
 
 function onVideoStreamsChange(event: Event) {
-  const target = event.target as HTMLInputElement;
-  localPreset.value.streamControl.videoStreams = parseStreams(target.value);
-  onStreamChange();
+  const target = event.target as HTMLInputElement
+  localPreset.value.streamControl.videoStreams = parseStreams(target.value)
+  onStreamChange()
 }
 
 function onAudioStreamsChange(event: Event) {
-  const target = event.target as HTMLInputElement;
-  localPreset.value.streamControl.audioStreams = parseStreams(target.value);
-  onStreamChange();
+  const target = event.target as HTMLInputElement
+  localPreset.value.streamControl.audioStreams = parseStreams(target.value)
+  onStreamChange()
 }
 
 function onSubtitleStreamsChange(event: Event) {
-  const target = event.target as HTMLInputElement;
-  localPreset.value.streamControl.subtitleStreams = parseStreams(target.value);
-  onStreamChange();
+  const target = event.target as HTMLInputElement
+  localPreset.value.streamControl.subtitleStreams = parseStreams(target.value)
+  onStreamChange()
 }
 
 function onStreamChange() {
-  emit('update:preset', localPreset.value);
+  emit('update:preset', localPreset.value)
 }
 </script>
 
@@ -256,7 +316,7 @@ function onStreamChange() {
   color: var(--text-color2, #999);
 }
 
-.form-group input[type="text"],
+.form-group input[type='text'],
 .form-group select {
   width: 100%;
   padding: 0.5rem;
@@ -288,7 +348,7 @@ function onStreamChange() {
   color: var(--text-color1, #e0e0e0);
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   -webkit-appearance: checkbox;
   appearance: checkbox;
   width: 16px;

@@ -1,11 +1,11 @@
 mod commands;
 mod library;
 pub mod modules;
-mod utility;
+// R2.1：utility/（legacy _executor + 无前缀事件枚举）已整体删除。
 
 use commands::*;
 use library::_probe::probe_media_info;
-use modules::{preset_manager, task_manager};
+use modules::{preset_manager, task_manager, task_queue_store};
 use tauri::Manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -37,8 +37,6 @@ pub fn run() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
-            execute_ffmpeg_command,
-            stop_convert,
             read_json_file,
             probe_media_info,
             check_ffmpeg_tools,
@@ -70,9 +68,14 @@ pub fn run() {
             preset_manager::delete_preset,
             preset_manager::export_preset,
             preset_manager::import_preset,
+            task_queue_store::load_task_queue,
+            task_queue_store::save_task_queue,
             set_tray_settings,
             open_independent_panel,
-            get_independent_panel_files
+            get_independent_panel_files,
+            parse_startup_args,
+            list_media_files,
+            get_file_sizes
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

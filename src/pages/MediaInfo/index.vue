@@ -3,7 +3,11 @@
     <div class="app-toolbar">
       <div class="app-toolbar__group file-selector">
         <label class="app-field-label">{{ t('page.mediainfo.selectFile') }}</label>
-        <select class="app-input--compact file-select" v-model="selectedFile" @change="loadMediaInfo">
+        <select
+          v-model="selectedFile"
+          class="app-input--compact file-select"
+          @change="loadMediaInfo"
+        >
           <option value="">{{ t('page.mediainfo.pleaseSelect') }}</option>
           <option v-for="file in recentFiles" :key="file" :value="file">
             {{ getFileName(file) }}
@@ -15,11 +19,31 @@
         </button>
       </div>
       <div class="app-toolbar__spacer"></div>
-      <button class="app-btn app-btn--primary" @click="loadMediaInfo" :disabled="!selectedFile">
+      <button
+        class="app-btn"
+        :disabled="!rawProbe"
+        data-testid="mediainfo-export-json"
+        @click="copyReport('json')"
+      >
+        {{ t('page.mediainfo.exportJson') }}
+      </button>
+      <button
+        class="app-btn"
+        :disabled="!rawProbe"
+        data-testid="mediainfo-export-csv"
+        @click="copyReport('csv')"
+      >
+        {{ t('page.mediainfo.exportCsv') }}
+      </button>
+      <button class="app-btn app-btn--primary" :disabled="!selectedFile" @click="loadMediaInfo">
         <AppIcon name="refresh" :size="16" class="icon" />
         {{ t('page.mediainfo.refresh') }}
       </button>
     </div>
+
+    <p v-if="reportToast" class="report-toast" data-testid="mediainfo-report-toast">
+      {{ reportToast }}
+    </p>
 
     <div class="info-container">
       <div v-if="!selectedFile" class="app-empty-state empty-state">
@@ -61,8 +85,16 @@
           </div>
         </div>
 
-        <div v-for="(stream, index) in mediaInfo.streams" :key="index" class="app-card info-section stream-section">
-          <h4 class="app-section-title">{{ getStreamType(stream.codec_type) }} {{ t('page.mediainfo.stream') }} #{{ stream.index }}</h4>
+        <div
+          v-for="(stream, index) in mediaInfo.streams"
+          :key="index"
+          class="app-card info-section stream-section"
+        >
+          <h4 class="app-section-title">
+            {{ getStreamType(stream.codec_type) }} {{ t('page.mediainfo.stream') }} #{{
+              stream.index
+            }}
+          </h4>
           <div class="info-grid">
             <div class="info-item">
               <span class="label">{{ t('page.mediainfo.codec') }}</span>
@@ -86,7 +118,9 @@
             </div>
             <div v-if="stream.codec_type === 'audio'" class="info-item">
               <span class="label">{{ t('page.mediainfo.channels') }}</span>
-              <span class="value">{{ stream.channels ? getChannelLayout(stream.channels) : 'N/A' }}</span>
+              <span class="value">{{
+                stream.channels ? getChannelLayout(stream.channels) : 'N/A'
+              }}</span>
             </div>
             <div v-if="stream.bit_rate" class="info-item">
               <span class="label">{{ t('page.mediainfo.bitrate') }}</span>
@@ -114,82 +148,91 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { invoke } from '@tauri-apps/api/core';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { invoke } from '@tauri-apps/api/core'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
+// R3.7：ffprobe 原始结果交给唯一报告层做规范化与 CSV/JSON 导出。
+import { normalizeMediaInfo, exportMediaReport } from '@/config/mediaReport'
+import type { FfprobeOutput } from '@/types/fileList'
 
-const { t } = useI18n();
+const { t } = useI18n()
 
 interface MediaStream {
-  index: number;
-  codec_type: string;
-  codec_name: string;
-  width?: number;
-  height?: number;
-  frameRate?: string;
-  displayAspectRatio?: string;
-  sampleRate?: number;
-  channels?: number;
-  bit_rate?: string;
-  language?: string;
+  index: number
+  codec_type: string
+  codec_name: string
+  width?: number
+  height?: number
+  frameRate?: string
+  displayAspectRatio?: string
+  sampleRate?: number
+  channels?: number
+  bit_rate?: string
+  language?: string
 }
 
 interface MediaInfo {
-  filename: string;
-  format: string;
-  duration: number;
-  size: number;
-  bitRate: number;
-  streams: MediaStream[];
-  metadata: Record<string, string>;
+  filename: string
+  format: string
+  duration: number
+  size: number
+  bitRate: number
+  streams: MediaStream[]
+  metadata: Record<string, string>
 }
 
-const selectedFile = ref('');
-const recentFiles = ref<string[]>([]);
-const loading = ref(false);
-const mediaInfo = ref<MediaInfo | null>(null);
+const selectedFile = ref('')
+const recentFiles = ref<string[]>([])
+const loading = ref(false)
+const mediaInfo = ref<MediaInfo | null>(null)
+const rawProbe = ref<unknown>(null)
+const reportToast = ref('')
 
 async function browseFile() {
-  const { open } = await import('@tauri-apps/plugin-dialog');
+  const { open } = await import('@tauri-apps/plugin-dialog')
   const selected = await open({
     multiple: false,
     filters: [
-      { name: t('page.mediainfo.mediaFiles'), extensions: ['mp4', 'mkv', 'avi', 'mov', 'flv', 'webm', 'mp3', 'wav', 'flac'] },
+      {
+        name: t('page.mediainfo.mediaFiles'),
+        extensions: ['mp4', 'mkv', 'avi', 'mov', 'flv', 'webm', 'mp3', 'wav', 'flac'],
+      },
     ],
-  });
+  })
 
   if (selected && typeof selected === 'string') {
-    selectedFile.value = selected;
+    selectedFile.value = selected
     if (!recentFiles.value.includes(selected)) {
-      recentFiles.value.unshift(selected);
+      recentFiles.value.unshift(selected)
       if (recentFiles.value.length > 10) {
-        recentFiles.value.pop();
+        recentFiles.value.pop()
       }
     }
-    loadMediaInfo();
+    loadMediaInfo()
   }
 }
 
 async function loadMediaInfo() {
-  if (!selectedFile.value) return;
+  if (!selectedFile.value) return
 
-  loading.value = true;
+  loading.value = true
   try {
-    const raw = await invoke<any>('probe_media_info', { path: selectedFile.value });
-    mediaInfo.value = mapFfprobeToMediaInfo(raw);
+    const raw = await invoke<FfprobeOutput>('probe_media_info', { path: selectedFile.value })
+    rawProbe.value = raw
+    mediaInfo.value = mapFfprobeToMediaInfo(raw)
   } catch (error) {
-    console.error('Failed to load media info:', error);
-    mediaInfo.value = null;
+    console.error('Failed to load media info:', error)
+    mediaInfo.value = null
   } finally {
-    loading.value = false;
+    loading.value = false
   }
 }
 
-function mapFfprobeToMediaInfo(raw: any): MediaInfo {
-  const fmt = raw.format || {};
-  const streams: MediaStream[] = (raw.streams || []).map((s: any) => {
-    const lang = s.tags?.language || s.language;
+function mapFfprobeToMediaInfo(raw: FfprobeOutput): MediaInfo {
+  const fmt = raw.format || {}
+  const streams: MediaStream[] = (raw.streams || []).map((s) => {
+    const lang = s.tags?.language || s.language
     return {
       index: s.index,
       codec_type: s.codec_type,
@@ -202,26 +245,37 @@ function mapFfprobeToMediaInfo(raw: any): MediaInfo {
       channels: s.channels,
       bit_rate: s.bit_rate,
       language: lang && lang !== 'und' ? lang : undefined,
-    };
-  });
+    }
+  })
 
   return {
     filename: fmt.filename || selectedFile.value,
     format: fmt.format_long_name || fmt.format_name || '',
-    duration: parseFloat(fmt.duration) || 0,
-    size: parseInt(fmt.size) || 0,
-    bitRate: parseInt(fmt.bit_rate) || 0,
+    duration: parseFloat(fmt.duration ?? '') || 0,
+    size: parseInt(fmt.size ?? '') || 0,
+    bitRate: parseInt(fmt.bit_rate ?? '') || 0,
     streams,
     metadata: fmt.tags || {},
-  };
+  }
+}
+
+async function copyReport(format: 'json' | 'csv') {
+  if (!rawProbe.value) return
+  const text = exportMediaReport(normalizeMediaInfo(rawProbe.value, selectedFile.value), format)
+  try {
+    await navigator.clipboard?.writeText(text)
+    reportToast.value = t('page.mediainfo.exportSuccess')
+  } catch {
+    reportToast.value = t('page.mediainfo.exportFailed')
+  }
 }
 
 function getFileName(path: string) {
-  return path.split('/').pop() || path;
+  return path.split('/').pop() || path
 }
 
 function computeAspectRatio(width: number, height: number): string {
-  if (!width || !height) return '';
+  if (!width || !height) return ''
   const ratios: [number, number, string][] = [
     [16, 9, '16:9'],
     [4, 3, '4:3'],
@@ -231,46 +285,46 @@ function computeAspectRatio(width: number, height: number): string {
     [1, 1, '1:1'],
     [3, 2, '3:2'],
     [5, 4, '5:4'],
-  ];
-  const ratio = width / height;
+  ]
+  const ratio = width / height
   for (const [w, h, label] of ratios) {
-    const expected = w / h;
+    const expected = w / h
     if (Math.abs(ratio - expected) < 0.02) {
-      return label;
+      return label
     }
   }
-  return `${width}:${height}`;
+  return `${width}:${height}`
 }
 
 function formatDuration(seconds: number): string {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = Math.floor(seconds % 60)
   if (h > 0) {
-    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, '0')}`
 }
 
 function formatSize(bytes: number): string {
   if (bytes > 1024 * 1024 * 1024) {
-    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+    return (bytes / (1024 * 1024 * 1024)).toFixed(2) + ' GB'
   } else if (bytes > 1024 * 1024) {
-    return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    return (bytes / (1024 * 1024)).toFixed(2) + ' MB'
   } else if (bytes > 1024) {
-    return (bytes / 1024).toFixed(2) + ' KB';
+    return (bytes / 1024).toFixed(2) + ' KB'
   }
-  return bytes + ' B';
+  return bytes + ' B'
 }
 
 function formatBitrate(bitrate: number | string): string {
-  const bps = typeof bitrate === 'string' ? parseInt(bitrate) : bitrate;
+  const bps = typeof bitrate === 'string' ? parseInt(bitrate) : bitrate
   if (bps > 1000000) {
-    return (bps / 1000000).toFixed(2) + ' Mbps';
+    return (bps / 1000000).toFixed(2) + ' Mbps'
   } else if (bps > 1000) {
-    return (bps / 1000).toFixed(2) + ' kbps';
+    return (bps / 1000).toFixed(2) + ' kbps'
   }
-  return bps + ' bps';
+  return bps + ' bps'
 }
 
 function getStreamType(type: string): string {
@@ -280,8 +334,8 @@ function getStreamType(type: string): string {
     subtitle: t('page.mediainfo.subtitle'),
     data: t('page.mediainfo.data'),
     attachment: t('page.mediainfo.attachment'),
-  };
-  return types[type] || type;
+  }
+  return types[type] || type
 }
 
 function getChannelLayout(channels: number): string {
@@ -290,12 +344,18 @@ function getChannelLayout(channels: number): string {
     2: t('page.mediainfo.stereo'),
     6: t('page.mediainfo.channel51'),
     8: t('page.mediainfo.channel71'),
-  };
-  return layouts[channels] || `${channels} ${t('page.mediainfo.channel')}`;
+  }
+  return layouts[channels] || `${channels} ${t('page.mediainfo.channel')}`
 }
 </script>
 
 <style scoped>
+.report-toast {
+  padding: 6px 16px;
+  color: var(--color-ok, #3fb96a);
+  font-size: var(--fs-xs, 12px);
+}
+
 .media-info-page {
   display: flex;
   flex-direction: column;

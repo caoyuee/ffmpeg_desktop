@@ -3,7 +3,7 @@
     <div class="app-page-hint">
       <span class="app-page-hint__text">{{ t('page.mux.hint') }}</span>
     </div>
-    
+
     <div class="app-toolbar">
       <div class="app-toolbar__group">
         <button class="app-btn app-btn--primary" @click="addFiles">
@@ -12,13 +12,17 @@
       </div>
       <div class="app-toolbar__divider"></div>
       <div class="app-toolbar__group">
-        <button class="app-btn" @click="moveUp" :disabled="selectedIndex === null">
+        <button class="app-btn" :disabled="selectedIndices.length === 0" @click="moveUp">
           <AppIcon name="arrow-up" :size="16" class="icon" /> {{ t('page.mux.moveUp') }}
         </button>
-        <button class="app-btn" @click="moveDown" :disabled="selectedIndex === null">
+        <button class="app-btn" :disabled="selectedIndices.length === 0" @click="moveDown">
           <AppIcon name="arrow-down" :size="16" class="icon" /> {{ t('page.mux.moveDown') }}
         </button>
-        <button class="app-btn app-btn--danger" @click="removeSelected" :disabled="selectedIndex === null">
+        <button
+          class="app-btn app-btn--danger"
+          :disabled="selectedIndices.length === 0"
+          @click="removeSelected"
+        >
           <AppIcon name="trash" :size="16" class="icon" /> {{ t('page.mux.remove') }}
         </button>
       </div>
@@ -30,25 +34,29 @@
         <span class="col-header">{{ t('page.mux.metadata') }}</span>
       </div>
     </div>
-    
+
     <div class="hint-bar">
       <span>{{ t('page.merge.keyboardHint') }}</span>
     </div>
-    
-    <div 
+
+    <div v-if="subtitleCopyWarning" class="subtitle-warning">
+      <span>{{ subtitleCopyWarning }}</span>
+    </div>
+
+    <div
       class="app-drop-zone file-list-container"
+      :class="{ 'app-drop-zone--over': isDragOver }"
       @dragover.prevent="onDragOver"
       @dragleave="onDragLeave"
       @drop.prevent="onDrop"
-      :class="{ 'app-drop-zone--over': isDragOver }"
     >
-      <div class="file-list" v-if="fileList.length > 0">
-        <div 
-          v-for="(file, index) in fileList" 
+      <div v-if="fileList.length > 0" class="file-list">
+        <div
+          v-for="(file, index) in fileList"
           :key="index"
           class="file-item"
-          :class="{ selected: selectedIndex === index }"
-          @click="selectFile(index)"
+          :class="{ selected: selectedIndices.includes(index) }"
+          @click="toggleSelect(index, $event)"
           @dblclick="openStreamSelector(file)"
         >
           <span class="file-name">{{ file.path }}</span>
@@ -65,70 +73,76 @@
           </span>
         </div>
       </div>
-      <div class="app-empty-state empty-hint" v-else>
+      <div v-else class="app-empty-state empty-hint">
         <span>{{ t('page.mux.dragHint') }}</span>
       </div>
     </div>
-    
+
     <StreamSelectorDialog
       :visible="showStreamSelector"
-      :filePath="streamSelectorFile?.path ?? ''"
-      :fileIndex="streamSelectorFile ? fileList.indexOf(streamSelectorFile) : 0"
-      :initialVideo="streamSelectorFile ? parseStreamIndices(streamSelectorFile.videoStreams) : []"
-      :initialAudio="streamSelectorFile ? parseStreamIndices(streamSelectorFile.audioStreams) : []"
-      :initialSubtitle="streamSelectorFile ? parseStreamIndices(streamSelectorFile.subtitleStreams) : []"
+      :file-path="streamSelectorFile?.path ?? ''"
+      :file-index="streamSelectorFile ? fileList.indexOf(streamSelectorFile) : 0"
+      :initial-video="streamSelectorFile ? parseStreamIndices(streamSelectorFile.videoStreams) : []"
+      :initial-audio="streamSelectorFile ? parseStreamIndices(streamSelectorFile.audioStreams) : []"
+      :initial-subtitle="
+        streamSelectorFile ? parseStreamIndices(streamSelectorFile.subtitleStreams) : []
+      "
       @update:visible="showStreamSelector = $event"
       @confirm="onStreamConfirm"
     />
 
-    <div class="stream-editor" v-if="selectedFile">
+    <div v-if="selectedFile" class="stream-editor">
       <div class="stream-row">
         <label class="stream-label">{{ t('page.mux.videoStreamIndex') }}</label>
-        <input 
-          type="text" 
-          class="stream-input" 
-          v-model="selectedFile.videoStreams" 
+        <input
+          v-model="selectedFile.videoStreams"
+          type="text"
+          class="stream-input"
           :placeholder="t('page.mux.multipleStreamsHint')"
         />
         <label class="stream-label">{{ t('page.mux.audioStreamIndex') }}</label>
-        <input 
-          type="text" 
-          class="stream-input" 
-          v-model="selectedFile.audioStreams" 
+        <input
+          v-model="selectedFile.audioStreams"
+          type="text"
+          class="stream-input"
           :placeholder="t('page.mux.multipleStreamsHint')"
         />
         <label class="stream-label">{{ t('page.mux.subtitleStreamIndex') }}</label>
-        <input 
-          type="text" 
-          class="stream-input" 
-          v-model="selectedFile.subtitleStreams" 
+        <input
+          v-model="selectedFile.subtitleStreams"
+          type="text"
+          class="stream-input"
           :placeholder="t('page.mux.multipleStreamsHint')"
         />
       </div>
       <div class="option-row">
         <label class="stream-label">{{ t('page.mux.chaptersAndMetadata') }}</label>
         <label class="checkbox-label">
-          <input type="checkbox" v-model="selectedFile.useChapters" @change="onChapterChange" />
+          <input v-model="selectedFile.useChapters" type="checkbox" @change="onChapterChange" />
           {{ t('page.mux.useChapters') }}
         </label>
         <label class="checkbox-label">
-          <input type="checkbox" v-model="selectedFile.useMetadata" @change="onMetadataChange" />
+          <input v-model="selectedFile.useMetadata" type="checkbox" @change="onMetadataChange" />
           {{ t('page.mux.useMetadata') }}
         </label>
       </div>
     </div>
-    
+
     <div class="app-bottom-bar">
       <button class="app-btn" @click="selectOutput">
         <AppIcon name="folder-open" :size="16" class="icon" /> {{ t('page.mux.selectOutput') }}
       </button>
       <input
+        v-model="outputPath"
         type="text"
         class="app-input--compact app-output-input"
-        v-model="outputPath"
         :placeholder="t('page.mux.outputTo')"
       />
-      <button class="app-btn app-btn--primary" @click="startMux" :disabled="fileList.length < 1 || !outputPath">
+      <button
+        class="app-btn app-btn--primary"
+        :disabled="fileList.length < 1 || !outputPath"
+        @click="startMux"
+      >
         <AppIcon name="play" :size="16" class="icon" /> {{ t('page.mux.startMux') }}
       </button>
     </div>
@@ -136,43 +150,55 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { open, save } from '@tauri-apps/plugin-dialog';
-import { useTaskStore } from '@/store/taskStore';
-import { getFFmpegPath } from '@/utils/ffmpegPath';
-import StreamSelectorDialog from '@/components/Dialogs/StreamSelectorDialog.vue';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { open, save } from '@tauri-apps/plugin-dialog'
+import { useTaskStore } from '@/store/taskStore'
+import { getFFmpegPath } from '@/utils/ffmpegPath'
+import { buildMuxCommand, needsSubtitleCopyWarning, type MuxInputSpec } from '@/config/muxCommand'
+import StreamSelectorDialog from '@/components/Dialogs/StreamSelectorDialog.vue'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
 
-const { t } = useI18n();
+const { t } = useI18n()
 
-interface MuxFile {
-  path: string;
-  videoStreams: string;
-  audioStreams: string;
-  subtitleStreams: string;
-  useChapters: boolean;
-  useMetadata: boolean;
+interface MuxFile extends MuxInputSpec {
+  path: string
+  videoStreams: string
+  audioStreams: string
+  subtitleStreams: string
+  useChapters: boolean
+  useMetadata: boolean
 }
 
-const taskStore = useTaskStore();
+const taskStore = useTaskStore()
 
-const fileList = ref<MuxFile[]>([]);
-const selectedIndex = ref<number | null>(null);
-const outputPath = ref('');
-const isDragOver = ref(false);
-const showStreamSelector = ref(false);
-const streamSelectorFile = ref<MuxFile | null>(null);
+const fileList = ref<MuxFile[]>([])
+// P2-2：对齐 Merge 页的多选模型，Ctrl+A 全选真正可用。
+const selectedIndices = ref<number[]>([])
+const outputPath = ref('')
+const isDragOver = ref(false)
+const showStreamSelector = ref(false)
+const streamSelectorFile = ref<MuxFile | null>(null)
 
-const selectedFile = computed(() => {
-  if (selectedIndex.value !== null) {
-    return fileList.value[selectedIndex.value];
-  }
-  return null;
-});
+const selectedFile = computed<MuxFile | null>(() => {
+  const last = selectedIndices.value[selectedIndices.value.length - 1]
+  return last === undefined ? null : (fileList.value[last] ?? null)
+})
+
+// P2-2：字幕流 copy 进 MP4/MOV 容器的兼容性提示（不阻断，由用户决定）。
+const subtitleCopyWarning = computed(() => {
+  const hasSubtitleSelection = fileList.value.some((f) => (f.subtitleStreams ?? '').trim() !== '')
+  return needsSubtitleCopyWarning(outputPath.value, hasSubtitleSelection)
+    ? t('page.mux.subtitleCopyWarning')
+    : ''
+})
 
 function parseStreamIndices(streams: string): number[] {
-  return streams.split(',').filter(s => s.trim()).map(Number).filter(n => !isNaN(n));
+  return streams
+    .split(',')
+    .filter((s) => s.trim())
+    .map(Number)
+    .filter((n) => !isNaN(n))
 }
 
 async function addFiles() {
@@ -180,9 +206,9 @@ async function addFiles() {
     const files = await open({
       multiple: true,
       filters: [{ name: '所有文件', extensions: ['*'] }],
-    });
+    })
     if (files) {
-      const paths = Array.isArray(files) ? files : [files];
+      const paths = Array.isArray(files) ? files : [files]
       for (const path of paths) {
         fileList.value.push({
           path,
@@ -191,69 +217,106 @@ async function addFiles() {
           subtitleStreams: '',
           useChapters: false,
           useMetadata: false,
-        });
+        })
       }
     }
   } catch (error) {
-    console.error('添加文件失败:', error);
+    console.error('添加文件失败:', error)
   }
 }
 
-function selectFile(index: number) {
-  selectedIndex.value = index;
+function toggleSelect(index: number, event: MouseEvent) {
+  if (event.ctrlKey || event.metaKey) {
+    const pos = selectedIndices.value.indexOf(index)
+    if (pos >= 0) {
+      selectedIndices.value.splice(pos, 1)
+    } else {
+      selectedIndices.value.push(index)
+    }
+  } else if (event.shiftKey && selectedIndices.value.length > 0) {
+    const last = selectedIndices.value[selectedIndices.value.length - 1] ?? 0
+    const start = Math.min(last, index)
+    const end = Math.max(last, index)
+    for (let i = start; i <= end; i++) {
+      if (!selectedIndices.value.includes(i)) {
+        selectedIndices.value.push(i)
+      }
+    }
+  } else {
+    if (selectedIndices.value.length === 1 && selectedIndices.value[0] === index) {
+      selectedIndices.value = []
+    } else {
+      selectedIndices.value = [index]
+    }
+  }
+}
+
+function selectAll() {
+  selectedIndices.value = fileList.value.map((_, i) => i)
 }
 
 function openStreamSelector(file: MuxFile) {
-  streamSelectorFile.value = file;
-  showStreamSelector.value = true;
+  streamSelectorFile.value = file
+  showStreamSelector.value = true
 }
 
 function onStreamConfirm(result: { video: number[]; audio: number[]; subtitle: number[] }) {
   if (streamSelectorFile.value) {
-    streamSelectorFile.value.videoStreams = result.video.join(',');
-    streamSelectorFile.value.audioStreams = result.audio.join(',');
-    streamSelectorFile.value.subtitleStreams = result.subtitle.join(',');
+    streamSelectorFile.value.videoStreams = result.video.join(',')
+    streamSelectorFile.value.audioStreams = result.audio.join(',')
+    streamSelectorFile.value.subtitleStreams = result.subtitle.join(',')
   }
 }
 
 function moveUp() {
-  if (selectedIndex.value === null || selectedIndex.value === 0) return;
-  const index = selectedIndex.value;
-  const temp = fileList.value[index];
-  fileList.value[index] = fileList.value[index - 1]!;
-  fileList.value[index - 1] = temp!;
-  selectedIndex.value = index - 1;
+  const sorted = [...selectedIndices.value].sort((a, b) => a - b)
+  for (const index of sorted) {
+    if (index > 0 && !selectedIndices.value.includes(index - 1)) {
+      const temp = fileList.value[index]
+      fileList.value[index] = fileList.value[index - 1]!
+      fileList.value[index - 1] = temp!
+      const idx = selectedIndices.value.indexOf(index)
+      selectedIndices.value[idx] = index - 1
+    }
+  }
 }
 
 function moveDown() {
-  if (selectedIndex.value === null || selectedIndex.value === fileList.value.length - 1) return;
-  const index = selectedIndex.value;
-  const temp = fileList.value[index];
-  fileList.value[index] = fileList.value[index + 1]!;
-  fileList.value[index + 1] = temp!;
-  selectedIndex.value = index + 1;
+  const sorted = [...selectedIndices.value].sort((a, b) => b - a)
+  for (const index of sorted) {
+    if (index < fileList.value.length - 1 && !selectedIndices.value.includes(index + 1)) {
+      const temp = fileList.value[index]
+      fileList.value[index] = fileList.value[index + 1]!
+      fileList.value[index + 1] = temp!
+      const idx = selectedIndices.value.indexOf(index)
+      selectedIndices.value[idx] = index + 1
+    }
+  }
 }
 
 function removeSelected() {
-  if (selectedIndex.value === null) return;
-  fileList.value.splice(selectedIndex.value, 1);
-  selectedIndex.value = null;
+  if (selectedIndices.value.length === 0) return
+  const doomed = [...selectedIndices.value].sort((a, b) => b - a)
+  for (const index of doomed) {
+    fileList.value.splice(index, 1)
+  }
+  selectedIndices.value = []
 }
 
 function onChapterChange() {
-  if (!selectedFile.value?.useChapters) return;
+  if (!selectedFile.value?.useChapters) return
   for (const file of fileList.value) {
     if (file !== selectedFile.value) {
-      file.useChapters = false;
+      file.useChapters = false
     }
   }
 }
 
 function onMetadataChange() {
-  if (!selectedFile.value?.useMetadata) return;
+  if (!selectedFile.value?.useMetadata) return
   for (const file of fileList.value) {
     if (file !== selectedFile.value) {
-      file.useMetadata = false;
+      file.useMetadata = false
     }
   }
 }
@@ -262,30 +325,30 @@ async function selectOutput() {
   try {
     const path = await save({
       filters: [{ name: '所有文件', extensions: ['*'] }],
-    });
+    })
     if (path) {
-      outputPath.value = path;
+      outputPath.value = path
     }
   } catch (error) {
-    console.error('选择输出位置失败:', error);
+    console.error('选择输出位置失败:', error)
   }
 }
 
 function onDragOver() {
-  isDragOver.value = true;
+  isDragOver.value = true
 }
 
 function onDragLeave() {
-  isDragOver.value = false;
+  isDragOver.value = false
 }
 
 function onDrop(event: DragEvent) {
-  isDragOver.value = false;
-  const files = event.dataTransfer?.getData('text/uri-list')?.split('\n');
+  isDragOver.value = false
+  const files = event.dataTransfer?.getData('text/uri-list')?.split('\n')
   if (files) {
     for (const file of files) {
       if (file.trim()) {
-        const path = file.trim().replace('file://', '');
+        const path = file.trim().replace('file://', '')
         fileList.value.push({
           path: decodeURIComponent(path),
           videoStreams: '',
@@ -293,82 +356,52 @@ function onDrop(event: DragEvent) {
           subtitleStreams: '',
           useChapters: false,
           useMetadata: false,
-        });
+        })
       }
     }
   }
 }
 
 async function startMux() {
-  if (fileList.value.length < 1 || !outputPath.value) return;
+  if (fileList.value.length < 1 || !outputPath.value) return
 
-  let command = getFFmpegPath() + ' -hide_banner -nostdin ';
-  
-  for (const file of fileList.value) {
-    command += `-i "${file.path}" `;
-  }
-
-  for (let i = 0; i < fileList.value.length; i++) {
-    const file = fileList.value[i];
-    
-    const videoStreams = file?.videoStreams?.split(',').filter(s => s.trim()) || [];
-    for (const stream of videoStreams) {
-      command += `-map ${i}:v:${stream.trim()} -c:v copy `;
-    }
-
-    const audioStreams = file?.audioStreams?.split(',').filter(s => s.trim()) || [];
-    for (const stream of audioStreams) {
-      command += `-map ${i}:a:${stream.trim()} -c:a copy `;
-    }
-
-    const subtitleStreams = file?.subtitleStreams?.split(',').filter(s => s.trim()) || [];
-    for (const stream of subtitleStreams) {
-      command += `-map ${i}:s:${stream.trim()} -c:s copy `;
-    }
-
-    if (file?.useChapters) {
-      command += `-map_chapters ${i} `;
-    }
-    if (file?.useMetadata) {
-      command += `-map_metadata ${i} `;
-    }
-  }
-
-  command += `"${outputPath.value}" -y`;
+  // P2-2：命令构建收敛到唯一纯函数层 muxCommand.ts，未选流的输入 -map i 不丢流。
+  const command = buildMuxCommand(fileList.value, outputPath.value, getFFmpegPath())
 
   try {
     await taskStore.addTask({
-        inputFile: fileList.value[0]?.path ?? '',
+      inputFile: fileList.value[0]?.path ?? '',
       outputFile: outputPath.value,
       commandLine: command,
       presetId: 'mux',
-    });
+    })
   } catch (error) {
-    console.error('启动混流失败:', error);
+    console.error('启动混流失败:', error)
   }
 }
 
 function handleKeyDown(event: KeyboardEvent) {
   if (event.key === 'F3') {
-    event.preventDefault();
-    moveUp();
+    event.preventDefault()
+    moveUp()
   } else if (event.key === 'F4') {
-    event.preventDefault();
-    moveDown();
+    event.preventDefault()
+    moveDown()
   } else if (event.key === 'Delete') {
-    event.preventDefault();
-    removeSelected();
-  } else if (event.key === 'a' && event.ctrlKey) {
-    event.preventDefault();
+    event.preventDefault()
+    removeSelected()
+  } else if (event.key === 'a' && (event.ctrlKey || event.metaKey)) {
+    event.preventDefault()
+    selectAll()
   }
 }
 
 onMounted(() => {
-  document.addEventListener('keydown', handleKeyDown);
+  document.addEventListener('keydown', handleKeyDown)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeyDown);
+  document.removeEventListener('keydown', handleKeyDown)
 })
 </script>
 
@@ -398,6 +431,14 @@ onUnmounted(() => {
 .hint-bar {
   color: var(--text-color2, #808080);
   font-size: 12px;
+}
+
+.subtitle-warning {
+  color: var(--warning-color, #e67e22);
+  font-size: 12px;
+  padding: 6px 10px;
+  background: var(--bg-color3, #242424);
+  border-radius: 4px;
 }
 
 .file-list {
@@ -493,10 +534,9 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.checkbox-label input[type="checkbox"] {
+.checkbox-label input[type='checkbox'] {
   width: 16px;
   height: 16px;
   cursor: pointer;
 }
-
 </style>

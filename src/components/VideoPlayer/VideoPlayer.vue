@@ -1,5 +1,5 @@
 <template>
-  <div class="video-player" ref="playerRef">
+  <div ref="playerRef" class="video-player">
     <video
       ref="videoRef"
       class="video-element"
@@ -19,19 +19,19 @@
       @canplay="onCanPlay"
     ></video>
 
-    <div class="video-overlay" v-if="showOverlay" @click="togglePlay">
+    <div v-if="showOverlay" class="video-overlay" @click="togglePlay">
       <div class="play-button">
         <AppIcon v-if="isPlaying" name="pause" :size="28" />
         <AppIcon v-else name="play" :size="28" />
       </div>
     </div>
 
-    <div class="loading-overlay" v-if="isLoading">
+    <div v-if="isLoading" class="loading-overlay">
       <div class="spinner"></div>
     </div>
 
-    <div class="controls" v-show="showControls && hasVideo">
-      <div class="progress-container" @click="seek" ref="progressRef">
+    <div v-show="showControls && hasVideo" class="controls">
+      <div ref="progressRef" class="progress-container" @click="seek">
         <div class="progress-buffered" :style="{ width: bufferedPercent + '%' }"></div>
         <div class="progress-played" :style="{ width: progressPercent + '%' }"></div>
         <div class="progress-handle" :style="{ left: progressPercent + '%' }"></div>
@@ -39,21 +39,29 @@
 
       <div class="controls-row">
         <div class="controls-left">
-          <button class="control-btn" @click="togglePlay" :title="isPlaying ? t('page.player.pause') : t('page.player.play')">
+          <button
+            class="control-btn"
+            :title="isPlaying ? t('page.player.pause') : t('page.player.play')"
+            @click="togglePlay"
+          >
             <AppIcon v-if="isPlaying" name="pause" :size="16" />
             <AppIcon v-else name="play" :size="16" />
           </button>
 
-          <button class="control-btn" @click="skipBackward" :title="t('page.player.skipBackward')">
+          <button class="control-btn" :title="t('page.player.skipBackward')" @click="skipBackward">
             <AppIcon name="rewind" :size="16" />
           </button>
 
-          <button class="control-btn" @click="skipForward" :title="t('page.player.skipForward')">
+          <button class="control-btn" :title="t('page.player.skipForward')" @click="skipForward">
             <AppIcon name="forward" :size="16" />
           </button>
 
           <div class="volume-control">
-            <button class="control-btn" @click="toggleMute" :title="isMuted ? t('page.player.unmute') : t('page.player.mute')">
+            <button
+              class="control-btn"
+              :title="isMuted ? t('page.player.unmute') : t('page.player.mute')"
+              @click="toggleMute"
+            >
               <AppIcon v-if="isMuted || volume === 0" name="volume-mute" :size="16" />
               <AppIcon v-else-if="volume < 50" name="volume-low" :size="16" />
               <AppIcon v-else name="volume-high" :size="16" />
@@ -63,8 +71,8 @@
               min="0"
               max="100"
               :value="volume"
-              @input="setVolume"
               class="volume-slider"
+              @input="setVolume"
             />
           </div>
 
@@ -75,10 +83,18 @@
 
         <div class="controls-right">
           <div class="speed-control" @mouseenter="onSpeedMenuEnter" @mouseleave="onSpeedMenuLeave">
-            <button class="control-btn" :title="t('page.player.playbackRate', { rate: playbackRate })">
+            <button
+              class="control-btn"
+              :title="t('page.player.playbackRate', { rate: playbackRate })"
+            >
               <span>{{ playbackRate }}x</span>
             </button>
-            <div class="speed-menu" v-show="showSpeedMenu" @mouseenter="onSpeedMenuEnter" @mouseleave="onSpeedMenuLeave">
+            <div
+              v-show="showSpeedMenu"
+              class="speed-menu"
+              @mouseenter="onSpeedMenuEnter"
+              @mouseleave="onSpeedMenuLeave"
+            >
               <div
                 v-for="speed in speedOptions"
                 :key="speed"
@@ -91,7 +107,11 @@
             </div>
           </div>
 
-          <button class="control-btn" @click="toggleFullscreen" :title="t('page.player.fullscreen')">
+          <button
+            class="control-btn"
+            :title="t('page.player.fullscreen')"
+            @click="toggleFullscreen"
+          >
             <AppIcon v-if="isFullscreen" name="exit-fullscreen" :size="16" />
             <AppIcon v-else name="fullscreen" :size="16" />
           </button>
@@ -102,18 +122,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { convertFileSrc } from '@tauri-apps/api/core';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { convertFileSrc } from '@tauri-apps/api/core'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
 
 interface Props {
-  src?: string;
-  poster?: string;
-  autoplay?: boolean;
-  loop?: boolean;
-  muted?: boolean;
-  showControls?: boolean;
+  src?: string
+  poster?: string
+  autoplay?: boolean
+  loop?: boolean
+  muted?: boolean
+  showControls?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -123,192 +143,195 @@ const props = withDefaults(defineProps<Props>(), {
   loop: false,
   muted: false,
   showControls: true,
-});
+})
 
 const emit = defineEmits<{
-  'update:currentTime': [time: number];
-  'update:duration': [duration: number];
-  'update:playing': [playing: boolean];
-  'ended': [];
-  'error': [error: Event];
-}>();
+  'update:currentTime': [time: number]
+  'update:duration': [duration: number]
+  'update:playing': [playing: boolean]
+  ended: []
+  error: [error: Event]
+}>()
 
-const { t } = useI18n();
+const { t } = useI18n()
 
-const videoRef = ref<HTMLVideoElement | null>(null);
-const playerRef = ref<HTMLDivElement | null>(null);
-const progressRef = ref<HTMLDivElement | null>(null);
+const videoRef = ref<HTMLVideoElement | null>(null)
+const playerRef = ref<HTMLDivElement | null>(null)
+const progressRef = ref<HTMLDivElement | null>(null)
 
-const isPlaying = ref(false);
-const isPaused = ref(true);
-const isLoading = ref(false);
-const isMuted = ref(props.muted);
-const isFullscreen = ref(false);
-const currentTime = ref(0);
-const duration = ref(0);
-const volume = ref(80);
-const bufferedPercent = ref(0);
-const playbackRate = ref(1);
-const hasVideo = ref(false);
-const showSpeedMenu = ref(false);
-let hideSpeedMenuTimer: ReturnType<typeof setTimeout> | null = null;
+const isPlaying = ref(false)
+const isPaused = ref(true)
+const isLoading = ref(false)
+const isMuted = ref(props.muted)
+const isFullscreen = ref(false)
+const currentTime = ref(0)
+const duration = ref(0)
+const volume = ref(80)
+const bufferedPercent = ref(0)
+const playbackRate = ref(1)
+const hasVideo = ref(false)
+const showSpeedMenu = ref(false)
+let hideSpeedMenuTimer: ReturnType<typeof setTimeout> | null = null
 
-const speedOptions = [0.5, 0.75, 1, 1.25, 1.5, 2];
+const speedOptions = [0.5, 0.75, 1, 1.25, 1.5, 2]
 
 const progressPercent = computed(() => {
-  return duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0;
-});
+  return duration.value > 0 ? (currentTime.value / duration.value) * 100 : 0
+})
 
 const showOverlay = computed(() => {
-  return !isPlaying.value && !isLoading.value && hasVideo.value;
-});
+  return !isPlaying.value && !isLoading.value && hasVideo.value
+})
 
-let hideControlsTimer: number | null = null;
+const hideControlsTimer: number | null = null
 
-watch(() => props.src, (newSrc) => {
-  if (newSrc && videoRef.value) {
-    loadVideo(newSrc);
-  }
-});
+watch(
+  () => props.src,
+  (newSrc) => {
+    if (newSrc && videoRef.value) {
+      loadVideo(newSrc)
+    }
+  },
+)
 
 function onLoadedMetadata() {
   if (videoRef.value) {
-    duration.value = videoRef.value.duration;
-    emit('update:duration', duration.value);
+    duration.value = videoRef.value.duration
+    emit('update:duration', duration.value)
   }
-  isLoading.value = false;
+  isLoading.value = false
 }
 
 function onTimeUpdate() {
   if (videoRef.value) {
-    currentTime.value = videoRef.value.currentTime;
-    emit('update:currentTime', currentTime.value);
+    currentTime.value = videoRef.value.currentTime
+    emit('update:currentTime', currentTime.value)
 
     if (videoRef.value.buffered.length > 0) {
-      const bufferedEnd = videoRef.value.buffered.end(videoRef.value.buffered.length - 1);
-      bufferedPercent.value = (bufferedEnd / duration.value) * 100;
+      const bufferedEnd = videoRef.value.buffered.end(videoRef.value.buffered.length - 1)
+      bufferedPercent.value = (bufferedEnd / duration.value) * 100
     }
   }
 }
 
 function onEnded() {
-  isPlaying.value = false;
-  isPaused.value = true;
-  emit('ended');
+  isPlaying.value = false
+  isPaused.value = true
+  emit('ended')
 }
 
 function onPlay() {
-  isPlaying.value = true;
-  isPaused.value = false;
-  emit('update:playing', true);
+  isPlaying.value = true
+  isPaused.value = false
+  emit('update:playing', true)
 }
 
 function onPause() {
-  isPlaying.value = false;
-  isPaused.value = true;
-  emit('update:playing', false);
+  isPlaying.value = false
+  isPaused.value = true
+  emit('update:playing', false)
 }
 
 function onError(event: Event) {
-  isLoading.value = false;
-  console.error('Video error:', event);
-  emit('error', event);
+  isLoading.value = false
+  console.error('Video error:', event)
+  emit('error', event)
 }
 
 function onWaiting() {
-  isLoading.value = true;
+  isLoading.value = true
 }
 
 function onCanPlay() {
-  isLoading.value = false;
+  isLoading.value = false
 }
 
 function togglePlay() {
-  if (!videoRef.value) return;
+  if (!videoRef.value) return
 
   if (videoRef.value.paused) {
-    videoRef.value.play();
+    videoRef.value.play()
   } else {
-    videoRef.value.pause();
+    videoRef.value.pause()
   }
 }
 
 function play() {
   if (videoRef.value) {
-    videoRef.value.play();
+    videoRef.value.play()
   }
 }
 
 function pause() {
   if (videoRef.value) {
-    videoRef.value.pause();
+    videoRef.value.pause()
   }
 }
 
 function stop() {
   if (videoRef.value) {
-    videoRef.value.pause();
-    videoRef.value.currentTime = 0;
-    isPlaying.value = false;
-    isPaused.value = true;
+    videoRef.value.pause()
+    videoRef.value.currentTime = 0
+    isPlaying.value = false
+    isPaused.value = true
   }
 }
 
 function seek(event: MouseEvent) {
-  if (!videoRef.value || !progressRef.value) return;
+  if (!videoRef.value || !progressRef.value) return
 
-  const rect = progressRef.value.getBoundingClientRect();
-  const percent = (event.clientX - rect.left) / rect.width;
-  const seekTime = duration.value * percent;
+  const rect = progressRef.value.getBoundingClientRect()
+  const percent = (event.clientX - rect.left) / rect.width
+  const seekTime = duration.value * percent
 
-  videoRef.value.currentTime = Math.max(0, Math.min(seekTime, duration.value));
+  videoRef.value.currentTime = Math.max(0, Math.min(seekTime, duration.value))
 }
 
 function setCurrentTime(time: number) {
   if (videoRef.value) {
-    videoRef.value.currentTime = Math.max(0, Math.min(time, duration.value));
+    videoRef.value.currentTime = Math.max(0, Math.min(time, duration.value))
   }
 }
 
 function skipForward() {
   if (videoRef.value) {
-    videoRef.value.currentTime = Math.min(videoRef.value.currentTime + 10, duration.value);
+    videoRef.value.currentTime = Math.min(videoRef.value.currentTime + 10, duration.value)
   }
 }
 
 function skipBackward() {
   if (videoRef.value) {
-    videoRef.value.currentTime = Math.max(videoRef.value.currentTime - 10, 0);
+    videoRef.value.currentTime = Math.max(videoRef.value.currentTime - 10, 0)
   }
 }
 
 function setVolume(event: Event) {
-  const target = event.target as HTMLInputElement;
-  const newVolume = parseInt(target.value);
-  volume.value = newVolume;
+  const target = event.target as HTMLInputElement
+  const newVolume = parseInt(target.value)
+  volume.value = newVolume
 
   if (videoRef.value) {
-    videoRef.value.volume = newVolume / 100;
+    videoRef.value.volume = newVolume / 100
     if (newVolume > 0) {
-      isMuted.value = false;
-      videoRef.value.muted = false;
+      isMuted.value = false
+      videoRef.value.muted = false
     }
   }
 }
 
 function toggleMute() {
   if (videoRef.value) {
-    isMuted.value = !isMuted.value;
-    videoRef.value.muted = isMuted.value;
+    isMuted.value = !isMuted.value
+    videoRef.value.muted = isMuted.value
   }
 }
 
 function selectSpeed(speed: number) {
-  playbackRate.value = speed;
+  playbackRate.value = speed
   if (videoRef.value) {
-    videoRef.value.playbackRate = speed;
+    videoRef.value.playbackRate = speed
   }
-  showSpeedMenu.value = false;
+  showSpeedMenu.value = false
 }
 
 function onSpeedMenuEnter() {
@@ -326,121 +349,121 @@ function onSpeedMenuLeave() {
 }
 
 async function toggleFullscreen() {
-  if (!playerRef.value) return;
+  if (!playerRef.value) return
 
   try {
     if (!document.fullscreenElement) {
-      await playerRef.value.requestFullscreen();
+      await playerRef.value.requestFullscreen()
     } else {
-      await document.exitFullscreen();
+      await document.exitFullscreen()
     }
   } catch (e) {
-    console.error('Fullscreen error:', e);
+    console.error('Fullscreen error:', e)
   }
 }
 
 function onFullscreenChange() {
-  isFullscreen.value = !!document.fullscreenElement;
+  isFullscreen.value = !!document.fullscreenElement
 }
 
 function formatTime(seconds: number): string {
-  if (!seconds || isNaN(seconds)) return '0:00';
+  if (!seconds || isNaN(seconds)) return '0:00'
 
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
+  const h = Math.floor(seconds / 3600)
+  const m = Math.floor((seconds % 3600) / 60)
+  const s = Math.floor(seconds % 60)
 
   if (h > 0) {
-    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+    return `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
   }
-  return `${m}:${s.toString().padStart(2, '0')}`;
+  return `${m}:${s.toString().padStart(2, '0')}`
 }
 
 function handleKeydown(event: KeyboardEvent) {
-  if (!hasVideo.value) return;
+  if (!hasVideo.value) return
 
   switch (event.key) {
     case ' ':
     case 'k':
-      event.preventDefault();
-      togglePlay();
-      break;
+      event.preventDefault()
+      togglePlay()
+      break
     case 'ArrowLeft':
-      event.preventDefault();
-      skipBackward();
-      break;
+      event.preventDefault()
+      skipBackward()
+      break
     case 'ArrowRight':
-      event.preventDefault();
-      skipForward();
-      break;
+      event.preventDefault()
+      skipForward()
+      break
     case 'ArrowUp':
-      event.preventDefault();
+      event.preventDefault()
       if (videoRef.value) {
-        volume.value = Math.min(100, volume.value + 10);
-        videoRef.value.volume = volume.value / 100;
+        volume.value = Math.min(100, volume.value + 10)
+        videoRef.value.volume = volume.value / 100
       }
-      break;
+      break
     case 'ArrowDown':
-      event.preventDefault();
+      event.preventDefault()
       if (videoRef.value) {
-        volume.value = Math.max(0, volume.value - 10);
-        videoRef.value.volume = volume.value / 100;
+        volume.value = Math.max(0, volume.value - 10)
+        videoRef.value.volume = volume.value / 100
       }
-      break;
+      break
     case 'f':
-      event.preventDefault();
-      toggleFullscreen();
-      break;
+      event.preventDefault()
+      toggleFullscreen()
+      break
     case 'm':
-      event.preventDefault();
-      toggleMute();
-      break;
+      event.preventDefault()
+      toggleMute()
+      break
   }
 }
 
 onMounted(() => {
-  document.addEventListener('keydown', handleKeydown);
-  document.addEventListener('fullscreenchange', onFullscreenChange);
+  document.addEventListener('keydown', handleKeydown)
+  document.addEventListener('fullscreenchange', onFullscreenChange)
 
   if (videoRef.value) {
-    videoRef.value.volume = volume.value / 100;
+    videoRef.value.volume = volume.value / 100
 
     if (props.src) {
-      loadVideo(props.src);
+      loadVideo(props.src)
     }
   }
-});
+})
 
 function loadVideo(src: string) {
-  if (!src || !videoRef.value) return;
+  if (!src || !videoRef.value) return
 
-  isLoading.value = true;
-  hasVideo.value = true;
+  isLoading.value = true
+  hasVideo.value = true
 
-  let videoSrc = src;
+  let videoSrc = src
   if (!src.startsWith('http') && !src.startsWith('blob:')) {
     try {
-      videoSrc = convertFileSrc(src);
+      videoSrc = convertFileSrc(src)
     } catch (e) {
-      console.error('Failed to convert file src:', e);
+      console.error('Failed to convert file src:', e)
     }
   }
 
-  videoRef.value.src = videoSrc;
-  videoRef.value.load();
+  videoRef.value.src = videoSrc
+  videoRef.value.load()
 }
 
 onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeydown);
-  document.removeEventListener('fullscreenchange', onFullscreenChange);
+  document.removeEventListener('keydown', handleKeydown)
+  document.removeEventListener('fullscreenchange', onFullscreenChange)
 
   if (hideControlsTimer) {
-    clearTimeout(hideControlsTimer);
+    clearTimeout(hideControlsTimer)
   }
   if (hideSpeedMenuTimer) {
-    clearTimeout(hideSpeedMenuTimer);
+    clearTimeout(hideSpeedMenuTimer)
   }
-});
+})
 
 defineExpose({
   play,
@@ -451,12 +474,12 @@ defineExpose({
   toggleFullscreen,
   toggleMute,
   setVolume: (vol: number) => {
-    volume.value = vol;
+    volume.value = vol
     if (videoRef.value) {
-      videoRef.value.volume = vol / 100;
+      videoRef.value.volume = vol / 100
     }
   },
-});
+})
 </script>
 
 <style scoped>

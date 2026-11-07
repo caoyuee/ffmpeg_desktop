@@ -4,11 +4,13 @@
     <div class="content-area">
       <router-view />
     </div>
+    <AppToastHost />
   </div>
 </template>
 
 <script setup lang="ts">
-import NavigationTabs from '@/components/NavigationTabs/NavigationTabs.vue';
+import NavigationTabs from '@/components/NavigationTabs/NavigationTabs.vue'
+import AppToastHost from '@/components/AppToast/AppToastHost.vue'
 </script>
 
 <style scoped>

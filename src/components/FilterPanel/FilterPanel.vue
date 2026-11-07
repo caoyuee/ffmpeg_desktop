@@ -3,16 +3,24 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('deinterlace')">
         <h4>{{ t('page.params.filterPanel.deinterlace') }}</h4>
-        <AppIcon :name="expandedSections.deinterlace ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.deinterlace ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.deinterlace" class="section-content">
         <div class="form-group">
           <label>{{ t('page.params.filterPanel.deinterlaceMode') }}</label>
           <select v-model="localPreset.video.filters.deinterlace" @change="onFilterChange">
             <option :value="0">{{ t('common.none') }}</option>
-            <option :value="1">YADIF - {{ t('page.params.filterPanel.fieldOrderAdaptive') }}</option>
+            <option :value="1">
+              YADIF - {{ t('page.params.filterPanel.fieldOrderAdaptive') }}
+            </option>
             <option :value="2">YADIF - {{ t('page.params.filterPanel.fieldOrderForced') }}</option>
-            <option :value="3">BWDIF - {{ t('page.params.filterPanel.fieldOrderAdaptive') }}</option>
+            <option :value="3">
+              BWDIF - {{ t('page.params.filterPanel.fieldOrderAdaptive') }}
+            </option>
             <option :value="4">BWDIF - {{ t('page.params.filterPanel.fieldOrderForced') }}</option>
           </select>
         </div>
@@ -22,12 +30,19 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('denoise')">
         <h4>{{ t('page.params.filterPanel.denoise') }}</h4>
-        <AppIcon :name="expandedSections.denoise ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.denoise ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.denoise" class="section-content">
         <div class="form-group">
           <label>{{ t('page.params.filterPanel.denoiseMode') }}</label>
-          <select v-model="localPreset.video.filters.denoise.method" @change="onDenoiseMethodChange">
+          <select
+            v-model="localPreset.video.filters.denoise.method"
+            @change="onDenoiseMethodChange"
+          >
             <option value="">{{ t('common.none') }}</option>
             <option value="hqdn3d">HQDN3D - 快速降噪</option>
             <option value="nlmeans">NLMeans - 高质量降噪</option>
@@ -38,14 +53,26 @@
         <div v-if="localPreset.video.filters.denoise.method === 'hqdn3d'" class="params-group">
           <div class="form-group">
             <label>{{ t('page.params.filterPanel.lumaStrength') }}</label>
-            <input type="range" min="0" max="20" step="0.5" 
-              v-model.number="localPreset.video.filters.denoise.param1" @input="onFilterChange" />
+            <input
+              v-model.number="localPreset.video.filters.denoise.param1"
+              type="range"
+              min="0"
+              max="20"
+              step="0.5"
+              @input="onFilterChange"
+            />
             <span class="param-value">{{ localPreset.video.filters.denoise.param1 || 4 }}</span>
           </div>
           <div class="form-group">
             <label>{{ t('page.params.filterPanel.chromaStrength') }}</label>
-            <input type="range" min="0" max="20" step="0.5"
-              v-model.number="localPreset.video.filters.denoise.param2" @input="onFilterChange" />
+            <input
+              v-model.number="localPreset.video.filters.denoise.param2"
+              type="range"
+              min="0"
+              max="20"
+              step="0.5"
+              @input="onFilterChange"
+            />
             <span class="param-value">{{ localPreset.video.filters.denoise.param2 || 3 }}</span>
           </div>
         </div>
@@ -53,8 +80,14 @@
         <div v-if="localPreset.video.filters.denoise.method === 'nlmeans'" class="params-group">
           <div class="form-group">
             <label>{{ t('page.params.filterPanel.denoiseStrength') }}</label>
-            <input type="range" min="1" max="20" step="0.5"
-              v-model.number="localPreset.video.filters.denoise.param1" @input="onFilterChange" />
+            <input
+              v-model.number="localPreset.video.filters.denoise.param1"
+              type="range"
+              min="1"
+              max="20"
+              step="0.5"
+              @input="onFilterChange"
+            />
             <span class="param-value">{{ localPreset.video.filters.denoise.param1 || 3 }}</span>
           </div>
         </div>
@@ -62,8 +95,14 @@
         <div v-if="localPreset.video.filters.denoise.method === 'atadenoise'" class="params-group">
           <div class="form-group">
             <label>{{ t('page.params.filterPanel.denoiseStrength') }}</label>
-            <input type="range" min="0.001" max="0.1" step="0.001"
-              v-model.number="localPreset.video.filters.denoise.param1" @input="onFilterChange" />
+            <input
+              v-model.number="localPreset.video.filters.denoise.param1"
+              type="range"
+              min="0.001"
+              max="0.1"
+              step="0.001"
+              @input="onFilterChange"
+            />
             <span class="param-value">{{ localPreset.video.filters.denoise.param1 || 0.02 }}</span>
           </div>
         </div>
@@ -73,25 +112,47 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('sharpen')">
         <h4>{{ t('page.params.filterPanel.sharpen') }}</h4>
-        <AppIcon :name="expandedSections.sharpen ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.sharpen ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.sharpen" class="section-content">
         <div class="form-group">
           <label>{{ t('page.params.filterPanel.sharpenStrength') }}</label>
-          <input type="range" min="0" max="2" step="0.1"
-            v-model.number="localPreset.video.filters.sharpen.lumaAmount" @input="onFilterChange" />
-          <span class="param-value">{{ localPreset.video.filters.sharpen.lumaAmount || t('page.params.notSet') }}</span>
+          <input
+            v-model.number="localPreset.video.filters.sharpen.lumaAmount"
+            type="range"
+            min="0"
+            max="2"
+            step="0.1"
+            @input="onFilterChange"
+          />
+          <span class="param-value">{{
+            localPreset.video.filters.sharpen.lumaAmount || t('page.params.notSet')
+          }}</span>
         </div>
         <div v-if="localPreset.video.filters.sharpen.lumaAmount" class="params-group">
           <div class="form-group">
             <label>{{ t('page.params.filterPanel.horizontalRadius') }}</label>
-            <input type="number" min="1" max="15"
-              v-model="localPreset.video.filters.sharpen.lumaMsizeX" @input="onFilterChange" />
+            <input
+              v-model="localPreset.video.filters.sharpen.lumaMsizeX"
+              type="number"
+              min="1"
+              max="15"
+              @input="onFilterChange"
+            />
           </div>
           <div class="form-group">
             <label>{{ t('page.params.filterPanel.verticalRadius') }}</label>
-            <input type="number" min="1" max="15"
-              v-model="localPreset.video.filters.sharpen.lumaMsizeY" @input="onFilterChange" />
+            <input
+              v-model="localPreset.video.filters.sharpen.lumaMsizeY"
+              type="number"
+              min="1"
+              max="15"
+              @input="onFilterChange"
+            />
           </div>
         </div>
       </div>
@@ -100,7 +161,11 @@
     <div class="panel-section">
       <div class="section-header" @click="toggleSection('transform')">
         <h4>{{ t('page.params.filterPanel.transform') }}</h4>
-        <AppIcon :name="expandedSections.transform ? 'chevron-down' : 'chevron-right'" :size="14" class="toggle-icon" />
+        <AppIcon
+          :name="expandedSections.transform ? 'chevron-down' : 'chevron-right'"
+          :size="14"
+          class="toggle-icon"
+        />
       </div>
       <div v-show="expandedSections.transform" class="section-content">
         <div class="form-group">
@@ -129,117 +194,127 @@
       </div>
       <div class="section-content">
         <div class="tool-buttons">
-          <button class="app-btn tool-btn" @click="showInterpolation = true">{{ t('page.params.filterPanel.interpolationTool') }}</button>
-          <button class="app-btn tool-btn" @click="showFrameBlend = true">{{ t('page.params.filterPanel.frameBlendTool') }}</button>
-          <button class="app-btn tool-btn" @click="showSuperResolution = true">{{ t('page.params.filterPanel.superResolutionTool') }}</button>
+          <button class="app-btn tool-btn" @click="showInterpolation = true">
+            {{ t('page.params.filterPanel.interpolationTool') }}
+          </button>
+          <button class="app-btn tool-btn" @click="showFrameBlend = true">
+            {{ t('page.params.filterPanel.frameBlendTool') }}
+          </button>
+          <button class="app-btn tool-btn" @click="showSuperResolution = true">
+            {{ t('page.params.filterPanel.superResolutionTool') }}
+          </button>
         </div>
       </div>
     </div>
 
-    <InterpolationDialog 
-      :visible="showInterpolation" 
-      :modelValue="localPreset.video.filters.interpolation" 
+    <InterpolationDialog
+      :visible="showInterpolation"
+      :model-value="localPreset.video.filters.interpolation"
       @update:visible="showInterpolation = $event"
-      @update:modelValue="onInterpolationUpdate" 
+      @update:model-value="onInterpolationUpdate"
     />
-    <FrameBlendDialog 
-      :visible="showFrameBlend" 
-      :modelValue="localPreset.video.filters.frameBlend"
+    <FrameBlendDialog
+      :visible="showFrameBlend"
+      :model-value="localPreset.video.filters.frameBlend"
       @update:visible="showFrameBlend = $event"
-      @update:modelValue="onFrameBlendUpdate" 
+      @update:model-value="onFrameBlendUpdate"
     />
-    <SuperResolutionDialog 
-      :visible="showSuperResolution" 
-      :modelValue="localPreset.video.filters.superResolution"
+    <SuperResolutionDialog
+      :visible="showSuperResolution"
+      :model-value="localPreset.video.filters.superResolution"
       @update:visible="showSuperResolution = $event"
-      @update:modelValue="onSuperResolutionUpdate" 
+      @update:model-value="onSuperResolutionUpdate"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
-import type { PresetData } from '@/types/preset';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
-import InterpolationDialog from '@/components/Dialogs/InterpolationDialog.vue';
-import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue';
-import SuperResolutionDialog from '@/components/Dialogs/SuperResolutionDialog.vue';
-
-const { t } = useI18n();
+import { ref, reactive, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import type { PresetData } from '@/types/preset'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
+import InterpolationDialog from '@/components/Dialogs/InterpolationDialog.vue'
+import FrameBlendDialog from '@/components/Dialogs/FrameBlendDialog.vue'
+import SuperResolutionDialog from '@/components/Dialogs/SuperResolutionDialog.vue'
 
 const props = defineProps<{
-  preset: PresetData;
-}>();
+  preset: PresetData
+}>()
 
 const emit = defineEmits<{
-  'update:preset': [preset: PresetData];
-}>();
+  'update:preset': [preset: PresetData]
+}>()
 
-const localPreset = ref<PresetData>({ ...props.preset });
+const { t } = useI18n()
+
+const localPreset = ref<PresetData>({ ...props.preset })
 
 const expandedSections = reactive({
   deinterlace: false,
   denoise: false,
   sharpen: false,
   transform: false,
-});
+})
 
-const showInterpolation = ref(false);
-const showFrameBlend = ref(false);
-const showSuperResolution = ref(false);
+const showInterpolation = ref(false)
+const showFrameBlend = ref(false)
+const showSuperResolution = ref(false)
 
-watch(() => props.preset, (newVal) => {
-  localPreset.value = { ...newVal };
-}, { deep: true });
+watch(
+  () => props.preset,
+  (newVal) => {
+    localPreset.value = { ...newVal }
+  },
+  { deep: true },
+)
 
 function toggleSection(section: keyof typeof expandedSections) {
-  expandedSections[section] = !expandedSections[section];
+  expandedSections[section] = !expandedSections[section]
 }
 
 function onFilterChange() {
-  emit('update:preset', localPreset.value);
+  emit('update:preset', localPreset.value)
 }
 
 function onInterpolationUpdate(settings: PresetData['video']['filters']['interpolation']) {
-  localPreset.value.video.filters.interpolation = settings;
-  emit('update:preset', localPreset.value);
+  localPreset.value.video.filters.interpolation = settings
+  emit('update:preset', localPreset.value)
 }
 
 function onFrameBlendUpdate(settings: PresetData['video']['filters']['frameBlend']) {
-  localPreset.value.video.filters.frameBlend = settings;
-  emit('update:preset', localPreset.value);
+  localPreset.value.video.filters.frameBlend = settings
+  emit('update:preset', localPreset.value)
 }
 
 function onSuperResolutionUpdate(settings: PresetData['video']['filters']['superResolution']) {
-  localPreset.value.video.filters.superResolution = settings;
-  emit('update:preset', localPreset.value);
+  localPreset.value.video.filters.superResolution = settings
+  emit('update:preset', localPreset.value)
 }
 
 function onDenoiseMethodChange() {
-  const method = localPreset.value.video.filters.denoise.method;
+  const method = localPreset.value.video.filters.denoise.method
   if (method === 'hqdn3d') {
-    localPreset.value.video.filters.denoise.param1 = '4';
-    localPreset.value.video.filters.denoise.param2 = '3';
-    localPreset.value.video.filters.denoise.param3 = '6';
-    localPreset.value.video.filters.denoise.param4 = '4';
+    localPreset.value.video.filters.denoise.param1 = '4'
+    localPreset.value.video.filters.denoise.param2 = '3'
+    localPreset.value.video.filters.denoise.param3 = '6'
+    localPreset.value.video.filters.denoise.param4 = '4'
   } else if (method === 'nlmeans') {
-    localPreset.value.video.filters.denoise.param1 = '3';
-    localPreset.value.video.filters.denoise.param2 = '';
-    localPreset.value.video.filters.denoise.param3 = '';
-    localPreset.value.video.filters.denoise.param4 = '';
+    localPreset.value.video.filters.denoise.param1 = '3'
+    localPreset.value.video.filters.denoise.param2 = ''
+    localPreset.value.video.filters.denoise.param3 = ''
+    localPreset.value.video.filters.denoise.param4 = ''
   } else if (method === 'atadenoise') {
-    localPreset.value.video.filters.denoise.param1 = '0.02';
-    localPreset.value.video.filters.denoise.param2 = '';
-    localPreset.value.video.filters.denoise.param3 = '';
-    localPreset.value.video.filters.denoise.param4 = '';
+    localPreset.value.video.filters.denoise.param1 = '0.02'
+    localPreset.value.video.filters.denoise.param2 = ''
+    localPreset.value.video.filters.denoise.param3 = ''
+    localPreset.value.video.filters.denoise.param4 = ''
   } else {
-    localPreset.value.video.filters.denoise.param1 = '';
-    localPreset.value.video.filters.denoise.param2 = '';
-    localPreset.value.video.filters.denoise.param3 = '';
-    localPreset.value.video.filters.denoise.param4 = '';
+    localPreset.value.video.filters.denoise.param1 = ''
+    localPreset.value.video.filters.denoise.param2 = ''
+    localPreset.value.video.filters.denoise.param3 = ''
+    localPreset.value.video.filters.denoise.param4 = ''
   }
-  onFilterChange();
+  onFilterChange()
 }
 </script>
 
@@ -300,7 +375,7 @@ function onDenoiseMethodChange() {
 }
 
 .form-group select,
-.form-group input[type="number"] {
+.form-group input[type='number'] {
   width: 100%;
   padding: 0.5rem;
   border: 1px solid var(--border-color1, #333);
@@ -310,7 +385,7 @@ function onDenoiseMethodChange() {
   font-size: 0.85rem;
 }
 
-.form-group input[type="range"] {
+.form-group input[type='range'] {
   width: calc(100% - 50px);
   vertical-align: middle;
 }
@@ -334,5 +409,4 @@ function onDenoiseMethodChange() {
   gap: 8px;
   flex-wrap: wrap;
 }
-
 </style>

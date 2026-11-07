@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import { createRouter, createWebHistory } from 'vue-router'
 
 const routes = [
   {
@@ -7,7 +7,7 @@ const routes = [
     children: [
       {
         path: '',
-        redirect: '/queue',
+        redirect: '/workbench',
       },
       {
         path: 'home',
@@ -15,9 +15,29 @@ const routes = [
         component: () => import('@/pages/Home/index.vue'),
       },
       {
+        path: 'workbench',
+        name: 'Workbench',
+        component: () => import('@/pages/Workbench/index.vue'),
+      },
+      {
+        path: 'watch',
+        name: 'WatchFolder',
+        component: () => import('@/pages/WatchFolder/index.vue'),
+      },
+      {
+        path: 'ab',
+        name: 'ABCompare',
+        component: () => import('@/pages/ABCompare/index.vue'),
+      },
+      {
         path: 'queue',
         name: 'EncodingQueue',
         component: () => import('@/pages/EncodingQueue/index.vue'),
+      },
+      {
+        path: 'history',
+        name: 'History',
+        component: () => import('@/pages/History/index.vue'),
       },
       {
         path: 'prepare',
@@ -71,11 +91,11 @@ const routes = [
     name: 'IndependentPanel',
     component: () => import('@/pages/IndependentPanel/index.vue'),
   },
-];
+]
 
 const router = createRouter({
   history: createWebHistory(),
   routes,
-});
+})
 
-export default router;
+export default router

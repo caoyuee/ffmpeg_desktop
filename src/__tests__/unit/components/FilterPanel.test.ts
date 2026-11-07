@@ -39,7 +39,10 @@ describe('FilterPanel', () => {
 
   it('passes frame blend settings to the frame blend dialog', async () => {
     const wrapper = mountWithLocale('en-US')
-    await wrapper.findAll('button').find((button) => button.text() === 'Frame Blend / Motion Blur')?.trigger('click')
+    await wrapper
+      .findAll('button')
+      .find((button) => button.text() === 'Frame Blend / Motion Blur')
+      ?.trigger('click')
     const dialog = wrapper.findComponent(FrameBlendDialog)
 
     expect(dialog.props('modelValue')).toEqual(DEFAULT_PRESET.video.filters.frameBlend)

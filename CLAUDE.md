@@ -2,169 +2,78 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-编写代码前**必须先读** `.agents/docs/前端结构规范.md`，确保目录结构、组件命名、样式、i18n 全部合规。
-
 当前目录就是 FFmpeg Desktop 项目根目录。所有命令均相对于本目录执行。
+
+**编码前必读**：`.agents/docs/前端结构规范.md`（硬性规范）+ `.agents/docs/接力开发手册.md`（陷阱清单）。项目完整状态见 `.agents/docs/项目现状审计报告.md`（含 P0/P1/P2 问题分级），本文只保留开发所需的速查事实。
 
 ## 快速参考
 
 ```bash
-pnpm install                  # 必须使用 pnpm（package.json 中 packageManager 强制指定）
-pnpm dev                      # Vite 开发服务器（仅浏览器，不含 Tauri）
-pnpm tauri dev                # 完整桌面应用（前端 + Rust 后端）
-pnpm build                    # 先类型检查（vue-tsc --noEmit）再 vite build
-pnpm typecheck                # 仅类型检查
-
-pnpm test:run                 # Vitest 单次运行（happy-dom 环境）
-pnpm test                     # Vitest 监听模式
-cd src-tauri && cargo test    # Rust 单元测试
-pnpm test:all                 # 前端 + 后端测试 + 覆盖率报告
+# pnpm 不在 PATH 时：export NVM_DIR="$HOME/.config/nvm" && . "$NVM_DIR/nvm.sh"
+pnpm install                  # 必须 pnpm（packageManager 强制 10.27.0）
+pnpm dev                      # 仅浏览器（Tauri API 全 mock）
+pnpm tauri dev                # 完整桌面应用
+pnpm build / pnpm typecheck   # vue-tsc --noEmit 必须通过
+pnpm test:run / test:coverage # Vitest（happy-dom）
+cd src-tauri && cargo test    # Rust 单测（cargo 可能需要 ~/.cargo/bin 进 PATH）
+bash scripts/preflight.sh     # 全量预检（含 CSP 断言）
 ```
 
-## 架构
+## 架构速查
 
-- **前端**: Vue 3.5（Composition API，`<script setup lang="ts">`），Pinia 3，Vue Router 4，vue-i18n 9
-- **后端**: Tauri 2.9（Rust），入口 `src-tauri/src/lib.rs` 的 `run()` 函数
-- **打包**: Vite 构建到 `dist/`，Tauri 将其封装为原生二进制
-- 前端通过 `invoke(commandName, args)`（来自 `@tauri-apps/api/core`）调用 Rust。命令名即 Rust 中 `#[tauri::command]` 函数名
-- 路径别名 `@` → `src/`（在 `vite.config.ts` 和 `vitest.config.ts` 中配置）
-- 应用通过 `src/main.ts` 启动，初始化 Pinia（含 `@tauri-store/pinia` 持久化插件）、Router、i18n、主题和任务事件监听
+- **前端**：Vue 3.5（`<script setup lang="ts">`）、Pinia 3、Vue Router 4、vue-i18n 9、Vite 7。别名 `@` → `src/`。
+- **后端**：Tauri 2.9（Rust），入口 `src-tauri/src/lib.rs::run()`，`generate_handler!` 注册 **39 个 command**（R1 新增 2 个、R2.1 移除 2 个 legacy、R2.5 新增 2 个队列持久化命令；R3.1 未新增命令只改签名；R3.2 新增 `get_file_sizes` 通用体积查询；R3.3~R3.8 未新增命令，`parse_startup_args` 改为纯 argv 透传；R1-7 收官时 `load/save/delete_preset` 增加可选 `dir` 参数，命令数不变）。
+- **路由**：`/` 重定向 `/workbench`（R3.8 工作台为管道起点）；15 个业务页（R3.2 新增 `/history`，R3.8 新增 `/workbench` `/watch` `/ab`）+ `/independent-panel`（独立窗口），全部挂 MainLayout；导航按「工作流/工具/监视/系统」四组。
+- **单一执行路径（R2.1 起，关键）**：所有 FFmpeg 进程都走 `modules/task_manager.rs::start_ffmpeg`（shell_words 解析、`ffmpeg-progress/finish/error/log` 事件带 taskId）。队列任务由 `taskStore` 并发调度；一次性任务（画质评测）走 `hooks/useTransientFFmpegTask`。事件名与 payload 的单一事实源是 `utils/ffmpegEvents.ts`；legacy executor 与无前缀事件已删除，`legacyPath.test.ts` 防止回流。
+- **命令构建与元数据单一事实源（R2.2 起，关键）**：命令行只由 `utils/commandBuilder.ts::FFmpegCommandBuilder.build` 生成；编码器与容器兼容性元数据只在 `config/codecDatabase.ts`（`CODEC_DATABASE` + `FORMAT_COMPATIBILITY` + 纯查询函数）。旧构建器与 `useCodecFilter` 已删除，**禁止静默改写用户选择的编码器**——OutputSettings 必须由用户点击确认后才调整；新增元数据不得另起模块，`singleBuilder.test.ts` 会拦。
+- **状态管理（R2.3 起）**：设置只有 `config/settings.ts`（schema/默认值/规范化/唯一键/旧键迁移）+ `store/settingsStore.ts`（setup 风格响应式门面）；文件列表只有 `store/fileListStore.ts`（`FileItem[]` + 派生 `files` 视图）。`settingStore`/`appSettings`/`ffmpegSettingsStore`/`useFileList` 已删，`config/stateUnification.test.ts` 防止回流。其余：taskStore/presetStore/logsStore/softInfoStore/hardwareCapabilityStore。
+- **设置单一事实源（R2.3 起，关键）**：Vue 外读写设置用 `config/settings.ts::loadSettings()/saveSettings()`，Vue 内用 `store/settingsStore.ts::commit()/update()`；禁止再直接读写 `theme`/`language`/`appSettings`/`ffmpeg_settings`，禁止新增设置 store 或页面本地 settings 副本。
+- **预设单一事实源（R2.4 起，关键）**：`types/preset.ts` 是形状/默认值/`PRESET_SCHEMA_VERSION` 的唯一定义，`config/presetSchema.ts` 是 `normalizePreset` / `createDefaultPreset` 的唯一入口；Rust `preset_manager.rs` 只透传 `serde_json::Value`，**禁止在 Rust 侧重建预设结构体**。任何后端预设返回值必须先过 `normalizePreset`；`createdAt/updatedAt` 是 ISO 字符串不是 `Date`；禁止 `{ ...DEFAULT_PRESET }` 浅拷贝。防线：`config/presetSingleSource.test.ts`。
+- **队列持久化（R2.5 起，关键）**：`config/taskQueueSchema.ts` 是快照 DTO / 清洗 / 重启状态迁移的唯一入口，`store/taskStore.ts` 独占 `restoreQueue()` / `flushPersist()` 调度，Rust `modules/task_queue_store.rs` 只原子透传 `tasks.json` blob，**禁止在 Rust 重建 Task 结构体**。快照只含元数据（`logs` / `progress` / `pid` / `stoppedByUser` / `elapsedTime` 不落盘）；只有 `main.ts` 的主窗口（`label === 'main'`）能恢复与写盘，独立窗口必须保持 `persistenceEnabled = false`，否则两份 Pinia 实例会互相覆盖磁盘。禁止用 localStorage 另起队列持久化通道。防线：`config/taskQueuePersistence.test.ts`。
+- **预设分享格式（R3.1 起，关键）**：`config/presetShare.ts` 是分享信封（format `ffmpeg-desktop/preset` v1）/ 版本兼容 / 6 类错误码 / `FFD1:` 文本分享码 / `.ffpreset.json` 文件名的唯一入口；Rust `preset_manager.rs` 的 `export_preset` / `import_preset` 只做纯文本 IO，**禁止在 Rust 解析预设或分享格式**；分享内容剥离 `id`/`createdAt`/`updatedAt`，导入一律经 `savePreset` 生成新 id；禁止在 store / UI 自行 `JSON.parse` 或另建第二套格式。防线：`config/presetShareSingleSource.test.ts`。
+- **任务历史（R3.2 起，关键）**：`config/taskHistory.ts` 是终态投影 / 统计口径 / 筛选排序 / 压缩比 / CSV·JSON 导出的唯一入口；历史是 `taskStore.tasks` 的**只读投影**，禁止另建 `history.json`、第二份状态或独立持久化命令；文件体积只经 Rust `get_file_sizes` 按需查询且不落盘；清空只走 `taskStore.clearHistory()`（不动进行中任务，且 `clearCompletedTasks()` 语义不变）；禁止在页面自行统计或 `JSON.parse`。防线：`taskHistorySingleSource.test.ts`。
+- **R3 管道扩展（R3.3~R3.8 起，关键）**：任务草稿只走 `config/taskDraft.ts`（`createTaskDraft(s)` / `previewCommand`，四处调用方已收敛，禁止再手写 `generateOutputPath + FFmpegCommandBuilder.build + 字段拷贝`）；CLI 解析只走 `config/cliArgs.ts`（Rust 只回原始 argv，禁止把参数名搬回 `startup_args.rs`）；监控规则只存 `AppSettings.watchRules`；重试只走 `config/taskRetry.ts` + `taskStore.retryTask()`；报告导出只走 `config/mediaReport.ts`；CSV 只走 `config/csv.ts`。**R1-7 设置生效（第十轮起，关键）**：输出目录默认值只走 `settingsStore.taskOutputDir` → `taskDraft.resolveOutputFile`（新入队调用方必须注入第 4 参 `outputDir`，显式 outputFile 不受设置影响）；预设目录只经 `presetStore.presetDirArg()` 以 `dir` 参数传给 Rust（空串传 null，Rust `resolve_preset_dir` 空值回退默认目录），禁止在 Rust 持有目录状态。防线：`config/settingsEffectSingleSource.test.ts`。
+- 详见 `.agents/docs/架构与数据流.md`（事件契约、命令注册表、TS↔Rust 类型对齐表）。
 
-## 前端结构
+## 已知问题索引（开发时避让）
 
-| 目录 | 用途 |
-|---|---|
-| `src/pages/` | 路由级页面组件（12 个页面：Home, EncodingQueue, PrepareFiles, ParameterPanel, Merge, Mux, Player, Performance, QualityAssess, MediaInfo, Settings, IndependentPanel） |
-| `src/components/` | 可复用 UI 组件：TaskQueue, ParameterPanel, PresetManager, Dialogs（ConfirmDialog, Toast, CropDialog, StreamSelectorDialog）, FilterPanel, ColorPanel, SubtitlePanel, TrimPanel, StreamPanel, NavigationTabs, VideoPlayer |
-| `src/store/` | Pinia store（见下表） |
-| `src/hooks/` | 组合式函数：`useFFmpegCommand`, `useFileList`, `useMediaProbe`, `useCodecFilter`, `useFormatters` |
-| `src/utils/` | 纯工具函数：`commandBuilder.ts`（基于 PresetData 构建 FFmpeg 命令），`ffmpegCommandBuilder.ts`（基于 FFmpegCommandOptions 的独立命令构建器，含格式兼容性检查），`progressParser.ts`（stderr 进度解析），`ffmpegPath.ts`（从 localStorage 读取自定义路径） |
-| `src/apis/` | `InvokeApi.ts` — FFmpeg 工具检测的封装调用（仅 2 个方法，其余 invoke 调用直接写在 store/hooks 中） |
-| `src/config/` | `codecDatabase.ts` — 编解码器元数据（preset/profile/tune/pixFmt），覆盖 20 种编码器，207 行 |
-| `src/i18n/` | vue-i18n 语言文件：`zh-CN`（完整），`en-US` |
+完整清单见《项目现状审计报告》，高频踩坑摘要：
 
-### Pinia Store
+> 2026-11-07 已完成 R0 + R1 全部 P0/P1 + R2.1~R2.5（R2 架构收敛全部收口）+ R3 全阶段（R3.1 分享生态、R3.2 任务历史、R3.3~R3.8 监控/CLI/A-B/重试/报告/UI 轻改）；下表中的「已修 / 已删」项均有回归测试或静态门禁守护。路线图 R0~R3 全部收口。
 
-| Store | 持久化方式 | 用途 |
-|---|---|---|
-| `taskStore` | 内存（非持久化） | 任务队列、进度追踪、任务生命周期。通过 `setupEventListeners()` 监听 Tauri 事件（`ffmpeg-progress`, `ffmpeg-finish`, `ffmpeg-error`）|
-| `presetStore` | `@tauri-store/pinia` 插件 → app data dir JSON 文件 | 编码预设 CRUD + 导入/导出 + 复制 |
-| `fileListStore` | 内存 | 输入文件列表（简单字符串数组） |
-| `ffmpegSettingsStore` | `localStorage`（键 `ffmpeg_settings`） | 编码器选择和参数状态，全局 FFmpeg 参数生成，硬件编码器映射 |
-| `settingStore` | `localStorage`（键 `theme`, `language`） | 主题（light/dark/system），语言，自动检测浏览器语言 |
-| `logsStore` | 内存 | 操作日志（简单字符串数组） |
-| `softInfoStore` | 内存 | FFmpeg/FFprobe/FFplay 工具检测和系统信息 |
-
-### 路由
-
-所有路由均为 `MainLayout`（`/`）的子路由，默认重定向到 `/queue`：
-
-| 路由 | 页面 | 说明 |
-|---|---|---|
-| `/home` | Home | 欢迎页/快速开始 |
-| `/queue` | EncodingQueue | 编码队列（默认页） |
-| `/prepare` | PrepareFiles | 准备文件（拖拽添加） |
-| `/params` | ParameterPanel | 参数面板（核心编码参数配置） |
-| `/merge` | Merge | 视频合并（concat） |
-| `/mux` | Mux | 混流工具 |
-| `/player` | Player | ffplay 播放器（嵌入窗口，支持播放控制） |
-| `/performance` | Performance | 性能监控（CPU/内存/FFmpeg 进程） |
-| `/quality` | QualityAssess | 画质评测（VMAF/SSIM/PSNR） |
-| `/mediainfo` | MediaInfo | 媒体信息（ffprobe JSON） |
-| `/settings` | Settings | 全局设置 |
-| `/independent-panel` | IndependentPanel | 独立参数面板（单独窗口，为不同文件指定不同参数） |
-
-## Rust 后端结构
-
-### 两条 FFmpeg 执行路径（重要）
-
-项目存在**两套独立的 FFmpeg 执行机制**：
-
-| 维度 | 旧路径（legacy executor） | 新路径（task manager） |
-|---|---|---|
-| Rust 入口 | `lib.rs::execute_ffmpeg_command` → `utility/_executor.rs` | `lib.rs` → `modules/task_manager.rs::start_ffmpeg` |
-| 命令解析 | 自定义 parser（仅处理双引号，不处理单引号和转义） | `shell_words` crate（更稳健） |
-| 事件名 | `progress`, `finish`, `error`（无前缀） | `ffmpeg-progress`, `ffmpeg-finish`, `ffmpeg-error`（带 `ffmpeg-` 前缀） |
-| 进度内容 | 原始 stderr 行（`{delim, line}`） | 结构化解析（frame/fps/time/bitrate/speed/size） |
-| 暂停/恢复 | 不支持 | 支持（Unix: SIGSTOP/SIGCONT，Windows: 未实现） |
-| 多任务 | 仅单任务（`GLOBAL_PID`） | 多任务（`TASK_PROCESSES` HashMap） |
-| stdin 交互 | 不支持 | 支持（`send_ffmpeg_stdin`） |
-| CPU 亲和性 | 不支持 | 支持（Unix only, `sched_setaffinity`） |
-| 前端调用 | `useFFmpegCommand` hook | `taskStore` |
-| 用途 | 简单的单次命令执行 | 完整的任务队列管理 |
-
-**新代码应使用 task manager 路径。** legacy executor 仅用于简单的一次性命令执行场景。
-
-### 源码目录
-
-| 目录 | 文件 | 用途 |
-|---|---|---|
-| `src-tauri/src/library/` | `_ffmpeg.rs`, `_probe.rs`, `_process.rs`, `_file.rs`, `_path.rs`, `_string.rs`, `_tauri.rs`, `_error.rs` | 基础库：FFmpeg 检测/安装、媒体探测、进程 Kill、文件 IO、路径工具、IPC 事件发送 |
-| `src-tauri/src/modules/` | `task_manager.rs`, `preset_manager.rs`, `menus.rs`, `tray.rs`, `windows.rs` | 功能模块：任务管理、预设 CRUD、菜单栏、系统托盘、多窗口 |
-| `src-tauri/src/utility/` | `_executor.rs`, `_constant.rs` | legacy 命令执行器、事件名枚举 |
-| `src-tauri/config/` | `codec.json`, `ffmpeg-settings.json` | 运行时配置（通过 `resources` 打包进二进制，通过 `read_json_file` 读取） |
-
-### lib.rs 关键全局状态
-
-- `GLOBAL_PID: Mutex<Option<u32>>` — legacy 执行器的单进程 PID，仅被 `execute_ffmpeg_command`/`stop_convert` 使用
-- `FFPLAY_PROCESS: Mutex<Option<Child>>` — ffplay 播放器进程
-- `TRAY_SETTINGS: Mutex<TraySettings>` — 托盘行为设置
-- `INDEPENDENT_PANEL_FILES: Mutex<Vec<String>>` — 独立面板文件列表
-
-### Rust 单元测试
-
-仅在 `task_manager.rs` 中有 11 个测试，覆盖 `parse_progress` 函数和所有正则表达式。其他模块无测试。
-
-## 已知代码问题和平台差异
-
-### Bug
-- **`taskStore.ts`**: `playNotification` 函数和 `audioCtx` 变量被错误地嵌套在 `classifyError` 函数体内部（第 22-36 行），导致 `playNotification` 在 `setupEventListeners` 中不可用（TypeScript 编译时应该报错，但 `noUnusedLocals` 可能掩盖了此问题）
-- **`lib.rs::toggle_ffplay_pause`**: 接受 `pause: bool` 参数但完全忽略，始终向 ffplay 发送空格
-
-### 未实现/桩代码
-- **Windows 暂停/恢复**: `task_manager.rs` 中 `pause_process`/`resume_process` 在 Windows 上返回 `"not implemented"`
-- **Windows FFmpeg 自动安装**: `_ffmpeg.rs::install_ffmpeg_windows()` 是空桩
-- **GPU 监控**: `get_system_metrics` 返回的 GPU 数据全部为 0，温度字段为 null，磁盘读写速度为 0
-- **`menus.rs::setup_menus`**: 定义了但从未在 `lib.rs::run()` 中调用（死代码）
-
-### 架构注意事项
-- **两条执行路径**: 新功能应使用 task manager 路径（`start_ffmpeg`/`ffmpeg-progress` 事件），legacy executor 应逐步淘汰
-- **两个命令构建器**: `commandBuilder.ts`（基于 PresetData，用于参数面板）和 `ffmpegCommandBuilder.ts`（基于 FFmpegCommandOptions，用于简单场景）— 功能有重叠
-- **两个文件列表实现**: `fileListStore`（简单数组）和 `useFileList` hook（带状态的 FileItem 对象）— 互不关联
-- **PresetData Rust 结构体不完整**: `preset_manager.rs` 中定义的 `PresetData` 缺少 `colorManagement`, `filters`, `subtitleBurn`, `frameServer`, `trim`, `streamControl`, `loudnorm`, `image` 等字段 — 保存/加载预设时这些数据会丢失
+- ✅ 已修：`parse_startup_args` 已注册 + `commands/mod.rs` 导出；新增 command **必须同时注册**（`commandRegistry.test.ts` 静态门禁）
+- ✅ 已修：`TaskQueue` emit `select`、TaskItem 选中态、stdin 链路；`startTask` 自带并发闸门，`tryStartNext()` 一次填满额度
+- ✅ 已修：`TaskProgress` 与 Rust `ProgressInfo` 对齐（`string | null` + `utils/progressFormat.ts` 解析）
+- ✅ 已删：legacy 无前缀事件与 `execute_ffmpeg_command` / `stop_convert`；**禁止新增无前缀 `listen`**，每个 `listen` 必须有对应 `unlisten`（`listenerRegistry` 统一释放）；新增 FFmpeg 事件必须登记进 `utils/ffmpegEvents.ts`
+- 路径处理统一走 `src/utils/pathUtils.ts`（normalize + `split(/[\\/]/)`，Windows 兼容）
+- 版本四处文件已统一（package.json / Cargo.toml / tauri.conf.json / Home 读 `__APP_VERSION__`）；**tag `v0.1.7` 仍与版本文件 0.1.6 不一致，R0-2 待决策**
+- `scripts/release-all.sh` 的 REPO_DIR 指向父目录，当前布局下不可直接运行
 
 ## 关键约束
 
-- **必须 pnpm**。`package.json` 中 `packageManager: "pnpm@10.27.0"`，`engines.pnpm: ">=10.27.0"`
-- **`vue-tsc --noEmit` 必须通过**才能构建。严格 TS 选项：`noUnusedLocals`, `noUnusedParameters`, `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitReturns`, `noImplicitOverride`
-- **所有用户可见文本必须使用 i18n**（`t()` from `vue-i18n`）。翻译键约定：`page.<pageName>.<key>`, `common.<key>`, `message.<key>`, `task.status.<key>`, `encoder.<category>.<key>`, `filter.<name>.<key>` 等
-- **禁用原生弹窗**（`alert`, `confirm`, `prompt`），使用 `ConfirmDialog` 和 `Toast`（`src/components/Dialogs/`）
-- **必须使用 scoped 样式和 CSS 变量**以支持明暗主题切换，严禁硬编码颜色值
-- **前端测试 Mock 所有 Tauri API**（`src/__tests__/setup.ts`），不能调用真实 Rust 命令
+- **必须 pnpm ≥10.27**；`vue-tsc --noEmit` 必须通过（严格模式：noUnusedLocals/noUncheckedIndexedAccess/exactOptionalPropertyTypes 等）
+- **所有用户可见文本必须 i18n**（`t()`），中英同步；禁硬编码中文
+- **禁原生弹窗**（alert/confirm/prompt），用 ConfirmDialog/Toast
+- **scoped 样式 + CSS 变量 + 回退值**，禁硬编码颜色；主题 light/dark/system 三态
+- 组件 `PascalCase/PascalCase.vue` 禁 index.vue；页面入口才允许 index.vue
+- 前端测试 mock 全部 Tauri API（`src/__tests__/setup.ts`）
+- CSP 已收紧（`default-src 'self'`，connect-src 白名单含 api.github.com/gitee.com）；构建期 `assert-csp-safe-build.mjs` 断言无 eval——不要引入需要动态代码执行的依赖
 
 ## 测试
 
-- **前端**: Vitest + `happy-dom` + `@vue/test-utils`。Mock 在 `src/__tests__/setup.ts`
-- **后端**: `cargo test`，覆盖率用 `cargo tarpaulin`
-- **覆盖率阈值**（`vitest.config.ts`）: lines ≥85%, functions ≥80%, branches ≥75%, statements ≥85%
-- 测试文件位置:
-  - `src/__tests__/unit/stores/`: taskStore, presetStore, logsStore, settingStore
-  - `src/__tests__/unit/utils/`: progressParser, commandBuilder, useFormatters, ffmpegCommandBuilder
-  - `src/__tests__/unit/components/`: ConfirmDialog
-  - `src/__tests__/factories/`: preset, task 测试工厂
+- 前端：Vitest + happy-dom，**66 文件 / 543 用例**全绿（2026-11-07，R1-7 收官后；净增 15 例为设置生效契约 / 静态门禁用例）
+- 覆盖率阈值（`coverage.thresholds`，已验证生效）：lines 56 / functions 42 / branches 51 / statements 56，约定只升不降；当前实测 68.40 / 58.85 / 63.12 / 68.60（lines/functions/branches/statements，R1-7 收官后四项均较 R3.8 提升；按不顶峰值原则保持阈值不变、未下调）
+- 后端：`cargo check` + `cargo test` 本机通过（2026-11-07，R1-7 收官复验）：**33 个 Rust 单测全绿**，仅 3 个既有 dead_code 警告 → V6 已定案
+- E2E：Playwright，**浏览器 + Tauri mock 层**，不证明桌面功能可用
+- 覆盖率数字必须实测（`pnpm test:coverage`），禁止引用历史报告结论
 
-## Tauri 配置要点
+## Tauri 配置速查
 
-- 开发服务器端口: 1421（`tauri.conf.json` 中固定）
-- CSP 限制 `connect-src` 为 `self` + `https://api.github.com`
-- `src-tauri/` 已排除在 Vite 文件监听之外
-- 平台特定覆盖: `tauri.{linux,macos,windows}.conf.json`
-- 打包资源: `src-tauri/config/*`
-- 应用标识符: `com.william.ffmpeg_desktop`
-- 主窗口: 1500x900，最小 1200x700
+- 开发端口 1421；identifier `com.william.ffmpeg-desktop`（连字符）
+- 主窗口 1280×800，最小 1024×640
+- 平台覆盖：`tauri.{linux,macos,windows}.conf.json`；无更新器构建用 `tauri.no-updater.conf.json`
+- updater endpoint 指向 GitHub Releases（macOS 无 CI 构建，updater manifest 只覆盖 linux/windows x86_64）
 
-## 版本
+## 文档同步义务
 
-- `package.json`: 0.1.6
-- `src-tauri/Cargo.toml`: 0.1.6
-- `src-tauri/tauri.conf.json`: 0.1.6
+改代码必须同步文档：架构变更 →《架构与数据流》；发布变更 →《质量保障与发布》；UI 变更 →《UI-UX重设计规范》；修复审计问题 → 更新《项目现状审计报告》对应条目的证据等级。

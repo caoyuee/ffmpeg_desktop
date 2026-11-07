@@ -2,13 +2,20 @@
   <div class="performance-page">
     <div class="app-toolbar">
       <div class="app-toolbar__group">
-        <button class="app-btn app-btn--primary" @click="refreshInterval > 0 ? stopMonitoring() : startMonitoring()">
+        <button
+          class="app-btn app-btn--primary"
+          @click="refreshInterval > 0 ? stopMonitoring() : startMonitoring()"
+        >
           <AppIcon :name="refreshInterval > 0 ? 'stop' : 'play'" :size="16" class="icon" />
-          {{ refreshInterval > 0 ? t('page.performance.stopMonitor') : t('page.performance.startMonitor') }}
+          {{
+            refreshInterval > 0
+              ? t('page.performance.stopMonitor')
+              : t('page.performance.startMonitor')
+          }}
         </button>
         <span class="refresh-rate">
           {{ t('page.performance.refreshRate') }}:
-          <select v-model="refreshRate" @change="updateRefreshRate" :disabled="refreshInterval > 0">
+          <select v-model="refreshRate" :disabled="refreshInterval > 0" @change="updateRefreshRate">
             <option :value="500">500ms</option>
             <option :value="1000">1s</option>
             <option :value="2000">2s</option>
@@ -17,7 +24,7 @@
         </span>
       </div>
     </div>
-    
+
     <div class="metrics-grid">
       <div class="metric-card cpu">
         <div class="metric-header">
@@ -38,11 +45,13 @@
           </div>
           <div class="detail-row">
             <span>{{ t('page.performance.temperature') }}</span>
-            <span>{{ metrics.cpu.temperature ? metrics.cpu.temperature.toFixed(0) + '°C' : 'N/A' }}</span>
+            <span>{{
+              metrics.cpu.temperature ? metrics.cpu.temperature.toFixed(0) + '°C' : 'N/A'
+            }}</span>
           </div>
         </div>
       </div>
-      
+
       <div class="metric-card memory">
         <div class="metric-header">
           <AppIcon name="memory" :size="18" class="metric-icon" />
@@ -66,8 +75,8 @@
           </div>
         </div>
       </div>
-      
-      <div class="metric-card gpu" v-if="metrics.gpu.memoryTotal > 0">
+
+      <div v-if="metrics.gpu.memoryTotal > 0" class="metric-card gpu">
         <div class="metric-header">
           <AppIcon name="gpu" :size="18" class="metric-icon" />
           <span class="metric-title">{{ t('page.performance.gpu') }}</span>
@@ -82,15 +91,20 @@
         <div class="metric-details">
           <div class="detail-row">
             <span>{{ t('page.performance.vram') }}</span>
-            <span>{{ formatBytes(metrics.gpu.memoryUsed) }} / {{ formatBytes(metrics.gpu.memoryTotal) }}</span>
+            <span
+              >{{ formatBytes(metrics.gpu.memoryUsed) }} /
+              {{ formatBytes(metrics.gpu.memoryTotal) }}</span
+            >
           </div>
           <div class="detail-row">
             <span>{{ t('page.performance.temperature') }}</span>
-            <span>{{ metrics.gpu.temperature ? metrics.gpu.temperature.toFixed(0) + '°C' : 'N/A' }}</span>
+            <span>{{
+              metrics.gpu.temperature ? metrics.gpu.temperature.toFixed(0) + '°C' : 'N/A'
+            }}</span>
           </div>
         </div>
       </div>
-      
+
       <div class="metric-card disk">
         <div class="metric-header">
           <AppIcon name="disk" :size="18" class="metric-icon" />
@@ -101,7 +115,10 @@
           <span class="unit">MB/s</span>
         </div>
         <div class="metric-bar">
-          <div class="bar-fill" :style="{ width: Math.min(metrics.disk.readSpeed / 10, 100) + '%' }"></div>
+          <div
+            class="bar-fill"
+            :style="{ width: Math.min(metrics.disk.readSpeed / 10, 100) + '%' }"
+          ></div>
         </div>
         <div class="metric-details">
           <div class="detail-row">
@@ -115,14 +132,16 @@
         </div>
       </div>
     </div>
-    
+
     <div class="process-section">
       <div class="section-header">
         <span class="section-title">{{ t('page.performance.processes') }}</span>
         <div class="process-summary">
           <span>{{ t('page.performance.processCount', { count: processSummary.count }) }}</span>
           <span>{{ t('page.performance.totalCpu') }}: {{ processSummary.cpu.toFixed(1) }}%</span>
-          <span>{{ t('page.performance.totalMemory') }}: {{ formatBytes(processSummary.memory) }}</span>
+          <span
+            >{{ t('page.performance.totalMemory') }}: {{ formatBytes(processSummary.memory) }}</span
+          >
         </div>
       </div>
       <div class="process-list">
@@ -133,9 +152,13 @@
           <div class="process-info">
             <span class="process-name">{{ proc.name }} (PID: {{ proc.pid }})</span>
             <span class="process-cpu">CPU: {{ proc.cpu.toFixed(1) }}%</span>
-            <span class="process-memory">{{ t('page.performance.memory') }}: {{ formatBytes(proc.memory) }}</span>
+            <span class="process-memory"
+              >{{ t('page.performance.memory') }}: {{ formatBytes(proc.memory) }}</span
+            >
           </div>
-          <button class="app-btn app-btn--danger" @click="killProcess(proc.pid)">{{ t('page.performance.terminate') }}</button>
+          <button class="app-btn app-btn--danger" @click="killProcess(proc.pid)">
+            {{ t('page.performance.terminate') }}
+          </button>
         </div>
       </div>
     </div>
@@ -143,49 +166,49 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted } from 'vue';
-import { useI18n } from 'vue-i18n';
-import { invoke } from '@tauri-apps/api/core';
-import AppIcon from '@/components/AppIcon/AppIcon.vue';
+import { computed, ref, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { invoke } from '@tauri-apps/api/core'
+import AppIcon from '@/components/AppIcon/AppIcon.vue'
 
-const { t } = useI18n();
+const { t } = useI18n()
 
 interface CpuMetrics {
-  usage: number;
-  cores: number;
-  temperature: number | null;
+  usage: number
+  cores: number
+  temperature: number | null
 }
 
 interface MemoryMetrics {
-  total: number;
-  used: number;
-  usedPercent: number;
+  total: number
+  used: number
+  usedPercent: number
 }
 
 interface GpuMetrics {
-  usage: number;
-  memoryTotal: number;
-  memoryUsed: number;
-  temperature: number | null;
+  usage: number
+  memoryTotal: number
+  memoryUsed: number
+  temperature: number | null
 }
 
 interface DiskMetrics {
-  readSpeed: number;
-  writeSpeed: number;
+  readSpeed: number
+  writeSpeed: number
 }
 
 interface ProcessInfo {
-  pid: number;
-  name: string;
-  cpu: number;
-  memory: number;
+  pid: number
+  name: string
+  cpu: number
+  memory: number
 }
 
 interface SystemMetrics {
-  cpu: CpuMetrics;
-  memory: MemoryMetrics;
-  gpu: GpuMetrics;
-  disk: DiskMetrics;
+  cpu: CpuMetrics
+  memory: MemoryMetrics
+  gpu: GpuMetrics
+  disk: DiskMetrics
 }
 
 const metrics = ref<SystemMetrics>({
@@ -193,76 +216,76 @@ const metrics = ref<SystemMetrics>({
   memory: { total: 0, used: 0, usedPercent: 0 },
   gpu: { usage: 0, memoryTotal: 0, memoryUsed: 0, temperature: null },
   disk: { readSpeed: 0, writeSpeed: 0 },
-});
+})
 
-const ffmpegProcesses = ref<ProcessInfo[]>([]);
-const refreshRate = ref(1000);
-const refreshInterval = ref(0);
+const ffmpegProcesses = ref<ProcessInfo[]>([])
+const refreshRate = ref(1000)
+const refreshInterval = ref(0)
 
 const processSummary = computed(() => ({
   count: ffmpegProcesses.value.length,
   cpu: ffmpegProcesses.value.reduce((total, proc) => total + proc.cpu, 0),
   memory: ffmpegProcesses.value.reduce((total, proc) => total + proc.memory, 0),
-}));
+}))
 
 async function fetchMetrics() {
   try {
-    const data = await invoke<SystemMetrics>('get_system_metrics');
-    metrics.value = data;
-    
-    const processes = await invoke<ProcessInfo[]>('get_ffmpeg_processes');
-    ffmpegProcesses.value = processes.map(proc => ({
+    const data = await invoke<SystemMetrics>('get_system_metrics')
+    metrics.value = data
+
+    const processes = await invoke<ProcessInfo[]>('get_ffmpeg_processes')
+    ffmpegProcesses.value = processes.map((proc) => ({
       ...proc,
       name: proc.name || 'ffmpeg',
-    }));
+    }))
   } catch (error) {
-    console.error('获取系统指标失败:', error);
+    console.error('获取系统指标失败:', error)
   }
 }
 
 function startMonitoring() {
-  fetchMetrics();
-  refreshInterval.value = window.setInterval(fetchMetrics, refreshRate.value);
+  fetchMetrics()
+  refreshInterval.value = window.setInterval(fetchMetrics, refreshRate.value)
 }
 
 function stopMonitoring() {
   if (refreshInterval.value) {
-    clearInterval(refreshInterval.value);
-    refreshInterval.value = 0;
+    clearInterval(refreshInterval.value)
+    refreshInterval.value = 0
   }
 }
 
 function updateRefreshRate() {
   if (refreshInterval.value > 0) {
-    stopMonitoring();
-    startMonitoring();
+    stopMonitoring()
+    startMonitoring()
   }
 }
 
 async function killProcess(pid: number) {
   try {
-    await invoke('kill_process_by_pid', { pid });
-    await fetchMetrics();
+    await invoke('kill_process_by_pid', { pid })
+    await fetchMetrics()
   } catch (error) {
-    console.error('终止进程失败:', error);
+    console.error('终止进程失败:', error)
   }
 }
 
 function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  if (bytes === 0) return '0 B'
+  const k = 1024
+  const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
+  const i = Math.floor(Math.log(bytes) / Math.log(k))
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i]
 }
 
 onMounted(() => {
-  startMonitoring();
-});
+  startMonitoring()
+})
 
 onUnmounted(() => {
-  stopMonitoring();
-});
+  stopMonitoring()
+})
 </script>
 
 <style scoped>
