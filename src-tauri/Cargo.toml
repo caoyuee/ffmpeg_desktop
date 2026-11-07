@@ -13,9 +13,9 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = ["config-json5"] }
 
 [dependencies]
-tauri = { version = "2.9.1", features = ["config-json5", "tray-icon", "devtools"] }
-tauri-plugin-opener = "2.5.2"
-tauri-plugin-dialog = "2.5.0"
+tauri = { version = "2.12", features = ["config-json5", "tray-icon", "devtools"] }
+tauri-plugin-opener = "2.7"
+tauri-plugin-dialog = "2.8"
 tauri-plugin-fs = "2"
 tauri-plugin-pinia = "4"
 serde = { version = "1", features = ["derive"] }
@@ -30,8 +30,8 @@ uuid = { version = "1.16", features = ["v4", "serde"] }
 base64 = "0.22"
 sysinfo = "0.33"
 filetime = "0.2"
-tauri-plugin-updater = "2.10.1"
-tauri-plugin-process = "2.3.1"
+tauri-plugin-updater = "2.14"
+tauri-plugin-process = "2.4"
 
 [dev-dependencies]
 mockall = "0.11"
