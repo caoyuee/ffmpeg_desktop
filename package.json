@@ -6,14 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
-    "build:csp-check": "pnpm build && node scripts/assert-csp-safe-build.mjs",
+    "build:csp-check": "vue-tsc --noEmit && vite build && node scripts/assert-csp-safe-build.mjs",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "lint:all": "pnpm lint && pnpm format:check",
+    "lint:all": "eslint . && prettier --check .",
     "tauri": "tauri",
     "test": "vitest",
     "test:ui": "vitest --ui",
@@ -24,7 +24,7 @@
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:report": "playwright show-report",
     "test:report": "bash scripts/generate-test-report.sh",
-    "test:all": "pnpm test:coverage && cd src-tauri && cargo tarpaulin --out Html --out Json --out Lcov --output-dir ../test-reports/backend && cd .. && pnpm test:report",
+    "test:all": "vitest run --coverage && cd src-tauri && cargo tarpaulin --out Html --out Json --out Lcov --output-dir ../test-reports/backend && cd .. && bash scripts/generate-test-report.sh",
     "verify": "bash scripts/preflight.sh",
     "version:bump": "node scripts/bump-version.mjs",
     "release:all": "bash scripts/release-all.sh patch",
@@ -35,45 +35,39 @@
     "updater:manifest": "node scripts/generate-updater-manifest.mjs"
   },
   "dependencies": {
-    "@tauri-apps/api": "^2.10.1",
-    "@tauri-apps/plugin-dialog": "^2.5.0",
-    "@tauri-apps/plugin-opener": "^2.4.0",
-    "@tauri-apps/plugin-process": "^2.3.1",
-    "@tauri-apps/plugin-updater": "^2.10.1",
+    "@tauri-apps/api": "^2.12.4",
+    "@tauri-apps/plugin-dialog": "^2.8.4",
+    "@tauri-apps/plugin-opener": "^2.7.2",
+    "@tauri-apps/plugin-process": "^2.4.0",
+    "@tauri-apps/plugin-updater": "^2.14.1",
     "@tauri-store/pinia": "^3.7.1",
-    "pinia": "^3.0.3",
-    "vue": "^3.5.26",
-    "vue-i18n": "^9.14.4",
-    "vue-router": "^4.5.1"
+    "pinia": "^3.0.4",
+    "vue": "^3.5.45",
+    "vue-i18n": "^9.14.5",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@playwright/test": "^1.61.1",
-    "@tauri-apps/cli": "^2.10.1",
-    "@types/node": "^24.1.0",
-    "@vitejs/plugin-vue": "^6.0.3",
-    "@vitest/coverage-v8": "^4.1.4",
-    "@vitest/ui": "^4.1.4",
+    "@playwright/test": "^1.65.0",
+    "@tauri-apps/cli": "^2.12.4",
+    "@types/node": "^24.19.2",
+    "@vitejs/plugin-vue": "^6.0.10",
+    "@vitest/coverage-v8": "^5.1.0",
+    "@vitest/ui": "^5.1.0",
     "@vue/eslint-config-typescript": "^14.9.0",
-    "@vue/test-utils": "^2.4.6",
+    "@vue/test-utils": "^2.5.1",
     "eslint": "^10.14.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-vue": "^10.12.0",
     "globals": "^17.14.0",
-    "happy-dom": "^20.9.0",
-    "pnpm": "^10.27.0",
+    "happy-dom": "^21.0.4",
     "prettier": "^3.9.10",
-    "typescript": "~5.9.3",
-    "vite": "^7.3.0",
-    "vitest": "^4.1.4",
-    "vue-tsc": "^3.2.2"
+    "typescript": "^6.0.3",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0",
+    "vue-tsc": "^3.3.14"
   },
-  "packageManager": "pnpm@10.27.0",
+  "packageManager": "pnpm@12.18.0",
   "engines": {
-    "pnpm": ">=10.27.0"
-  },
-  "pnpm": {
-    "neverBuiltDependencies": [
-      "@tauri-apps/cli"
-    ]
+    "pnpm": ">=12.18.0"
   }
 }

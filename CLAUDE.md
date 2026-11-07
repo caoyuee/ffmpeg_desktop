@@ -10,7 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 # pnpm 不在 PATH 时：export NVM_DIR="$HOME/.config/nvm" && . "$NVM_DIR/nvm.sh"
-pnpm install                  # 必须 pnpm（packageManager 强制 10.27.0）
+pnpm install                  # 必须 pnpm（packageManager 强制 12.18.0）
 pnpm dev                      # 仅浏览器（Tauri API 全 mock）
 pnpm tauri dev                # 完整桌面应用
 pnpm build / pnpm typecheck   # vue-tsc --noEmit 必须通过
@@ -51,7 +51,7 @@ bash scripts/preflight.sh     # 全量预检（含 CSP 断言）
 
 ## 关键约束
 
-- **必须 pnpm ≥10.27**；`vue-tsc --noEmit` 必须通过（严格模式：noUnusedLocals/noUncheckedIndexedAccess/exactOptionalPropertyTypes 等）
+- **必须 pnpm ≥12.18**（v11+ 起构建审批用 pnpm-workspace.yaml 的 allowBuilds；脚本子进程不再包含 pnpm 自身，npm scripts 内禁止递归调用 pnpm）；`vue-tsc --noEmit` 必须通过（严格模式：noUnusedLocals/noUncheckedIndexedAccess/exactOptionalPropertyTypes 等）
 - **所有用户可见文本必须 i18n**（`t()`），中英同步；禁硬编码中文
 - **禁原生弹窗**（alert/confirm/prompt），用 ConfirmDialog/Toast
 - **scoped 样式 + CSS 变量 + 回退值**，禁硬编码颜色；主题 light/dark/system 三态

@@ -12,7 +12,7 @@
 
 | 约束        | 详情                                                                                               |
 | ----------- | -------------------------------------------------------------------------------------------------- |
-| 包管理器    | pnpm 10.27+（强制，pnpm install 前先 `export NVM_DIR="$HOME/.config/nvm" && . "$NVM_DIR/nvm.sh"`） |
+| 包管理器    | pnpm 12.18+（强制，pnpm install 前先 `export NVM_DIR="$HOME/.config/nvm" && . "$NVM_DIR/nvm.sh"`；构建审批配置在 pnpm-workspace.yaml 的 allowBuilds） |
 | 组件文件    | `PascalCase/PascalCase.vue`，禁止 `index.vue`                                                      |
 | 页面入口    | `index.vue`（仅页面允许）                                                                          |
 | 脚本        | `<script setup lang="ts">`，TypeScript 泛型 Props/Emits                                            |

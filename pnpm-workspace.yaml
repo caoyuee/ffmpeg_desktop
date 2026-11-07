@@ -1,0 +1,9 @@
+# pnpm 12 起设置统一收敛到本文件（原 package.json 的 pnpm 字段迁移至此）
+# 供应链保护：拒绝发布不足 12 小时的包版本（默认 24h，曾误伤刚发布的 vue-eslint-parser）
+minimumReleaseAge: 720
+
+# pnpm v11+ 唯一生效的构建审批配置（onlyBuiltDependencies / neverBuiltDependencies 已废弃）
+# esbuild 需要 postinstall 下载平台二进制；@tauri-apps/cli 的构建脚本按旧约定继续禁止
+allowBuilds:
+  esbuild: true
+  '@tauri-apps/cli': false
