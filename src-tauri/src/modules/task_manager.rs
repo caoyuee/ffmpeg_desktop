@@ -1,10 +1,10 @@
-use std::collections::HashMap;
-use std::sync::Mutex;
-use std::process::{Command, Stdio};
-use std::io::{BufRead, BufReader};
-use tauri::{AppHandle, Emitter};
 use once_cell::sync::Lazy;
 use regex::Regex;
+use std::collections::HashMap;
+use std::io::{BufRead, BufReader};
+use std::process::{Command, Stdio};
+use std::sync::Mutex;
+use tauri::{AppHandle, Emitter};
 
 const EXIT_CODE_ERROR: i32 = -1;
 
@@ -12,32 +12,24 @@ struct TaskProcess {
     _pid: u32,
 }
 
-static TASK_PROCESSES: Lazy<Mutex<HashMap<String, TaskProcess>>> = Lazy::new(|| Mutex::new(HashMap::new()));
-static TASK_STDINS: Lazy<Mutex<HashMap<String, std::process::ChildStdin>>> = Lazy::new(|| Mutex::new(HashMap::new()));
+static TASK_PROCESSES: Lazy<Mutex<HashMap<String, TaskProcess>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
+static TASK_STDINS: Lazy<Mutex<HashMap<String, std::process::ChildStdin>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
 
-static FRAME_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"frame=\s*(\d+)").unwrap()
-});
+static FRAME_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"frame=\s*(\d+)").unwrap());
 
-static FPS_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"fps=\s*([\d\.]+)").unwrap()
-});
+static FPS_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"fps=\s*([\d\.]+)").unwrap());
 
-static TIME_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"time=\s*(\d+:\d{2}:\d{2}\.\d{2})").unwrap()
-});
+static TIME_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"time=\s*(\d+:\d{2}:\d{2}\.\d{2})").unwrap());
 
-static BITRATE_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"bitrate=\s*([\d\.]+)\s*kbits/s").unwrap()
-});
+static BITRATE_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"bitrate=\s*([\d\.]+)\s*kbits/s").unwrap());
 
-static SPEED_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"speed=\s*([\d\.eE\+\-]+)\s*x").unwrap()
-});
+static SPEED_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"speed=\s*([\d\.eE\+\-]+)\s*x").unwrap());
 
-static SIZE_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"size=\s*(\d+)\s*([KMG]iB)").unwrap()
-});
+static SIZE_RE: Lazy<Regex> = Lazy::new(|| Regex::new(r"size=\s*(\d+)\s*([KMG]iB)").unwrap());
 
 static ERROR_RE: Lazy<Regex> = Lazy::new(|| {
     Regex::new(r"(?i)(Error|Invalid|cannot find|failed|No such file|Permission denied|not found|not recognized|unrecognized|Unknown|missing)").unwrap()
@@ -59,9 +51,9 @@ pub fn start_ffmpeg(
     task_id: String,
     cpu_affinity: Option<String>,
 ) -> Result<u32, String> {
-    let parts = shell_words::split(&command)
-        .map_err(|e| format!("Failed to parse command: {}", e))?;
-    
+    let parts =
+        shell_words::split(&command).map_err(|e| format!("Failed to parse command: {}", e))?;
+
     if parts.is_empty() {
         return Err("Empty command".to_string());
     }
@@ -83,13 +75,16 @@ pub fn start_ffmpeg(
         TASK_STDINS.lock().unwrap().insert(task_id.clone(), stdin);
     }
 
-    TASK_PROCESSES.lock().unwrap().insert(task_id.clone(), TaskProcess { _pid: pid });
+    TASK_PROCESSES
+        .lock()
+        .unwrap()
+        .insert(task_id.clone(), TaskProcess { _pid: pid });
 
     if let Some(ref affinity_str) = cpu_affinity {
         #[cfg(unix)]
         {
+            use nix::sched::{sched_setaffinity, CpuSet};
             use nix::unistd::Pid;
-            use nix::sched::{CpuSet, sched_setaffinity};
             let mut cpuset = CpuSet::new();
             for s in affinity_str.split(',') {
                 if let Ok(core) = s.trim().parse::<usize>() {
@@ -102,50 +97,68 @@ pub fn start_ffmpeg(
 
     let task_id_clone = task_id.clone();
     let app_clone = app.clone();
-    
+
     std::thread::spawn(move || {
         let exit_code = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
             if let Some(stderr) = child.stderr.take() {
                 let reader = BufReader::new(stderr);
                 for line in reader.lines() {
-                     if let Ok(line) = line {
+                    if let Ok(line) = line {
                         // R1-6：转发全量 stderr 行，由前端按 level / outputType 过滤。
                         // 旧实现只发 ERROR_RE 命中的行，导致"最新输出"面板几乎永远为空。
-                        let level = if ERROR_RE.is_match(&line) { "error" } else { "info" };
+                        let level = if ERROR_RE.is_match(&line) {
+                            "error"
+                        } else {
+                            "info"
+                        };
                         if let Ok(progress) = parse_progress(&line) {
-                            let _ = app_clone.emit("ffmpeg-progress", serde_json::json!({
-                                "taskId": task_id_clone,
-                                "progress": progress
-                            }));
+                            let _ = app_clone.emit(
+                                "ffmpeg-progress",
+                                serde_json::json!({
+                                    "taskId": task_id_clone,
+                                    "progress": progress
+                                }),
+                            );
                         }
-                        let _ = app_clone.emit("ffmpeg-log", serde_json::json!({
-                            "taskId": task_id_clone,
-                            "level": level,
-                            "message": line.as_str()
-                        }));
+                        let _ = app_clone.emit(
+                            "ffmpeg-log",
+                            serde_json::json!({
+                                "taskId": task_id_clone,
+                                "level": level,
+                                "message": line.as_str()
+                            }),
+                        );
                     }
                 }
             }
 
-            child.wait()
+            child
+                .wait()
                 .map(|s| s.code().unwrap_or(EXIT_CODE_ERROR))
                 .unwrap_or(EXIT_CODE_ERROR)
-        })).unwrap_or(EXIT_CODE_ERROR);
-        
+        }))
+        .unwrap_or(EXIT_CODE_ERROR);
+
         TASK_PROCESSES.lock().unwrap().remove(&task_id_clone);
         TASK_STDINS.lock().unwrap().remove(&task_id_clone);
-        
+
         if exit_code == 0 {
-            let _ = app_clone.emit("ffmpeg-finish", serde_json::json!({
-                "taskId": task_id_clone,
-                "exitCode": exit_code
-            }));
+            let _ = app_clone.emit(
+                "ffmpeg-finish",
+                serde_json::json!({
+                    "taskId": task_id_clone,
+                    "exitCode": exit_code
+                }),
+            );
         } else {
-            let _ = app_clone.emit("ffmpeg-error", serde_json::json!({
-                "taskId": task_id_clone,
-                "exitCode": exit_code,
-                "message": format!("FFmpeg exited with code {}", exit_code)
-            }));
+            let _ = app_clone.emit(
+                "ffmpeg-error",
+                serde_json::json!({
+                    "taskId": task_id_clone,
+                    "exitCode": exit_code,
+                    "message": format!("FFmpeg exited with code {}", exit_code)
+                }),
+            );
         }
     });
 
@@ -198,7 +211,11 @@ fn suspend_windows_process(pid: u32) -> Result<(), String> {
     }
     #[link(name = "kernel32")]
     extern "system" {
-        fn OpenProcess(dwDesiredAccess: u32, bInheritHandle: i32, dwProcessId: u32) -> *mut std::ffi::c_void;
+        fn OpenProcess(
+            dwDesiredAccess: u32,
+            bInheritHandle: i32,
+            dwProcessId: u32,
+        ) -> *mut std::ffi::c_void;
         fn CloseHandle(hObject: *mut std::ffi::c_void) -> i32;
     }
 
@@ -206,14 +223,22 @@ fn suspend_windows_process(pid: u32) -> Result<(), String> {
 
     let handle = unsafe { OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid) };
     if handle.is_null() {
-        return Err(format!("Failed to open process {}: access denied or not found", pid));
+        return Err(format!(
+            "Failed to open process {}: access denied or not found",
+            pid
+        ));
     }
 
     let status = unsafe { NtSuspendProcess(handle) };
-    unsafe { CloseHandle(handle); }
+    unsafe {
+        CloseHandle(handle);
+    }
 
     if status != 0 {
-        return Err(format!("NtSuspendProcess failed with status 0x{:X}", status));
+        return Err(format!(
+            "NtSuspendProcess failed with status 0x{:X}",
+            status
+        ));
     }
 
     Ok(())
@@ -227,7 +252,11 @@ fn resume_windows_process(pid: u32) -> Result<(), String> {
     }
     #[link(name = "kernel32")]
     extern "system" {
-        fn OpenProcess(dwDesiredAccess: u32, bInheritHandle: i32, dwProcessId: u32) -> *mut std::ffi::c_void;
+        fn OpenProcess(
+            dwDesiredAccess: u32,
+            bInheritHandle: i32,
+            dwProcessId: u32,
+        ) -> *mut std::ffi::c_void;
         fn CloseHandle(hObject: *mut std::ffi::c_void) -> i32;
     }
 
@@ -235,11 +264,16 @@ fn resume_windows_process(pid: u32) -> Result<(), String> {
 
     let handle = unsafe { OpenProcess(PROCESS_SUSPEND_RESUME, 0, pid) };
     if handle.is_null() {
-        return Err(format!("Failed to open process {}: access denied or not found", pid));
+        return Err(format!(
+            "Failed to open process {}: access denied or not found",
+            pid
+        ));
     }
 
     let status = unsafe { NtResumeProcess(handle) };
-    unsafe { CloseHandle(handle); }
+    unsafe {
+        CloseHandle(handle);
+    }
 
     if status != 0 {
         return Err(format!("NtResumeProcess failed with status 0x{:X}", status));
@@ -254,21 +288,21 @@ pub fn stop_process(pid: u32) -> Result<(), String> {
     {
         use nix::sys::signal::{kill, Signal};
         use nix::unistd::Pid;
-        
+
         kill(Pid::from_raw(pid as i32), Signal::SIGTERM)
             .map_err(|e| format!("Failed to stop process: {}", e))?;
     }
-    
+
     #[cfg(windows)]
     {
         use std::process::Command;
-        
+
         Command::new("taskkill")
             .args(&["/PID", &pid.to_string(), "/F"])
             .spawn()
             .map_err(|e| format!("Failed to stop process: {}", e))?;
     }
-    
+
     Ok(())
 }
 
@@ -295,23 +329,23 @@ fn parse_progress(line: &str) -> Result<ProgressInfo, ()> {
     if let Some(caps) = FRAME_RE.captures(line) {
         progress.frame = caps[1].parse().ok();
     }
-    
+
     if let Some(caps) = FPS_RE.captures(line) {
         progress.fps = caps[1].parse().ok();
     }
-    
+
     if let Some(caps) = TIME_RE.captures(line) {
         progress.time = Some(caps[1].to_string());
     }
-    
+
     if let Some(caps) = BITRATE_RE.captures(line) {
         progress.bitrate = Some(format!("{} kbps", &caps[1]));
     }
-    
+
     if let Some(caps) = SPEED_RE.captures(line) {
         progress.speed = Some(format!("{}x", &caps[1]));
     }
-    
+
     if let Some(caps) = SIZE_RE.captures(line) {
         progress.size = Some(format!("{}{}", &caps[1], &caps[2]));
     }
@@ -328,7 +362,9 @@ pub fn send_ffmpeg_stdin(task_id: String, input: String) -> Result<(), String> {
     use std::io::Write;
     let mut stdins = TASK_STDINS.lock().unwrap();
     if let Some(stdin) = stdins.get_mut(&task_id) {
-        stdin.write_all(input.as_bytes()).map_err(|e| format!("写入失败: {}", e))?;
+        stdin
+            .write_all(input.as_bytes())
+            .map_err(|e| format!("写入失败: {}", e))?;
         stdin.flush().map_err(|e| format!("刷新失败: {}", e))?;
     }
     Ok(())
@@ -342,7 +378,7 @@ mod tests {
     fn test_parse_progress_frame() {
         let line = "frame=  123 fps= 30 q=28.0 size=  12345kB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
         let result = parse_progress(line);
-        
+
         assert!(result.is_ok());
         let progress = result.unwrap();
         assert_eq!(progress.frame, Some(123));
@@ -352,7 +388,7 @@ mod tests {
     fn test_parse_progress_fps() {
         let line = "frame=  123 fps= 30.5 q=28.0 size=  12345kB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
         let result = parse_progress(line);
-        
+
         assert!(result.is_ok());
         let progress = result.unwrap();
         assert_eq!(progress.fps, Some(30.5));
@@ -362,7 +398,7 @@ mod tests {
     fn test_parse_progress_time() {
         let line = "frame=  123 fps= 30 q=28.0 size=  12345kB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
         let result = parse_progress(line);
-        
+
         assert!(result.is_ok());
         let progress = result.unwrap();
         assert_eq!(progress.time, Some("00:01:23.45".to_string()));
@@ -372,7 +408,7 @@ mod tests {
     fn test_parse_progress_bitrate() {
         let line = "frame=  123 fps= 30 q=28.0 size=  12345kB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
         let result = parse_progress(line);
-        
+
         assert!(result.is_ok());
         let progress = result.unwrap();
         assert_eq!(progress.bitrate, Some("1234.5 kbps".to_string()));
@@ -382,7 +418,7 @@ mod tests {
     fn test_parse_progress_speed() {
         let line = "frame=  123 fps= 30 q=28.0 size=  12345kB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
         let result = parse_progress(line);
-        
+
         assert!(result.is_ok());
         let progress = result.unwrap();
         assert_eq!(progress.speed, Some("1.23x".to_string()));
@@ -392,7 +428,7 @@ mod tests {
     fn test_parse_progress_size() {
         let line = "frame=  123 fps= 30 q=28.0 size=  12345KiB time=00:01:23.45 bitrate=1234.5kbits/s speed=1.23x";
         let result = parse_progress(line);
-        
+
         assert!(result.is_ok());
         let progress = result.unwrap();
         assert_eq!(progress.size, Some("12345KiB".to_string()));
@@ -402,7 +438,7 @@ mod tests {
     fn test_parse_progress_combined() {
         let line = "frame=  456 fps= 60.5 q=25.0 size=  67890KiB time=00:05:30.12 bitrate=2345.6kbits/s speed=2.5x";
         let result = parse_progress(line);
-        
+
         assert!(result.is_ok());
         let progress = result.unwrap();
         assert_eq!(progress.frame, Some(456));
@@ -417,7 +453,7 @@ mod tests {
     fn test_parse_progress_invalid() {
         let line = "This is not a progress line";
         let result = parse_progress(line);
-        
+
         assert!(result.is_err());
     }
 
@@ -425,7 +461,7 @@ mod tests {
     fn test_parse_progress_partial() {
         let line = "frame=  123 fps= 30";
         let result = parse_progress(line);
-        
+
         assert!(result.is_ok());
         let progress = result.unwrap();
         assert_eq!(progress.frame, Some(123));

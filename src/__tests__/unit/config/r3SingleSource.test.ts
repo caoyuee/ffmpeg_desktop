@@ -230,14 +230,14 @@ describe('R3 中英 i18n 一致性', () => {
 })
 
 describe('R3 命令注册表未膨胀', () => {
-  it('generate_handler! 仍为 39 项，且没有新增 watch / retry / report 命令', () => {
+  it('generate_handler! 仍为 40 项，且没有新增 watch / retry / report 命令', () => {
     const lib = read('src-tauri/src/lib.rs')
     const handler = /generate_handler!\[([\s\S]*?)\]/.exec(lib)?.[1] ?? ''
     const entries = handler
       .split(',')
       .map((s) => s.trim())
       .filter(Boolean)
-    expect(entries).toHaveLength(39)
+    expect(entries).toHaveLength(40)
     expect(handler).not.toMatch(/watch_folder|retry_task|export_report|load_history|save_history/)
   })
 })

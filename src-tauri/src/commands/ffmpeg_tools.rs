@@ -133,7 +133,11 @@ fn parse_ffmpeg_filters(output: &str) -> Vec<String> {
             if flags.contains("->") || name.contains("->") {
                 return None;
             }
-            if flags.len() < 3 || !flags.chars().all(|ch| ch == '.' || ch.is_ascii_alphabetic()) {
+            if flags.len() < 3
+                || !flags
+                    .chars()
+                    .all(|ch| ch == '.' || ch.is_ascii_alphabetic())
+            {
                 return None;
             }
             Some(name.to_string())
@@ -282,7 +286,10 @@ Filters:
  T.. anull             A->A       Pass the source unchanged
 "#;
 
-        assert_eq!(parse_ffmpeg_filters(output), vec!["anull", "hwupload", "scale_cuda"]);
+        assert_eq!(
+            parse_ffmpeg_filters(output),
+            vec!["anull", "hwupload", "scale_cuda"]
+        );
     }
 
     #[test]

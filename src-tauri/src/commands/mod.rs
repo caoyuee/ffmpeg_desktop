@@ -1,3 +1,4 @@
+pub mod exe_path;
 pub mod ffmpeg_tools;
 pub mod ffplay;
 pub mod file_commands;
@@ -7,6 +8,7 @@ pub mod startup_args;
 pub mod tray_settings;
 pub mod video_preview;
 
+pub use exe_path::get_executable_path;
 pub use ffmpeg_tools::{
     check_ffmpeg_from_path, check_ffmpeg_tools, detect_hardware_acceleration, get_system_info_app,
     install_ffmpeg_command, test_ffmpeg,

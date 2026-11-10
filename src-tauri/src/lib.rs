@@ -1,5 +1,6 @@
 mod commands;
 mod library;
+pub mod mcp;
 pub mod modules;
 // R2.1：utility/（legacy _executor + 无前缀事件枚举）已整体删除。
 
@@ -73,6 +74,7 @@ pub fn run() {
             set_tray_settings,
             open_independent_panel,
             get_independent_panel_files,
+            get_executable_path,
             parse_startup_args,
             list_media_files,
             get_file_sizes

@@ -89,8 +89,8 @@ describe('R3.2 任务历史与统计（防复发门禁）', () => {
     expect(handlerBlock).toContain('get_file_sizes')
   })
 
-  it('注册表为 39 项（R3.1 的 38 项 + R3.2 体积查询），5 个预设命令仍在', () => {
-    expect(handlerEntries).toHaveLength(39)
+  it('注册表为 40 项（RM1 新增 exe 路径查询），5 个预设命令仍在', () => {
+    expect(handlerEntries).toHaveLength(40)
     for (const name of [
       'load_presets',
       'save_preset',

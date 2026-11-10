@@ -210,6 +210,30 @@
         </div>
       </div>
 
+      <div v-show="activeTab === 'mcp'" class="app-card settings-section">
+        <h4>{{ t('page.settings.mcp') }}</h4>
+
+        <p class="mcp-desc">{{ t('page.settings.mcpDesc') }}</p>
+
+        <div class="form-group">
+          <label>{{ t('page.settings.mcpConfigLabel') }}</label>
+          <pre class="mcp-config-code">{{ mcpConfigJson }}</pre>
+        </div>
+
+        <div class="mcp-actions">
+          <button
+            class="app-btn app-btn--primary"
+            :disabled="!mcpConfigJson"
+            @click="copyMcpConfig"
+          >
+            {{ mcpCopied ? t('page.settings.mcpCopied') : t('page.settings.mcpCopy') }}
+          </button>
+          <span v-if="exePathError" class="setting-hint">{{ exePathError }}</span>
+        </div>
+
+        <p class="setting-hint">{{ t('page.settings.mcpReadOnlyHint') }}</p>
+      </div>
+
       <div v-show="activeTab === 'about'" class="app-card settings-section">
         <h4>{{ t('page.settings.about') }}</h4>
 
@@ -313,6 +337,7 @@ import { availableLanguages } from '@/i18n'
 import { useSettingsStore } from '@/store/settingsStore'
 import { useTaskStore } from '@/store/taskStore'
 import { useUpdateChecker } from '@/hooks/useUpdateChecker'
+import { buildMcpServerConfig } from '@/config/mcpConfig'
 import ConfirmDialog from '@/components/Dialogs/ConfirmDialog.vue'
 import Toast from '@/components/Dialogs/Toast.vue'
 
@@ -326,6 +351,7 @@ const tabs = [
   { id: 'general', label: computed(() => t('page.settings.general')) },
   { id: 'ffmpeg', label: computed(() => t('page.settings.ffmpeg')) },
   { id: 'output', label: computed(() => t('page.settings.output')) },
+  { id: 'mcp', label: computed(() => t('page.settings.mcp')) },
   { id: 'storage', label: computed(() => t('page.settings.storage')) },
   { id: 'about', label: computed(() => t('page.settings.about')) },
 ]
@@ -344,9 +370,58 @@ const toastType = ref<'success' | 'error' | 'warning' | 'info'>('success')
 const { state: updateState, checkForUpdates, downloadAndInstallUpdate } = useUpdateChecker()
 const repositoryUrl = 'https://github.com/caoyuee/ffmpeg_desktop'
 
+// RM1 后续：MCP 配置展示。exe 路径由 Rust `get_executable_path` 提供，
+// JSON 拼装唯一走 config/mcpConfig.ts（测试锁口径）。
+const exePath = ref('')
+const exePathError = ref('')
+const mcpCopied = ref(false)
+let mcpCopiedTimer: ReturnType<typeof setTimeout> | undefined
+
+const mcpConfigJson = computed(() => (exePath.value ? buildMcpServerConfig(exePath.value) : ''))
+
+async function loadExecutablePath() {
+  try {
+    exePath.value = await invoke<string>('get_executable_path')
+  } catch (error) {
+    exePathError.value = t('page.settings.mcpPathError')
+    console.error('[settings] 获取可执行文件路径失败:', error)
+  }
+}
+
+async function copyMcpConfig() {
+  const text = mcpConfigJson.value
+  if (!text) return
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+    } else {
+      // WebView 未暴露 clipboard API 时的兜底（execCommand 已废弃但无副作用）。
+      const textarea = document.createElement('textarea')
+      textarea.value = text
+      textarea.style.position = 'fixed'
+      textarea.style.opacity = '0'
+      document.body.appendChild(textarea)
+      textarea.select()
+      document.execCommand('copy')
+      textarea.remove()
+    }
+    mcpCopied.value = true
+    if (mcpCopiedTimer) clearTimeout(mcpCopiedTimer)
+    mcpCopiedTimer = setTimeout(() => {
+      mcpCopied.value = false
+    }, 1500)
+  } catch (error) {
+    console.error('[settings] 复制 MCP 配置失败:', error)
+    toastMessage.value = t('common.copyFailed')
+    toastType.value = 'error'
+    showToast.value = true
+  }
+}
+
 onMounted(() => {
   applyTraySettings()
   loadVersion()
+  loadExecutablePath()
   if (settings.value.autoCheckUpdate) {
     checkForUpdates()
   }
@@ -528,6 +603,35 @@ async function installUpdate() {
 .settings-section {
   max-width: 600px;
   padding: 20px;
+}
+
+.mcp-desc {
+  margin: 0 0 16px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-color2, #808080);
+}
+
+.mcp-config-code {
+  margin: 8px 0 0;
+  padding: 12px;
+  max-height: 260px;
+  overflow: auto;
+  font-family: var(--font-mono, ui-monospace, Menlo, Consolas, monospace);
+  font-size: 12px;
+  line-height: 1.5;
+  border-radius: var(--radius-md, 8px);
+  background: var(--bg-color2, #242424);
+  color: var(--text-color1, #f5f5f5);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  white-space: pre;
+}
+
+.mcp-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
 }
 
 .settings-section h4 {

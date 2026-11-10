@@ -8,9 +8,8 @@ use chrono;
 /// - `String` - 回傳格式為 "output_YYYYMMDD_HHMMSS.format"
 #[allow(dead_code)]
 pub fn timestamp_filename(prefix: &str, format: &str) -> String {
-
     let now = chrono::Local::now();
     let datetime_str = now.format("%Y%m%d_%H%M%S").to_string();
-    
+
     format!("{}_{}.{}", prefix, datetime_str, format)
 }

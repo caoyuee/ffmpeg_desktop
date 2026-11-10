@@ -22,7 +22,8 @@ bash scripts/preflight.sh     # 全量预检（含 CSP 断言）
 ## 架构速查
 
 - **前端**：Vue 3.5（`<script setup lang="ts">`）、Pinia 3、Vue Router 4、vue-i18n 9、Vite 7。别名 `@` → `src/`。
-- **后端**：Tauri 2.9（Rust），入口 `src-tauri/src/lib.rs::run()`，`generate_handler!` 注册 **39 个 command**（R1 新增 2 个、R2.1 移除 2 个 legacy、R2.5 新增 2 个队列持久化命令；R3.1 未新增命令只改签名；R3.2 新增 `get_file_sizes` 通用体积查询；R3.3~R3.8 未新增命令，`parse_startup_args` 改为纯 argv 透传；R1-7 收官时 `load/save/delete_preset` 增加可选 `dir` 参数，命令数不变）。
+- **MCP Server 模式（RM1 起）**：`FFmpeg_Desktop mcp`（argv 第二参数字面量）以 stdio MCP Server 运行（`src-tauri/src/mcp/`，官方 rmcp 3.9），无 GUI、无网络端口、只读两个工具 `list_presets` / `get_queue_status`；这是**运行模式分流**而非参数语义解析，是「Rust 只透传 argv」铁律的唯一显式例外。工具层 `mcp/tools.rs` 只做宽松透传（schema 语义归前端），status 数字语义写在工具 description；目录定位语义与 Tauri `app_data_dir` 对齐（`mcp/app_data.rs`）。**禁止在 MCP 工具里建模业务或启动转码**；提交任务走 GUI bridge（RM2）。设置页「MCP 服务」标签页展示可直接复制的 mcpServers 配置：Rust `get_executable_path` 供路径（Windows `\\?\` 前缀已剥离），JSON 拼装唯一在 `config/mcpConfig.ts`。
+- **后端**：Tauri 2.9（Rust），入口 `src-tauri/src/lib.rs::run()`，`generate_handler!` 注册 **40 个 command**（R1 新增 2 个、R2.1 移除 2 个 legacy、R2.5 新增 2 个队列持久化命令；R3.1 未新增命令只改签名；R3.2 新增 `get_file_sizes` 通用体积查询；R3.3~R3.8 未新增命令，`parse_startup_args` 改为纯 argv 透传；R1-7 收官时 `load/save/delete_preset` 增加可选 `dir` 参数，命令数不变）。
 - **路由**：`/` 重定向 `/workbench`（R3.8 工作台为管道起点）；15 个业务页（R3.2 新增 `/history`，R3.8 新增 `/workbench` `/watch` `/ab`）+ `/independent-panel`（独立窗口），全部挂 MainLayout；导航按「工作流/工具/监视/系统」四组。
 - **单一执行路径（R2.1 起，关键）**：所有 FFmpeg 进程都走 `modules/task_manager.rs::start_ffmpeg`（shell_words 解析、`ffmpeg-progress/finish/error/log` 事件带 taskId）。队列任务由 `taskStore` 并发调度；一次性任务（画质评测）走 `hooks/useTransientFFmpegTask`。事件名与 payload 的单一事实源是 `utils/ffmpegEvents.ts`；legacy executor 与无前缀事件已删除，`legacyPath.test.ts` 防止回流。
 - **命令构建与元数据单一事实源（R2.2 起，关键）**：命令行只由 `utils/commandBuilder.ts::FFmpegCommandBuilder.build` 生成；编码器与容器兼容性元数据只在 `config/codecDatabase.ts`（`CODEC_DATABASE` + `FORMAT_COMPATIBILITY` + 纯查询函数）。旧构建器与 `useCodecFilter` 已删除，**禁止静默改写用户选择的编码器**——OutputSettings 必须由用户点击确认后才调整；新增元数据不得另起模块，`singleBuilder.test.ts` 会拦。
@@ -63,7 +64,7 @@ bash scripts/preflight.sh     # 全量预检（含 CSP 断言）
 
 - 前端：Vitest + happy-dom，**66 文件 / 543 用例**全绿（2026-11-07，R1-7 收官后；净增 15 例为设置生效契约 / 静态门禁用例）
 - 覆盖率阈值（`coverage.thresholds`，已验证生效）：lines 56 / functions 42 / branches 51 / statements 56，约定只升不降；当前实测 68.40 / 58.85 / 63.12 / 68.60（lines/functions/branches/statements，R1-7 收官后四项均较 R3.8 提升；按不顶峰值原则保持阈值不变、未下调）
-- 后端：`cargo check` + `cargo test` 本机通过（2026-11-07，R1-7 收官复验）：**33 个 Rust 单测全绿**，仅 3 个既有 dead_code 警告 → V6 已定案
+- 后端：`cargo check` + `cargo test` 本机通过（2026-11-10，RM1 复验）：**45 个 Rust 单测全绿**（mcp 模块 9 个 + exe_path 3 个），仅 3 个既有 dead_code 警告 → V6 已定案
 - E2E：Playwright，**浏览器 + Tauri mock 层**，不证明桌面功能可用
 - 覆盖率数字必须实测（`pnpm test:coverage`），禁止引用历史报告结论
 

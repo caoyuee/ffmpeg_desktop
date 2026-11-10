@@ -10,17 +10,17 @@
 
 ## 关键约束速查
 
-| 约束        | 详情                                                                                               |
-| ----------- | -------------------------------------------------------------------------------------------------- |
+| 约束        | 详情                                                                                                                                                  |
+| ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 包管理器    | pnpm 12.18+（强制，pnpm install 前先 `export NVM_DIR="$HOME/.config/nvm" && . "$NVM_DIR/nvm.sh"`；构建审批配置在 pnpm-workspace.yaml 的 allowBuilds） |
-| 组件文件    | `PascalCase/PascalCase.vue`，禁止 `index.vue`                                                      |
-| 页面入口    | `index.vue`（仅页面允许）                                                                          |
-| 脚本        | `<script setup lang="ts">`，TypeScript 泛型 Props/Emits                                            |
-| 样式        | `<style scoped>`，CSS 变量 + 回退值，禁止硬编码颜色                                                |
-| i18n        | 所有用户可见文本用 `t()`，中英文同步                                                               |
-| 对话框      | 禁止原生 `alert/confirm/prompt`，用 `ConfirmDialog`/`Toast`                                        |
-| 类型检查    | `vue-tsc --noEmit` 必须通过                                                                        |
-| FFmpeg 执行 | 新功能用 task manager 路径（`start_ffmpeg`），不用 legacy executor                                 |
+| 组件文件    | `PascalCase/PascalCase.vue`，禁止 `index.vue`                                                                                                         |
+| 页面入口    | `index.vue`（仅页面允许）                                                                                                                             |
+| 脚本        | `<script setup lang="ts">`，TypeScript 泛型 Props/Emits                                                                                               |
+| 样式        | `<style scoped>`，CSS 变量 + 回退值，禁止硬编码颜色                                                                                                   |
+| i18n        | 所有用户可见文本用 `t()`，中英文同步                                                                                                                  |
+| 对话框      | 禁止原生 `alert/confirm/prompt`，用 `ConfirmDialog`/`Toast`                                                                                           |
+| 类型检查    | `vue-tsc --noEmit` 必须通过                                                                                                                           |
+| FFmpeg 执行 | 新功能用 task manager 路径（`start_ffmpeg`），不用 legacy executor                                                                                    |
 
 ## 目录速查
 

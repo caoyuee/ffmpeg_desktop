@@ -3,12 +3,12 @@ use std::process::Command;
 /// 执行 ffprobe 命令
 /// 前端传入文件路径，后端构建并执行 ffprobe 命令
 #[tauri::command]
-pub fn probe_media_info(
-    path: String,
-) -> Result<serde_json::Value, String> {
+pub fn probe_media_info(path: String) -> Result<serde_json::Value, String> {
     let args = vec![
-        "-v", "quiet",
-        "-print_format", "json",
+        "-v",
+        "quiet",
+        "-print_format",
+        "json",
         "-show_format",
         "-show_streams",
         &path,

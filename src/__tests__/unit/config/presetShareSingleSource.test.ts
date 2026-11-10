@@ -102,7 +102,7 @@ describe('R3.1 预设分享格式单一事实源（防复发门禁）', () => {
     expect(rust).not.toMatch(/import_preset[\s\S]{0,200}serde_json::from_str/)
   })
 
-  it('5 个预设命令仍全部注册，注册表为 39 项（R3.2 体积查询）', () => {
+  it('5 个预设命令仍全部注册，注册表为 40 项（RM1 新增 exe 路径查询）', () => {
     const handlerBlock = read(libRs).match(/generate_handler!\[([\s\S]*?)\]/)?.[1] ?? ''
     for (const command of PRESET_COMMANDS) {
       expect(handlerBlock).toContain(`preset_manager::${command}`)
@@ -111,7 +111,7 @@ describe('R3.1 预设分享格式单一事实源（防复发门禁）', () => {
       .split(',')
       .map((entry) => entry.trim())
       .filter(Boolean)
-    expect(entries).toHaveLength(39)
+    expect(entries).toHaveLength(40)
   })
 
   it('presetStore 只通过分享层读写文件，不直接拼裸 JSON', () => {

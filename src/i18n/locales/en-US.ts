@@ -754,6 +754,15 @@ export default {
       ffmpeg: 'FFmpeg',
       output: 'Output',
       storage: 'Storage',
+      mcp: 'MCP Server',
+      mcpDesc:
+        'This app ships a read-only MCP server. Copy the configuration below into the mcp.json of AI clients such as Claude Desktop or Cursor, and the AI can list presets and inspect the task queue over MCP.',
+      mcpConfigLabel: 'mcp.json configuration',
+      mcpCopy: 'Copy configuration',
+      mcpCopied: 'Copied',
+      mcpPathError:
+        'Failed to resolve the executable path; fill in the app binary location manually',
+      mcpReadOnlyHint: 'The MCP server is read-only; submit transcoding tasks in the desktop app.',
       about: 'About',
       language: 'Language',
       theme: 'Theme',

@@ -1,8 +1,8 @@
-use std::path::{Path, PathBuf};
 use std::io::{Error, ErrorKind};
+use std::path::{Path, PathBuf};
 
-use crate::library::_string::timestamp_filename;
 use crate::library::_error::io_error_maker;
+use crate::library::_string::timestamp_filename;
 
 /// 該檔案路徑是否存在
 /// # 參數
@@ -42,16 +42,15 @@ pub fn file_stem(file_path: &str) -> Option<&str> {
 /// - `Ok(PathBuf)` 如果成功，回傳一個完整的檔案路徑
 /// - `Err(Error)` 如果無法取得父目錄，則回傳錯誤
 #[allow(dead_code)]
-pub fn full_path_maker(path: &str, format: &str) -> Result<PathBuf, Error>{
-    
+pub fn full_path_maker(path: &str, format: &str) -> Result<PathBuf, Error> {
     let dir_path = match file_parent_dir(path) {
         Some(dir) => dir,
         None => {
             let error_message = &format!("無法取得父目錄: {}", path);
             return Err(io_error_maker(ErrorKind::NotFound, error_message));
-        },
+        }
     };
-    
+
     let prefix = file_stem(path).unwrap_or("output");
     let filename = timestamp_filename(prefix, format);
 
